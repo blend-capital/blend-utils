@@ -27,7 +27,6 @@ const __dirname = path.dirname(__filename);
  * @returns {xdr.Operation<Operation.InvokeHostFunction>}
  */
 export function createInstallOperation(wasmKey: string, config: Config) {
-  console.log(path.join(__dirname, CONTRACT_REL_PATH[wasmKey as keyof object]));
   const contractWasm = readFileSync(
     path.join(__dirname, CONTRACT_REL_PATH[wasmKey as keyof object])
   );
