@@ -19,6 +19,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
+    "soroban-client": "^0.7.2",
     "blend-sdk": "../blend-sdk-js"
   }
 }
