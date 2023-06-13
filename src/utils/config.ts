@@ -1,85 +1,63 @@
 import { readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { Keypair } from 'soroban-client';
+import dotenv from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-interface Network {
-  rpc: string;
-  passphrase: string;
-  friendbot: string;
-}
-export class Config {
-  network: Network;
-  users: Map<string, string>;
+dotenv.config({ path: path.join(__dirname, '../../.env') });
+export class Contracts {
   addresses: Map<string, string>;
   wasmHashes: Map<string, string>;
+  fileName: string;
 
-  constructor(
-    network: Network,
-    users: Map<string, string>,
-    addresses: Map<string, string>,
-    wasmHashes: Map<string, string>
-  ) {
-    this.network = network;
-    this.users = users;
+  constructor(addresses: Map<string, string>, wasmHashes: Map<string, string>, fileName: string) {
     this.addresses = addresses;
     this.wasmHashes = wasmHashes;
+    this.fileName = fileName;
   }
 
   /**
-   * @returns {Config}
+   * @returns {Contracts}
    */
   static loadFromFile(network: string) {
-    let configFileName = '';
+    let fileName = '';
     switch (network) {
       case 'standalone':
-        configFileName = '../../local.config.json';
+        fileName = '../../local.contracts.json';
         break;
-      case 'future-net':
-        configFileName = '../../future-net.config.json';
+      case 'futurenet':
+        fileName = '../../futurenet.contracts.json';
         break;
-      case 'test-net':
-        configFileName = '../../test-net.config.json';
+      case 'testnet':
+        fileName = '../../testnet.contracts.json';
+        break;
+      case 'mainnet':
+        fileName = '../../mainnet.contracts.json';
         break;
     }
-    const configFile = readFileSync(path.join(__dirname, configFileName));
-    const configObj = JSON.parse(configFile.toString());
-    return new Config(
-      configObj.network,
-      new Map(Object.entries(configObj.users)),
-      new Map(Object.entries(configObj.addresses)),
-      new Map(Object.entries(configObj.wasmHashes))
+    const addressFile = readFileSync(path.join(__dirname, fileName));
+    const addressObj = JSON.parse(addressFile.toString());
+    return new Contracts(
+      new Map(Object.entries(addressObj.addresses)),
+      new Map(Object.entries(addressObj.wasmHashes)),
+      fileName
     );
   }
 
   writeToFile() {
-    const newFile = JSON.stringify(this, null, 2);
-    writeFileSync(path.join(__dirname, '/local.config.json'), newFile);
-  }
-
-  /**
-   * @param {string} userKey
-   * @returns {Keypair}
-   */
-  getAddress(userKey: string) {
-    const userSecret = this.users.get(userKey);
-
-    if (userSecret != undefined) {
-      return Keypair.fromSecret(userSecret);
-    } else {
-      console.error('unable to find user in config: ', userKey);
-      throw Error();
-    }
-  }
-
-  /**
-   * @param {string} userKey
-   * @param {Keypair} keypair
-   */
-  setAddress(userKey: string, keypair: Keypair) {
-    this.users.set(userKey, keypair.secret());
+    const newFile = JSON.stringify(
+      this,
+      (key, value) => {
+        if (value instanceof Map) {
+          return Object.fromEntries(value);
+        } else if (key != 'fileName') {
+          return value;
+        }
+      },
+      2
+    );
+    writeFileSync(path.join(__dirname, this.fileName), newFile);
   }
 
   /**
@@ -128,3 +106,40 @@ export class Config {
     this.wasmHashes.set(contractKey, wasmHash);
   }
 }
+
+interface Env {
+  rpc: string | undefined;
+  passphrase: string | undefined;
+  friendbot: string | undefined;
+  secretkey: string | undefined;
+}
+
+interface Config {
+  rpc: string;
+  passphrase: string;
+  friendbot: string;
+  secretkey: string;
+}
+
+function getEnv(): Env {
+  return {
+    rpc: process.env.rpc,
+    passphrase: process.env.passphrase,
+    friendbot: process.env.friendbot,
+    secretkey: process.env.secretkey,
+  };
+}
+
+function getConfig(env: Env): Config {
+  for (const [key, value] of Object.entries(env)) {
+    if (value === undefined) {
+      throw new Error(`Error: Missing key ${key} in .env`);
+    }
+  }
+  return env as Config;
+}
+
+const env = getEnv();
+const config = getConfig(env);
+
+export default config;

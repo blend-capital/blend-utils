@@ -19,7 +19,8 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "soroban-client": "^0.8.0",
-    "blend-sdk": "../blend-sdk-js"
+    "blend-sdk": "../blend-sdk-js",
+    "dotenv": "^16.1.4",
+    "soroban-client": "^0.8.0"
   }
 }

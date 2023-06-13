@@ -1,11 +1,11 @@
 import { randomBytes } from 'crypto';
 import { Asset, Keypair, Operation, Server, hash, xdr } from 'soroban-client';
-import { Config } from '../utils/config.js';
+import { Contracts } from './config.js';
+import config from './config';
 import { readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createTxBuilder, signAndSubmitTransaction } from './tx.js';
-
+import { createTxBuilder, signAndSubmitTransaction } from './tx';
 // Relative paths from __dirname
 const CONTRACT_REL_PATH: object = {
   token: '../../../blend-contracts/soroban_token_contract.wasm',
@@ -23,10 +23,10 @@ const __dirname = path.dirname(__filename);
 
 /**
  * @param {string} wasmKey
- * @param {Config} config
+ * @param {contracts} contracts
  * @returns {xdr.Operation<Operation.InvokeHostFunction>}
  */
-export function createInstallOperation(wasmKey: string, config: Config) {
+export function createInstallOperation(wasmKey: string, contracts: Contracts) {
   const contractWasm = readFileSync(
     path.join(__dirname, CONTRACT_REL_PATH[wasmKey as keyof object])
   );
@@ -36,7 +36,7 @@ export function createInstallOperation(wasmKey: string, config: Config) {
   });
   const wasmHash = hash(installContractArgs.toXDR());
 
-  config.setWasmHash(wasmKey, wasmHash.toString('hex'));
+  contracts.setWasmHash(wasmKey, wasmHash.toString('hex'));
   const op = Operation.invokeHostFunction({
     args: xdr.HostFunctionArgs.hostFunctionTypeUploadContractWasm(installContractArgs),
     auth: [],
@@ -49,18 +49,18 @@ export function createInstallOperation(wasmKey: string, config: Config) {
  *
  * @param {string} contractKey
  * @param {string} wasmKey
- * @param {Config} config
+ * @param {Contracts} contracts
  * @param {Keypair} source
  * @returns {xdr.Operation<Operation.InvokeHostFunction>}
  */
 export function createDeployOperation(
   contractKey: string,
   wasmKey: string,
-  config: Config,
+  contracts: Contracts,
   source: Keypair
 ): xdr.Operation<Operation.InvokeHostFunction> {
   const contractIdSalt = randomBytes(32);
-  const networkId = hash(Buffer.from(config.network.passphrase));
+  const networkId = hash(Buffer.from(config.passphrase));
   const preimage = xdr.HashIdPreimage.envelopeTypeContractIdFromSourceAccount(
     new xdr.HashIdPreimageSourceAccountContractId({
       networkId: networkId,
@@ -70,8 +70,8 @@ export function createDeployOperation(
   );
   const contractId = hash(preimage.toXDR());
 
-  config.setContractId(contractKey, contractId.toString('hex'));
-  const wasmHash = Buffer.from(config.getWasmHash(wasmKey), 'hex');
+  contracts.setContractId(contractKey, contractId.toString('hex'));
+  const wasmHash = Buffer.from(contracts.getWasmHash(wasmKey), 'hex');
 
   const deployFunction = xdr.HostFunctionArgs.hostFunctionTypeCreateContract(
     new xdr.CreateContractArgs({
@@ -88,12 +88,12 @@ export function createDeployOperation(
 
 /**
  * @param {Asset} asset
- * @param {Config} config
+ * @param {contracts} contracts
  * @returns {xdr.Operation<Operation.InvokeHostFunction>}
  */
-export function createDeployStellarAssetOperation(asset: Asset, config: Config) {
+export function createDeployStellarAssetOperation(asset: Asset, contracts: Contracts) {
   const xdrAsset = asset.toXDRObject();
-  const networkId = hash(Buffer.from(config.network.passphrase));
+  const networkId = hash(Buffer.from(config.passphrase));
   const preimage = xdr.HashIdPreimage.envelopeTypeContractIdFromAsset(
     new xdr.HashIdPreimageFromAsset({
       networkId: networkId,
@@ -102,7 +102,7 @@ export function createDeployStellarAssetOperation(asset: Asset, config: Config) 
   );
   const contractId = hash(preimage.toXDR());
 
-  config.setContractId(asset.code, contractId.toString('hex'));
+  contracts.setContractId(asset.code, contractId.toString('hex'));
 
   const deployFunction = xdr.HostFunctionArgs.hostFunctionTypeCreateContract(
     new xdr.CreateContractArgs({
@@ -119,11 +119,10 @@ export function createDeployStellarAssetOperation(asset: Asset, config: Config) 
 
 export async function invokeStellarOperation(
   stellarRpc: Server,
-  config: Config,
   operation: xdr.Operation,
   source: Keypair
 ) {
-  const network = config.network.passphrase;
+  const network = config.passphrase;
   const txBuilder = await createTxBuilder(stellarRpc, network, source);
   txBuilder.addOperation(operation);
   await signAndSubmitTransaction(stellarRpc, network, txBuilder.build(), source);
@@ -131,18 +130,17 @@ export async function invokeStellarOperation(
 
 /**
  * @param {Server} stellarRpc
- * @param {Config} config
+ * @param {contracts} contracts
  */
-export async function airdropAccounts(stellarRpc: Server, config: Config) {
-  for (const user of config.users.keys()) {
-    const pubKey = config.getAddress(user).publicKey();
-    try {
-      console.log('Start funding');
-      await stellarRpc.requestAirdrop(pubKey, config.network.friendbot);
-      console.log('Funded: ', pubKey);
-    } catch (e) {
-      console.log(pubKey, ' already funded');
-    }
+export async function airdropAccounts(stellarRpc: Server) {
+  const pubKey = Keypair.fromSecret(config.secretkey).publicKey();
+  try {
+    console.log('Start funding');
+    await stellarRpc.requestAirdrop(pubKey, config.friendbot);
+    console.log('Funded: ', pubKey);
+  } catch (e) {
+    console.log(pubKey, ' already funded');
   }
+
   console.log('All users airdropped\n');
 }
