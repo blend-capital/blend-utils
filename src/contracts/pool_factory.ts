@@ -10,6 +10,7 @@ import { PoolFactory } from 'blend-sdk';
 export async function deployPoolFactory(stellarRpc: Server, contracts: Contracts, source: Keypair) {
   const operation = createDeployOperation('poolFactory', 'poolFactory', contracts, source);
   await invokeStellarOperation(stellarRpc, operation, source);
+  return new PoolFactoryContract(contracts.getContractId('poolFactory'), stellarRpc, contracts);
 }
 export async function installPoolFactory(
   stellarRpc: Server,

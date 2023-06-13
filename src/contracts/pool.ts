@@ -5,7 +5,7 @@ import {
   createInstallOperation,
   invokeStellarOperation,
 } from '../utils/contract';
-import { Pool as PoolContract } from 'blend-sdk';
+import { Pool } from 'blend-sdk';
 
 export async function deployLendingPool(
   stellarRpc: Server,
@@ -15,6 +15,7 @@ export async function deployLendingPool(
 ) {
   const operation = createDeployOperation(poolName, 'lendingPool', contracts, source);
   await invokeStellarOperation(stellarRpc, operation, source);
+  return new PoolContract(contracts.getContractId(poolName), stellarRpc, contracts);
 }
 export async function installLendingPool(
   stellarRpc: Server,
@@ -25,12 +26,12 @@ export async function installLendingPool(
   await invokeStellarOperation(stellarRpc, operation, source);
 }
 
-export class Pool {
-  poolOpBuilder: PoolContract.PoolOpBuilder;
+export class PoolContract {
+  poolOpBuilder: Pool.PoolOpBuilder;
   stellarRpc: Server;
   contracts: Contracts;
   constructor(address: string, stellarRpc: Server, contracts: Contracts) {
-    this.poolOpBuilder = new PoolContract.PoolOpBuilder(address);
+    this.poolOpBuilder = new Pool.PoolOpBuilder(address);
     this.stellarRpc = stellarRpc;
     this.contracts = contracts;
   }
@@ -60,7 +61,7 @@ export class Pool {
   public async init_reserve(
     admin: string,
     asset: string,
-    metadata: PoolContract.ReserveMetadata,
+    metadata: Pool.ReserveMetadata,
     source: Keypair
   ) {
     const xdr_op = this.poolOpBuilder.init_reserve({ admin, asset, metadata });
@@ -71,7 +72,7 @@ export class Pool {
   public async update_reserve(
     admin: string,
     asset: string,
-    metadata: PoolContract.ReserveMetadata,
+    metadata: Pool.ReserveMetadata,
     source: Keypair
   ) {
     const xdr_op = this.poolOpBuilder.update_reserve({ admin, asset, metadata });
@@ -135,7 +136,7 @@ export class Pool {
 
   public async set_emissions_config(
     admin: string,
-    res_emission_metadata: PoolContract.ReserveEmissionMetadata[],
+    res_emission_metadata: Pool.ReserveEmissionMetadata[],
     source: Keypair
   ) {
     const xdr_op = this.poolOpBuilder.set_emissions_config({ admin, res_emission_metadata });
@@ -151,7 +152,7 @@ export class Pool {
 
   public async new_liquidation_auction(
     user: string,
-    data: PoolContract.LiquidationMetadata,
+    data: Pool.LiquidationMetadata,
     source: Keypair
   ) {
     const xdr_op = this.poolOpBuilder.new_liquidation_auction({ user, data });

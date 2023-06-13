@@ -16,6 +16,7 @@ export async function installEmitter(stellarRpc: Server, contracts: Contracts, s
 export async function deployEmitter(stellarRpc: Server, contracts: Contracts, source: Keypair) {
   const operation = createDeployOperation('emitter', 'emitter', contracts, source);
   await invokeStellarOperation(stellarRpc, operation, source);
+  return new EmitterContract(contracts.getContractId('emitter'), stellarRpc, contracts);
 }
 
 export class EmitterContract {

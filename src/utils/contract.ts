@@ -23,7 +23,7 @@ const __dirname = path.dirname(__filename);
 
 /**
  * @param {string} wasmKey
- * @param {contracts} contracts
+ * @param {Contracts} contracts
  * @returns {xdr.Operation<Operation.InvokeHostFunction>}
  */
 export function createInstallOperation(wasmKey: string, contracts: Contracts) {

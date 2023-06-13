@@ -27,6 +27,7 @@ export async function deployBlendToken(
 ) {
   const operation = createDeployOperation(token_name, token_type, contracts, source);
   await invokeStellarOperation(stellarRpc, operation, source);
+  return new BlendTokenContract(contracts.getContractId(token_name), stellarRpc, contracts);
 }
 
 export async function deployStellarAsset(

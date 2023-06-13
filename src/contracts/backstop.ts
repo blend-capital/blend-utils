@@ -16,6 +16,7 @@ export async function installBackstop(stellarRpc: Server, contracts: Contracts, 
 export async function deployBackstop(stellarRpc: Server, contracts: Contracts, source: Keypair) {
   const operation = createDeployOperation('backstop', 'backstop', contracts, source);
   await invokeStellarOperation(stellarRpc, operation, source);
+  return new BackstopContract(contracts.getContractId('backstop'), stellarRpc, contracts);
 }
 
 export class BackstopContract {
