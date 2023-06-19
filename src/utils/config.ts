@@ -70,7 +70,7 @@ export class Contracts {
     if (contractId != undefined) {
       return contractId;
     } else {
-      console.error('unable to find address in config: ', contractKey);
+      console.error(`unable to find address for ${contractKey} in ${this.fileName}`);
       throw Error();
     }
   }
@@ -93,7 +93,7 @@ export class Contracts {
     if (washHash != undefined) {
       return washHash;
     } else {
-      console.error('unable to find hash in config: ', contractKey);
+      console.error(`unable to find hash for ${contractKey} in ${this.fileName}`);
       throw Error();
     }
   }

@@ -31,10 +31,10 @@ export class EmitterContract {
 
   public async initialize(source: Keypair) {
     const backstop = this.contracts.getContractId('backstop');
-    const blnd_token_id = this.contracts.getContractId('blnd_token');
+    const blndTokenId = this.contracts.getContractId('BLND');
     const xdr_op = this.emitterOpBuilder.initialize({
       backstop,
-      blnd_token_id,
+      blnd_token_id: blndTokenId,
     });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(this.stellarRpc, operation, source);

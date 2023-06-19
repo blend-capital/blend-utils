@@ -30,9 +30,9 @@ export class BackstopContract {
   }
 
   public async initialize(source: Keypair) {
-    const backstop_token = this.contracts.getContractId('backstop_token');
-    const blnd_token = this.contracts.getContractId('blnd_token');
-    const pool_factory = this.contracts.getContractId('pool_factory');
+    const backstop_token = this.contracts.getContractId('backstopToken');
+    const blnd_token = this.contracts.getContractId('BLND');
+    const pool_factory = this.contracts.getContractId('poolFactory');
     const xdr_op = this.backstopOpBuilder.initialize({
       backstop_token,
       blnd_token,

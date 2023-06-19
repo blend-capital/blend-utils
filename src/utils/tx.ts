@@ -41,7 +41,7 @@ export async function signAndSubmitTransaction(
       status = response.status;
     }
     console.log('Transaction status:', response.status);
-    console.log('Hash: ', tx_hash);
+    console.log(`Hash: ${tx_hash}\n`);
   } catch (e) {
     console.error(e);
     throw e;
