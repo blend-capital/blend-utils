@@ -22,8 +22,8 @@ export async function signAndSubmitTransaction(
   tx: Transaction,
   source: Keypair
 ) {
-  const prepped_tx = await stellarRpc.prepareTransaction(tx, network);
   try {
+    const prepped_tx = await stellarRpc.prepareTransaction(tx, network);
     prepped_tx.sign(source);
     console.log('fee: ', prepped_tx.fee);
     console.log('submitting tx...');

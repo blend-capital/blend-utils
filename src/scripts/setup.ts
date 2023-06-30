@@ -17,14 +17,14 @@ export async function deployAndInitContracts(
 ) {
   await airdropAccount(stellarRpc, source);
 
+  console.log('Installing Blend Contracts');
   await installBackstop(stellarRpc, contracts, source);
   await installEmitter(stellarRpc, contracts, source);
   await installPoolFactory(stellarRpc, contracts, source);
-  await installToken(stellarRpc, contracts, source, 'bToken');
-  await installToken(stellarRpc, contracts, source, 'dToken');
   await installToken(stellarRpc, contracts, source, 'token');
   await installPool(stellarRpc, contracts, source);
 
+  console.log('Deploying and Initializing Tokens');
   const blnd = await deployToken(stellarRpc, contracts, source, 'token', 'BLND');
   await blnd.initialize(
     source.publicKey(),
@@ -53,13 +53,7 @@ export async function deployAndInitContracts(
       Buffer.from('WETH'),
       source
     );
-    const blndusdc = await deployToken(
-      stellarRpc,
-      contracts,
-      source,
-      'token',
-      'backstopToken'
-    );
+    const blndusdc = await deployToken(stellarRpc, contracts, source, 'token', 'backstopToken');
     await blndusdc.initialize(
       source.publicKey(),
       7,
@@ -67,10 +61,12 @@ export async function deployAndInitContracts(
       Buffer.from('BLND-USDC'),
       source
     );
+
     await deployStellarAsset(stellarRpc, contracts, source, Asset.native());
     await deployStellarAsset(stellarRpc, contracts, source, new Asset('USDC', source.publicKey()));
   }
 
+  console.log('Deploying and Initializing Blend Contracts');
   const backstop = await deployBackstop(stellarRpc, contracts, source);
   const emitter = await deployEmitter(stellarRpc, contracts, source);
   const poolFactory = await deployPoolFactory(stellarRpc, contracts, source);
@@ -80,8 +76,6 @@ export async function deployAndInitContracts(
   await emitter.initialize(source);
 
   const poolInitMeta: PoolFactory.PoolInitMeta = {
-    b_token_hash: Buffer.from(contracts.getWasmHash('bToken'), 'hex'),
-    d_token_hash: Buffer.from(contracts.getWasmHash('dToken'), 'hex'),
     backstop: contracts.getContractId('backstop'),
     blnd_id: contracts.getContractId('BLND'),
     usdc_id: contracts.getContractId('USDC'),

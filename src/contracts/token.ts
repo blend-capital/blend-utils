@@ -39,8 +39,12 @@ export async function deployStellarAsset(
   source: Keypair,
   asset: Asset
 ) {
-  const operation = createDeployStellarAssetOperation(asset, contracts);
-  await invokeStellarOperation(stellarRpc, operation, source);
+  try {
+    const operation = createDeployStellarAssetOperation(asset, contracts);
+    await invokeStellarOperation(stellarRpc, operation, source);
+  } catch (e) {
+    console.error('unable to deploy stellar asset', asset.code, e);
+  }
 }
 
 export class BlendTokenContract {
@@ -74,9 +78,7 @@ export class BlendTokenContract {
 
   public async mint(to: string, amount: bigint, source: Keypair) {
     const xdr_op = this.tokenOpBuilder.mint({ to, amount });
-    console.log(xdr_op);
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    console.log('Mint Operation Received');
     await invokeStellarOperation(this.stellarRpc, operation, source);
   }
 

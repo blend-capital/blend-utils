@@ -27,12 +27,10 @@ async function mock(stellarRpc: Server, contracts: Contracts, source: Keypair) {
     stellarRpc,
     contracts
   );
-  const oracle = new OracleContract(contracts.getContractId("oracle"), stellarRpc, contracts);
+  const oracle = new OracleContract(contracts.getContractId('oracle'), stellarRpc, contracts);
   const weth_token = new BlendTokenContract(contracts.getContractId('WETH'), stellarRpc, contracts);
   const wbtc_token = new BlendTokenContract(contracts.getContractId('WBTC'), stellarRpc, contracts);
   const usdc_token = new BlendTokenContract(contracts.getContractId('USDC'), stellarRpc, contracts);
-  const xlm = new BlendTokenContract(contracts.getContractId('XLM'), stellarRpc, contracts);
-
 
   console.log('Mint 10m to admin and transfer blnd admin to emitter');
   await blnd.mint(source.publicKey(), BigInt(10_000_000e7), source);
@@ -48,13 +46,14 @@ async function mock(stellarRpc: Server, contracts: Contracts, source: Keypair) {
     source
   );
 
-  console.log('Setup Starbridge reserves and emissions');
+  console.log('Setup Starbridge pool reserves and emissions');
   const starBridgePool = new PoolContract(
     contracts.getContractId('Starbridge'),
     stellarRpc,
     contracts
   );
-  const xlmReserveMetaData: Pool.ReserveMetadata = {
+  const xlmReserveMetaData: Pool.ReserveConfig = {
+    index: 0,
     decimals: 7,
     c_factor: 900_0000,
     l_factor: 850_0000,
@@ -71,7 +70,8 @@ async function mock(stellarRpc: Server, contracts: Contracts, source: Keypair) {
     xlmReserveMetaData,
     source
   );
-  const wethReserveMetaData: Pool.ReserveMetadata = {
+  const wethReserveMetaData: Pool.ReserveConfig = {
+    index: 1,
     decimals: 7,
     c_factor: 750_0000,
     l_factor: 750_0000,
@@ -88,7 +88,9 @@ async function mock(stellarRpc: Server, contracts: Contracts, source: Keypair) {
     wethReserveMetaData,
     source
   );
-  const wbtcReserveMetaData: Pool.ReserveMetadata = {
+
+  const wbtcReserveMetaData: Pool.ReserveConfig = {
+    index: 2,
     decimals: 7,
     c_factor: 900_0000,
     l_factor: 900_0000,
@@ -120,7 +122,7 @@ async function mock(stellarRpc: Server, contracts: Contracts, source: Keypair) {
   ];
   await starBridgePool.set_emissions_config(source.publicKey(), emissionMetadata, source);
 
-  console.log('Setup backstop for Starbridge');
+  console.log('Setup backstop for Starbridge pool');
   await backstopToken.mint(frodo.publicKey(), BigInt(1_000_000e7), source);
   await backstop.deposit(
     frodo.publicKey(),
@@ -128,7 +130,7 @@ async function mock(stellarRpc: Server, contracts: Contracts, source: Keypair) {
     BigInt(1_000_000e7),
     frodo
   );
-  await starBridgePool.update_state(source);
+  await starBridgePool.update_status(source);
   await backstop.add_reward(
     contracts.getContractId('Starbridge'),
     contracts.getContractId('Starbridge'),
@@ -145,9 +147,10 @@ async function mock(stellarRpc: Server, contracts: Contracts, source: Keypair) {
     source
   );
 
-  console.log('Setup Stellar reserves and emissions');
+  console.log('Setup Stellar pool reserves and emissions');
   const stellarPool = new PoolContract(contracts.getContractId('Stellar'), stellarRpc, contracts);
-  const stellarPoolXlmReserveMetaData: Pool.ReserveMetadata = {
+  const stellarPoolXlmReserveMetaData: Pool.ReserveConfig = {
+    index: 0,
     decimals: 7,
     c_factor: 900_0000,
     l_factor: 850_0000,
@@ -164,7 +167,8 @@ async function mock(stellarRpc: Server, contracts: Contracts, source: Keypair) {
     stellarPoolXlmReserveMetaData,
     source
   );
-  const stellarPoolUsdcReserveMetaData: Pool.ReserveMetadata = {
+  const stellarPoolUsdcReserveMetaData: Pool.ReserveConfig = {
+    index: 1,
     decimals: 7,
     c_factor: 750_0000,
     l_factor: 750_0000,
@@ -196,7 +200,7 @@ async function mock(stellarRpc: Server, contracts: Contracts, source: Keypair) {
   ];
   await stellarPool.set_emissions_config(source.publicKey(), stellarPoolEmissionMetadata, source);
 
-  console.log('Setup backstop for Stellar');
+  console.log('Setup backstop for Stellar pool');
   await backstopToken.mint(frodo.publicKey(), BigInt(1_000_000e7), source);
   await backstop.deposit(
     frodo.publicKey(),
@@ -204,7 +208,7 @@ async function mock(stellarRpc: Server, contracts: Contracts, source: Keypair) {
     BigInt(1_000_000e7),
     frodo
   );
-  await stellarPool.update_state(source);
+  await stellarPool.update_status(source);
   await backstop.add_reward(
     contracts.getContractId('Stellar'),
     contracts.getContractId('Stellar'),
@@ -238,60 +242,61 @@ async function mock(stellarRpc: Server, contracts: Contracts, source: Keypair) {
     '200000'
   );
 
+  const starbridgeRequests: Pool.Request[] = [
+    {
+      amount: BigInt(4000e7),
+      request_type: 2,
+      reserve_index: 0,
+    },
+    {
+      amount: BigInt(10e7),
+      request_type: 2,
+      reserve_index: 1,
+    },
+    {
+      amount: BigInt(1e7),
+      request_type: 4,
+      reserve_index: 1,
+    },
+  ];
   console.log('Frodo Supply tokens and borrowing from Starbridge pool');
-  await starBridgePool.supply(
-    frodo.publicKey(),
-    wbtc_token.tokenOpBuilder._contract.contractId('strkey'),
-    BigInt(1e7),
-    frodo
-  );
-  await starBridgePool.supply(
-    frodo.publicKey(),
-    weth_token.tokenOpBuilder._contract.contractId('strkey'),
-    BigInt(10e7),
-    frodo
-  );
-  await starBridgePool.supply(
-    frodo.publicKey(),
-    xlm.tokenOpBuilder._contract.contractId('strkey'),
-    BigInt(4000e7),
-    frodo
-  );
 
-  await starBridgePool.borrow(
+  await starBridgePool.submit(
     frodo.publicKey(),
-    wbtc_token.tokenOpBuilder._contract.contractId('strkey'),
-    BigInt(6e6),
     frodo.publicKey(),
+    frodo.publicKey(),
+    starbridgeRequests,
     frodo
   );
 
   console.log('Frodo Supply tokens and borrowing from Stellar pool');
-  await stellarPool.supply(
+  const stellarRequests: Pool.Request[] = [
+    {
+      amount: BigInt(10000e7),
+      request_type: 2,
+      reserve_index: 1,
+    },
+    {
+      amount: BigInt(4000e7),
+      request_type: 2,
+      reserve_index: 0,
+    },
+    {
+      amount: BigInt(5000e7),
+      request_type: 4,
+      reserve_index: 1,
+    },
+    {
+      amount: BigInt(2000),
+      request_type: 4,
+      reserve_index: 0,
+    },
+  ];
+  stellarPool.submit(
     frodo.publicKey(),
-    usdc_token.tokenOpBuilder._contract.contractId('strkey'),
-    BigInt(10_000e7),
-    frodo
-  );
-  await stellarPool.supply(
     frodo.publicKey(),
-    xlm.tokenOpBuilder._contract.contractId('strkey'),
-    BigInt(4000e7),
-    frodo
-  );
-  await stellarPool.borrow(
     frodo.publicKey(),
-    usdc_token.tokenOpBuilder._contract.contractId('strkey'),
-    BigInt(9000e7),
-    frodo.publicKey(),
-    frodo
-  );
-
-  await stellarPool.borrow(
-    frodo.publicKey(),
-    xlm.tokenOpBuilder._contract.contractId('strkey'),
-    BigInt(2000e7),
-    frodo.publicKey(),
+    stellarRequests,
     frodo
   );
 }
@@ -304,4 +309,3 @@ const stellarRpc = new Server(config.rpc, {
 const admin = config.admin;
 const bombadil = Keypair.fromSecret(admin);
 mock(stellarRpc, contracts, bombadil);
-
