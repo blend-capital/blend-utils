@@ -70,7 +70,7 @@ export class Contracts {
     if (contractId != undefined) {
       return contractId;
     } else {
-      console.error('unable to find address in config: ', contractKey);
+      console.error(`unable to find address for ${contractKey} in ${this.fileName}`);
       throw Error();
     }
   }
@@ -93,7 +93,7 @@ export class Contracts {
     if (washHash != undefined) {
       return washHash;
     } else {
-      console.error('unable to find hash in config: ', contractKey);
+      console.error(`unable to find hash for ${contractKey} in ${this.fileName}`);
       throw Error();
     }
   }
@@ -111,14 +111,14 @@ interface Env {
   rpc: string | undefined;
   passphrase: string | undefined;
   friendbot: string | undefined;
-  secretkey: string | undefined;
+  admin: string | undefined;
 }
 
 interface Config {
   rpc: string;
   passphrase: string;
   friendbot: string;
-  secretkey: string;
+  admin: string;
 }
 
 function getEnv(): Env {
@@ -126,7 +126,7 @@ function getEnv(): Env {
     rpc: process.env.rpc,
     passphrase: process.env.passphrase,
     friendbot: process.env.friendbot,
-    secretkey: process.env.secretkey,
+    admin: process.env.admin,
   };
 }
 
@@ -139,6 +139,14 @@ function getConfig(env: Env): Config {
   return env as Config;
 }
 
+export function getUser(user: string): string {
+  const userSecretKey = process.env[user];
+  if (userSecretKey != undefined) {
+    return userSecretKey;
+  } else {
+    throw new Error(`${user} secret key not found in .env`);
+  }
+}
 const env = getEnv();
 const config = getConfig(env);
 

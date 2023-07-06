@@ -1,14 +1,14 @@
-import { Contract, Keypair, Server, xdr } from 'soroban-client';
+import { Keypair, Server, xdr,  } from 'soroban-client';
 import {
   createDeployOperation,
   createInstallOperation,
   invokeStellarOperation,
 } from '../utils/contract';
 import { Contracts } from '../utils/config';
-
+import { Oracle } from "blend-sdk"
 export interface AssetPrices {
   price: bigint;
-  assetKey: string;
+  assetId: string;
 }
 
 export async function installMockOracle(stellarRpc: Server, contracts: Contracts, source: Keypair) {
@@ -24,26 +24,23 @@ export async function deployMockOracle(stellarRpc: Server, contracts: Contracts,
   console.log('DONE: deploy mock oracle\n');
 }
 
-export async function setAssetPrices(
-  stellarRpc: Server,
-  contracts: Contracts,
-  assetPrices: AssetPrices[],
-  source: Keypair
-) {
-  const contract = new Contract(contracts.getContractId('oracle'));
-  console.log('START: setting asset prices for oracle');
-  for (const asset of assetPrices) {
-    const operation = contract.call(
-      'set_price',
-      xdr.ScVal.scvAddress(
-        xdr.ScAddress.scAddressTypeContract(
-          Buffer.from(contracts.getContractId(asset.assetKey), 'hex')
-        )
-      ),
-      xdr.ScVal.scvU64(xdr.Uint64.fromString(asset.price.toString()))
-    );
-    invokeStellarOperation(stellarRpc, operation, source);
-    console.log('set price for ' + asset.assetKey + ' to ' + asset.price.toString());
+export class OracleContract {
+  stellarRpc: Server;
+  contracts: Contracts;
+  oracleOpBuilder: Oracle.OracleOpBuilder;
+
+  constructor(address: string, stellarRpc: Server, contracts: Contracts) {
+    this.stellarRpc = stellarRpc;
+    this.contracts = contracts;
+    this.oracleOpBuilder = new Oracle.OracleOpBuilder(address);
   }
-  console.log('DONE: asset prices set\n');
+
+
+  public async setAssetPrices(assets: AssetPrices[], source: Keypair) {
+    for (const assetPrice of assets)  {
+      const xdr_op = this.oracleOpBuilder.set_price({asset: assetPrice.assetId, price: assetPrice.price});
+      const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
+      await invokeStellarOperation(this.stellarRpc, operation, source);
+    }
+  }
 }

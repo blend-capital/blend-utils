@@ -7,7 +7,7 @@ import {
 } from '../utils/contract';
 import { Pool } from 'blend-sdk';
 
-export async function deployLendingPool(
+export async function deployPool(
   stellarRpc: Server,
   contracts: Contracts,
   source: Keypair,
@@ -17,11 +17,7 @@ export async function deployLendingPool(
   await invokeStellarOperation(stellarRpc, operation, source);
   return new PoolContract(contracts.getContractId(poolName), stellarRpc, contracts);
 }
-export async function installLendingPool(
-  stellarRpc: Server,
-  contracts: Contracts,
-  source: Keypair
-) {
+export async function installPool(stellarRpc: Server, contracts: Contracts, source: Keypair) {
   const operation = createInstallOperation('lendingPool', contracts);
   await invokeStellarOperation(stellarRpc, operation, source);
 }

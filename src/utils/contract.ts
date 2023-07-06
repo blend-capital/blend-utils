@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { Asset, Keypair, Operation, Server, hash, xdr } from 'soroban-client';
+import { Asset, Contract, Keypair, Operation, Server, hash, xdr } from 'soroban-client';
 import { Contracts } from './config.js';
 import config from './config';
 import { readFileSync } from 'fs';
@@ -68,9 +68,9 @@ export function createDeployOperation(
       salt: contractIdSalt,
     })
   );
-  const contractId = hash(preimage.toXDR());
+  const contractId = new Contract(hash(preimage.toXDR()).toString('hex')).contractId('strkey');
 
-  contracts.setContractId(contractKey, contractId.toString('hex'));
+  contracts.setContractId(contractKey, contractId);
   const wasmHash = Buffer.from(contracts.getWasmHash(wasmKey), 'hex');
 
   const deployFunction = xdr.HostFunctionArgs.hostFunctionTypeCreateContract(
@@ -100,9 +100,9 @@ export function createDeployStellarAssetOperation(asset: Asset, contracts: Contr
       asset: xdrAsset,
     })
   );
-  const contractId = hash(preimage.toXDR());
+  const contractId = new Contract(hash(preimage.toXDR()).toString('hex')).contractId('strkey');
 
-  contracts.setContractId(asset.code, contractId.toString('hex'));
+  contracts.setContractId(asset.code, contractId);
 
   const deployFunction = xdr.HostFunctionArgs.hostFunctionTypeCreateContract(
     new xdr.CreateContractArgs({
@@ -132,15 +132,12 @@ export async function invokeStellarOperation(
  * @param {Server} stellarRpc
  * @param {contracts} contracts
  */
-export async function airdropAccounts(stellarRpc: Server) {
-  const pubKey = Keypair.fromSecret(config.secretkey).publicKey();
+export async function airdropAccount(stellarRpc: Server, user: Keypair) {
   try {
     console.log('Start funding');
-    await stellarRpc.requestAirdrop(pubKey, config.friendbot);
-    console.log('Funded: ', pubKey);
+    await stellarRpc.requestAirdrop(user.publicKey(), config.friendbot);
+    console.log('Funded: ', user.publicKey());
   } catch (e) {
-    console.log(pubKey, ' already funded');
+    console.log(user.publicKey(), ' already funded');
   }
-
-  console.log('All users airdropped\n');
 }

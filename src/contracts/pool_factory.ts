@@ -1,5 +1,5 @@
-import { Keypair, Server, xdr } from 'soroban-client';
-import { Contracts } from '../utils/config';
+import { Contract, Keypair, Server, hash, xdr } from 'soroban-client';
+import config, { Contracts } from '../utils/config';
 import {
   createDeployOperation,
   createInstallOperation,
@@ -54,5 +54,18 @@ export class PoolFactoryContract {
     });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(this.stellarRpc, operation, source);
+
+    const networkId = hash(Buffer.from(config.passphrase));
+    const preimage = xdr.HashIdPreimage.envelopeTypeContractIdFromContract(
+      new xdr.HashIdPreimageContractId({
+        networkId: networkId,
+        contractId: Buffer.from(this.poolFactoryOpsBuilder._contract.contractId('hex'), 'hex'),
+        salt: salt,
+      })
+    );
+    const contractId = new Contract(hash(preimage.toXDR()).toString('hex')).contractId('strkey');
+
+    this.contracts.setContractId(name, contractId);
+    this.contracts.writeToFile();
   }
 }
