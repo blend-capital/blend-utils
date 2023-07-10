@@ -1,34 +1,32 @@
-import { Keypair, Server, xdr } from 'soroban-client';
+import { Keypair, xdr } from 'soroban-client';
 import {
   createDeployOperation,
   createInstallOperation,
   invokeStellarOperation,
 } from '../utils/contract';
-import { Contracts } from '../utils/config';
+import { AddressBook } from '../utils/address_book';
 import { Oracle } from 'blend-sdk';
 export interface AssetPrices {
   price: bigint;
   assetId: string;
 }
 
-export async function installMockOracle(stellarRpc: Server, contracts: Contracts, source: Keypair) {
+export async function installMockOracle(contracts: AddressBook, source: Keypair) {
   const operation = createInstallOperation('oracle', contracts);
-  await invokeStellarOperation(stellarRpc, operation, source);
+  await invokeStellarOperation(operation, source);
 }
 
-export async function deployMockOracle(stellarRpc: Server, contracts: Contracts, source: Keypair) {
+export async function deployMockOracle(contracts: AddressBook, source: Keypair) {
   const operation = createDeployOperation('oracle', 'oracle', contracts, source);
-  await invokeStellarOperation(stellarRpc, operation, source);
+  await invokeStellarOperation(operation, source);
   contracts.writeToFile();
 }
 
 export class OracleContract {
-  stellarRpc: Server;
-  contracts: Contracts;
+  contracts: AddressBook;
   oracleOpBuilder: Oracle.OracleOpBuilder;
 
-  constructor(address: string, stellarRpc: Server, contracts: Contracts) {
-    this.stellarRpc = stellarRpc;
+  constructor(address: string, contracts: AddressBook) {
     this.contracts = contracts;
     this.oracleOpBuilder = new Oracle.OracleOpBuilder(address);
   }
@@ -40,7 +38,7 @@ export class OracleContract {
         price: assetPrice.price,
       });
       const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-      await invokeStellarOperation(this.stellarRpc, operation, source);
+      await invokeStellarOperation(operation, source);
     }
   }
 }
