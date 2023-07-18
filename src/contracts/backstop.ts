@@ -76,31 +76,19 @@ export class BackstopContract {
   }
 
   public async balance(user: string, pool_address: string, source: Keypair) {
-    const xdr_op = this.backstopOpBuilder.balance({ pool: pool_address, user });
+    const xdr_op = this.backstopOpBuilder.user_balance({ pool: pool_address, user });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
   }
 
-  public async withdrawal_queue(user: string, pool_address: string, source: Keypair) {
-    const xdr_op = this.backstopOpBuilder.withdrawal_queue({ pool: pool_address, user });
-    const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(operation, source);
-  }
-
-  public async distribute(source: Keypair) {
-    const xdr_op = this.backstopOpBuilder.distribute();
+  public async update_emission_cycle(source: Keypair) {
+    const xdr_op = this.backstopOpBuilder.update_emission_cycle();
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
   }
 
   public async add_reward(to_add: string, to_remove: string, source: Keypair) {
     const xdr_op = this.backstopOpBuilder.add_reward({ to_add, to_remove });
-    const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(operation, source);
-  }
-
-  public async pool_claim(pool_address: string, to: string, amount: bigint, source: Keypair) {
-    const xdr_op = this.backstopOpBuilder.pool_claim({ pool_address, to, amount });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
   }
