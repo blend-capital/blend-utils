@@ -52,11 +52,17 @@ export class PoolFactoryContract {
     await invokeStellarOperation(operation, source);
 
     const networkId = hash(Buffer.from(config.passphrase));
-    const preimage = xdr.HashIdPreimage.envelopeTypeContractIdFromContract(
+    const preimage = xdr.HashIdPreimage.envelopeTypeContractId(
       new xdr.HashIdPreimageContractId({
         networkId: networkId,
-        contractId: Buffer.from(this.poolFactoryOpsBuilder._contract.contractId('hex'), 'hex'),
-        salt: salt,
+        contractIdPreimage: xdr.ContractIdPreimage.contractIdPreimageFromAddress(
+          new xdr.ContractIdPreimageFromAddress({
+            address: xdr.ScAddress.scAddressTypeContract(
+              Buffer.from(this.poolFactoryOpsBuilder._contract.contractId('hex'), 'hex')
+            ),
+            salt: salt,
+          })
+        ),
       })
     );
     const contractId = new Contract(hash(preimage.toXDR()).toString('hex')).contractId('strkey');
