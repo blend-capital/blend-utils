@@ -49,8 +49,8 @@ export class BlendTokenContract {
   public async initialize(
     admin: string,
     decimal: number,
-    name: Buffer,
-    symbol: Buffer,
+    name: string,
+    symbol: string,
     source: Keypair
   ) {
     const xdr_op = this.tokenOpBuilder.initialize({ admin, decimal, name, symbol });

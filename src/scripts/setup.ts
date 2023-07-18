@@ -22,39 +22,21 @@ export async function deployAndInitContracts(addressBook: AddressBook) {
 
   console.log('Deploying and Initializing Tokens');
   const blnd = await deployToken(addressBook, config.admin, 'token', 'BLND');
-  await blnd.initialize(
-    config.admin.publicKey(),
-    7,
-    Buffer.from('BLND Token'),
-    Buffer.from('BLND'),
-    config.admin
-  );
+  await blnd.initialize(config.admin.publicKey(), 7, 'BLND Token', 'BLND', config.admin);
 
   if (network != 'mainnet') {
     await installMockOracle(addressBook, config.admin);
     await deployMockOracle(addressBook, config.admin);
     const wbtc = await deployToken(addressBook, config.admin, 'token', 'WBTC');
-    await wbtc.initialize(
-      config.admin.publicKey(),
-      7,
-      Buffer.from('WBTC Token'),
-      Buffer.from('WBTC'),
-      config.admin
-    );
+    await wbtc.initialize(config.admin.publicKey(), 7, 'WBTC Token', 'WBTC', config.admin);
     const weth = await deployToken(addressBook, config.admin, 'token', 'WETH');
-    await weth.initialize(
-      config.admin.publicKey(),
-      7,
-      Buffer.from('WETH Token'),
-      Buffer.from('WETH'),
-      config.admin
-    );
+    await weth.initialize(config.admin.publicKey(), 7, 'WETH Token', 'WETH', config.admin);
     const blndusdc = await deployToken(addressBook, config.admin, 'token', 'backstopToken');
     await blndusdc.initialize(
       config.admin.publicKey(),
       7,
-      Buffer.from('BLND-USDC Token'),
-      Buffer.from('BLND-USDC'),
+      'BLND-USDC Token',
+      'BLND-USDC',
       config.admin
     );
 
@@ -86,4 +68,5 @@ export async function deployAndInitContracts(addressBook: AddressBook) {
 
 const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
+console.log(config.admin.publicKey());
 await deployAndInitContracts(addressBook);

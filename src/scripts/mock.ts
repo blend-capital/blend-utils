@@ -219,7 +219,7 @@ async function mock(addressBook: AddressBook) {
   );
 
   console.log('Distribute to pools');
-  await backstop.distribute(config.admin);
+  await backstop.update_emission_cycle(config.admin);
   await starBridgePool.update_emissions(config.admin);
   await stellarPool.update_emissions(config.admin);
 
@@ -247,11 +247,6 @@ async function mock(addressBook: AddressBook) {
 
   const starbridgeRequests: Pool.Request[] = [
     {
-      amount: BigInt(4000e7),
-      request_type: 2,
-      reserve_index: 0,
-    },
-    {
       amount: BigInt(10e7),
       request_type: 2,
       reserve_index: 1,
@@ -263,7 +258,6 @@ async function mock(addressBook: AddressBook) {
     },
   ];
   console.log('Frodo Supply tokens and borrowing from Starbridge pool');
-
   await starBridgePool.submit(
     frodo.publicKey(),
     frodo.publicKey(),
