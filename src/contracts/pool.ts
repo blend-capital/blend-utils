@@ -45,24 +45,14 @@ export class PoolContract {
     await invokeStellarOperation(operation, source);
   }
 
-  public async init_reserve(
-    admin: string,
-    asset: string,
-    config: Pool.ReserveConfig,
-    source: Keypair
-  ) {
-    const xdr_op = this.poolOpBuilder.init_reserve({ admin, asset, config });
+  public async init_reserve(asset: string, config: Pool.ReserveConfig, source: Keypair) {
+    const xdr_op = this.poolOpBuilder.init_reserve({ asset, config });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
   }
 
-  public async update_reserve(
-    admin: string,
-    asset: string,
-    config: Pool.ReserveConfig,
-    source: Keypair
-  ) {
-    const xdr_op = this.poolOpBuilder.update_reserve({ admin, asset, config });
+  public async update_reserve(asset: string, config: Pool.ReserveConfig, source: Keypair) {
+    const xdr_op = this.poolOpBuilder.update_reserve({ asset, config });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
   }
@@ -91,8 +81,8 @@ export class PoolContract {
     await invokeStellarOperation(operation, source);
   }
 
-  public async set_status(admin: string, pool_status: number, source: Keypair) {
-    const xdr_op = this.poolOpBuilder.set_status({ admin, pool_status });
+  public async set_status(pool_status: number, source: Keypair) {
+    const xdr_op = this.poolOpBuilder.set_status({ pool_status });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
   }
@@ -104,11 +94,10 @@ export class PoolContract {
   }
 
   public async set_emissions_config(
-    admin: string,
     res_emission_metadata: Pool.ReserveEmissionMetadata[],
     source: Keypair
   ) {
-    const xdr_op = this.poolOpBuilder.set_emissions_config({ admin, res_emission_metadata });
+    const xdr_op = this.poolOpBuilder.set_emissions_config({ res_emission_metadata });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
   }

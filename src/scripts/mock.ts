@@ -1,4 +1,4 @@
-import { Asset } from 'soroban-client';
+import { Asset, xdr } from 'soroban-client';
 import { BackstopContract } from '../contracts/backstop';
 import { BlendTokenContract } from '../contracts/token';
 import { PoolFactoryContract } from '../contracts/pool_factory';
@@ -6,13 +6,13 @@ import { OracleContract } from '../contracts/oracle';
 import { airdropAccount } from '../utils/contract';
 import { PoolContract } from '../contracts/pool';
 import { randomBytes } from 'crypto';
-import { Pool } from 'blend-sdk';
+import { Backstop, Pool } from 'blend-sdk';
 import { config } from '../utils/env_config';
 import { AddressBook } from '../utils/address_book';
+import { Durability } from 'soroban-client/lib/server';
 
 async function mock(addressBook: AddressBook) {
   const frodo = config.getUser('FRODO');
-
   await airdropAccount(frodo);
 
   // Initialize Contracts
@@ -60,7 +60,6 @@ async function mock(addressBook: AddressBook) {
     reactivity: 1000,
   };
   await starBridgePool.init_reserve(
-    config.admin.publicKey(),
     addressBook.getContractId('XLM'),
     xlmReserveMetaData,
     config.admin
@@ -78,7 +77,6 @@ async function mock(addressBook: AddressBook) {
     reactivity: 1000,
   };
   await starBridgePool.init_reserve(
-    config.admin.publicKey(),
     addressBook.getContractId('WETH'),
     wethReserveMetaData,
     config.admin
@@ -97,7 +95,6 @@ async function mock(addressBook: AddressBook) {
     reactivity: 1000,
   };
   await starBridgePool.init_reserve(
-    config.admin.publicKey(),
     addressBook.getContractId('WBTC'),
     wbtcReserveMetaData,
     config.admin
@@ -115,11 +112,7 @@ async function mock(addressBook: AddressBook) {
       share: BigInt(0.5e7), // 50%
     },
   ];
-  await starBridgePool.set_emissions_config(
-    config.admin.publicKey(),
-    emissionMetadata,
-    config.admin
-  );
+  await starBridgePool.set_emissions_config(emissionMetadata, config.admin);
 
   console.log('Setup backstop for Starbridge pool');
   await backstopToken.mint(frodo.publicKey(), BigInt(1_000_000e7), config.admin);
@@ -161,7 +154,6 @@ async function mock(addressBook: AddressBook) {
     reactivity: 1000,
   };
   await stellarPool.init_reserve(
-    config.admin.publicKey(),
     addressBook.getContractId('XLM'),
     stellarPoolXlmReserveMetaData,
     config.admin
@@ -179,7 +171,6 @@ async function mock(addressBook: AddressBook) {
     reactivity: 1000,
   };
   await stellarPool.init_reserve(
-    config.admin.publicKey(),
     addressBook.getContractId('USDC'),
     stellarPoolUsdcReserveMetaData,
     config.admin
@@ -197,11 +188,7 @@ async function mock(addressBook: AddressBook) {
       share: BigInt(0.3e7), // 50%
     },
   ];
-  await stellarPool.set_emissions_config(
-    config.admin.publicKey(),
-    stellarPoolEmissionMetadata,
-    config.admin
-  );
+  await stellarPool.set_emissions_config(stellarPoolEmissionMetadata, config.admin);
 
   console.log('Setup backstop for Stellar pool');
   await backstopToken.mint(frodo.publicKey(), BigInt(1_000_000e7), config.admin);
@@ -289,13 +276,32 @@ async function mock(addressBook: AddressBook) {
       reserve_index: 0,
     },
   ];
-  stellarPool.submit(
+  await stellarPool.submit(
     frodo.publicKey(),
     frodo.publicKey(),
     frodo.publicKey(),
     stellarRequests,
     frodo
   );
+
+  await backstop.queue_withdrawal(
+    frodo.publicKey(),
+    addressBook.getContractId('Starbridge'),
+    BigInt(1000e7),
+    frodo
+  );
+
+  let q4w_datakey = Backstop.BackstopDataKeyToXDR({
+    tag: 'UserBalance',
+    values: [{ pool: addressBook.getContractId('Starbridge'), user: frodo.publicKey() }],
+  });
+  q4w_datakey = xdr.ScVal.fromXDR(q4w_datakey.toXDR());
+  const q4w_dataEntry = await config.rpc.getContractData(
+    backstop.backstopOpBuilder._contract.contractId('strkey'),
+    q4w_datakey,
+    Durability.Persistent
+  );
+  console.log(Backstop.UserBalanceFromXDR(q4w_dataEntry.xdr));
 }
 
 const network = process.argv[2];
