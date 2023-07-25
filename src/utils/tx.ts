@@ -7,7 +7,6 @@ type txStatus = SorobanRpc.SendTransactionStatus | SorobanRpc.GetTransactionStat
 export async function signAndSubmitTransaction(tx: Transaction, source: Keypair) {
   try {
     const prepped_tx = await config.rpc.prepareTransaction(tx, config.passphrase);
-    console.log('tx prepped');
     prepped_tx.sign(source);
     console.log('fee: ', prepped_tx.fee);
     console.log('submitting tx...');
