@@ -1,4 +1,4 @@
-import { Asset, xdr } from 'soroban-client';
+import { Asset } from 'soroban-client';
 import { BackstopContract } from '../contracts/backstop';
 import { BlendTokenContract } from '../contracts/token';
 import { PoolFactoryContract } from '../contracts/pool_factory';
@@ -6,10 +6,9 @@ import { OracleContract } from '../contracts/oracle';
 import { airdropAccount } from '../utils/contract';
 import { PoolContract } from '../contracts/pool';
 import { randomBytes } from 'crypto';
-import { Backstop, Pool } from 'blend-sdk';
+import { Pool } from 'blend-sdk';
 import { config } from '../utils/env_config';
 import { AddressBook } from '../utils/address_book';
-import { Durability } from 'soroban-client/lib/server';
 
 async function mock(addressBook: AddressBook) {
   const frodo = config.getUser('FRODO');
@@ -290,18 +289,6 @@ async function mock(addressBook: AddressBook) {
     BigInt(1000e7),
     frodo
   );
-
-  let q4w_datakey = Backstop.BackstopDataKeyToXDR({
-    tag: 'UserBalance',
-    values: [{ pool: addressBook.getContractId('Starbridge'), user: frodo.publicKey() }],
-  });
-  q4w_datakey = xdr.ScVal.fromXDR(q4w_datakey.toXDR());
-  const q4w_dataEntry = await config.rpc.getContractData(
-    backstop.backstopOpBuilder._contract.contractId('strkey'),
-    q4w_datakey,
-    Durability.Persistent
-  );
-  console.log(Backstop.UserBalanceFromXDR(q4w_dataEntry.xdr));
 }
 
 const network = process.argv[2];
