@@ -235,12 +235,12 @@ async function mock(addressBook: AddressBook) {
     {
       amount: BigInt(10e7),
       request_type: 2,
-      reserve_index: 1,
+      address: addressBook.getContractId('WETH'),
     },
     {
       amount: BigInt(1e7),
       request_type: 4,
-      reserve_index: 1,
+      address: addressBook.getContractId('WETH'),
     },
   ];
   console.log('Frodo Supply tokens and borrowing from Starbridge pool');
@@ -257,22 +257,22 @@ async function mock(addressBook: AddressBook) {
     {
       amount: BigInt(10000e7),
       request_type: 2,
-      reserve_index: 1,
+      address: addressBook.getContractId('USDC'),
     },
     {
       amount: BigInt(4000e7),
       request_type: 2,
-      reserve_index: 0,
+      address: addressBook.getContractId('XLM'),
     },
     {
       amount: BigInt(5000e7),
       request_type: 4,
-      reserve_index: 1,
+      address: addressBook.getContractId('USDC'),
     },
     {
       amount: BigInt(2000),
       request_type: 4,
-      reserve_index: 0,
+      address: addressBook.getContractId('XLM'),
     },
   ];
   await stellarPool.submit(

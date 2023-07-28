@@ -10,7 +10,7 @@ import { createTxBuilder, signAndSubmitTransaction } from './tx';
 // Relative paths from __dirname
 const CONTRACT_REL_PATH: object = {
   token: '../../../blend-contracts/soroban_token_contract.wasm',
-  oracle: '../../../blend-contracts/target/wasm32-unknown-unknown/release/mock_blend_oracle.wasm',
+  oracle: '../../../blend-contracts/target/wasm32-unknown-unknown/release/mock_oracle.wasm',
   emitter: '../../../blend-contracts/target/wasm32-unknown-unknown/release/emitter.wasm',
   poolFactory: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/pool_factory.wasm',
   backstop: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/backstop_module.wasm',
