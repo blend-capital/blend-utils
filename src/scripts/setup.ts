@@ -1,5 +1,5 @@
-import { Asset, Keypair, Server } from 'soroban-client';
-import config, { Contracts } from '../utils/config';
+import { Asset } from 'soroban-client';
+import { AddressBook } from '../utils/address_book';
 import { deployBackstop, installBackstop } from '../contracts/backstop';
 import { installToken, deployToken, deployStellarAsset } from '../contracts/token';
 import { deployEmitter, installEmitter } from '../contracts/emitter';
@@ -8,97 +8,65 @@ import { deployMockOracle, installMockOracle } from '../contracts/oracle';
 import { PoolFactory } from 'blend-sdk';
 import { airdropAccount } from '../utils/contract';
 import { installPool } from '../contracts/pool';
+import { config } from '../utils/env_config';
 
-export async function deployAndInitContracts(
-  stellarRpc: Server,
-  contracts: Contracts,
-  network: string,
-  source: Keypair
-) {
-  await airdropAccount(stellarRpc, source);
+export async function deployAndInitContracts(addressBook: AddressBook) {
+  await airdropAccount(config.admin);
 
-  await installBackstop(stellarRpc, contracts, source);
-  await installEmitter(stellarRpc, contracts, source);
-  await installPoolFactory(stellarRpc, contracts, source);
-  await installToken(stellarRpc, contracts, source, 'bToken');
-  await installToken(stellarRpc, contracts, source, 'dToken');
-  await installToken(stellarRpc, contracts, source, 'token');
-  await installPool(stellarRpc, contracts, source);
+  console.log('Installing Blend Contracts');
+  await installBackstop(addressBook, config.admin);
+  await installEmitter(addressBook, config.admin);
+  await installPoolFactory(addressBook, config.admin);
+  await installToken(addressBook, config.admin, 'token');
+  await installPool(addressBook, config.admin);
 
-  const blnd = await deployToken(stellarRpc, contracts, source, 'token', 'BLND');
-  await blnd.initialize(
-    source.publicKey(),
-    7,
-    Buffer.from('BLND Token'),
-    Buffer.from('BLND'),
-    source
-  );
+  console.log('Deploying and Initializing Tokens');
+  const blnd = await deployToken(addressBook, config.admin, 'token', 'BLND');
+  await blnd.initialize(config.admin.publicKey(), 7, 'BLND Token', 'BLND', config.admin);
 
-  if (network == 'standalone' || network == 'futurenet') {
-    await installMockOracle(stellarRpc, contracts, source);
-    await deployMockOracle(stellarRpc, contracts, source);
-    const wbtc = await deployToken(stellarRpc, contracts, source, 'token', 'WBTC');
-    await wbtc.initialize(
-      source.publicKey(),
-      7,
-      Buffer.from('WBTC Token'),
-      Buffer.from('WBTC'),
-      source
-    );
-    const weth = await deployToken(stellarRpc, contracts, source, 'token', 'WETH');
-    await weth.initialize(
-      source.publicKey(),
-      7,
-      Buffer.from('WETH Token'),
-      Buffer.from('WETH'),
-      source
-    );
-    const blndusdc = await deployToken(
-      stellarRpc,
-      contracts,
-      source,
-      'token',
-      'backstopToken'
-    );
+  if (network != 'mainnet') {
+    await installMockOracle(addressBook, config.admin);
+    await deployMockOracle(addressBook, config.admin);
+    const wbtc = await deployToken(addressBook, config.admin, 'token', 'WBTC');
+    await wbtc.initialize(config.admin.publicKey(), 7, 'WBTC Token', 'WBTC', config.admin);
+    const weth = await deployToken(addressBook, config.admin, 'token', 'WETH');
+    await weth.initialize(config.admin.publicKey(), 7, 'WETH Token', 'WETH', config.admin);
+    const blndusdc = await deployToken(addressBook, config.admin, 'token', 'backstopToken');
     await blndusdc.initialize(
-      source.publicKey(),
+      config.admin.publicKey(),
       7,
-      Buffer.from('BLND-USDC Token'),
-      Buffer.from('BLND-USDC'),
-      source
+      'BLND-USDC Token',
+      'BLND-USDC',
+      config.admin
     );
-    await deployStellarAsset(stellarRpc, contracts, source, Asset.native());
-    await deployStellarAsset(stellarRpc, contracts, source, new Asset('USDC', source.publicKey()));
+
+    await deployStellarAsset(addressBook, config.admin, Asset.native());
+    await deployStellarAsset(
+      addressBook,
+      config.admin,
+      new Asset('USDC', config.admin.publicKey())
+    );
   }
 
-  const backstop = await deployBackstop(stellarRpc, contracts, source);
-  const emitter = await deployEmitter(stellarRpc, contracts, source);
-  const poolFactory = await deployPoolFactory(stellarRpc, contracts, source);
-  contracts.writeToFile();
+  console.log('Deploying and Initializing Blend addressBook');
+  const backstop = await deployBackstop(addressBook, config.admin);
+  const emitter = await deployEmitter(addressBook, config.admin);
+  const poolFactory = await deployPoolFactory(addressBook, config.admin);
+  addressBook.writeToFile();
 
-  await backstop.initialize(source);
-  await emitter.initialize(source);
+  await backstop.initialize(config.admin);
+  await emitter.initialize(config.admin);
 
   const poolInitMeta: PoolFactory.PoolInitMeta = {
-    b_token_hash: Buffer.from(contracts.getWasmHash('bToken'), 'hex'),
-    d_token_hash: Buffer.from(contracts.getWasmHash('dToken'), 'hex'),
-    backstop: contracts.getContractId('backstop'),
-    blnd_id: contracts.getContractId('BLND'),
-    usdc_id: contracts.getContractId('USDC'),
-    pool_hash: Buffer.from(contracts.getWasmHash('lendingPool'), 'hex'),
+    backstop: addressBook.getContractId('backstop'),
+    blnd_id: addressBook.getContractId('BLND'),
+    usdc_id: addressBook.getContractId('USDC'),
+    pool_hash: Buffer.from(addressBook.getWasmHash('lendingPool'), 'hex'),
   };
-  await poolFactory.initialize(poolInitMeta, source);
+  await poolFactory.initialize(poolInitMeta, config.admin);
 }
 
 const network = process.argv[2];
-const contracts = Contracts.loadFromFile(network);
-const stellarRpc = new Server(config.rpc, {
-  allowHttp: true,
-});
-const admin = config.admin;
-if (admin === undefined) {
-  throw Error('Error: env does not contain admin secret key');
-} else {
-  const bombadil = Keypair.fromSecret(admin);
-  deployAndInitContracts(stellarRpc, contracts, network, bombadil);
-}
+const addressBook = AddressBook.loadFromFile(network);
+console.log(config.admin.publicKey());
+await deployAndInitContracts(addressBook);

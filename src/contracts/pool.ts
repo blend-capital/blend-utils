@@ -1,5 +1,5 @@
-import { Keypair, Server, xdr } from 'soroban-client';
-import { Contracts } from '../utils/config';
+import { Keypair, xdr } from 'soroban-client';
+import { AddressBook } from '../utils/address_book';
 import {
   createDeployOperation,
   createInstallOperation,
@@ -7,36 +7,29 @@ import {
 } from '../utils/contract';
 import { Pool } from 'blend-sdk';
 
-export async function deployPool(
-  stellarRpc: Server,
-  contracts: Contracts,
-  source: Keypair,
-  poolName: string
-) {
+export async function deployPool(contracts: AddressBook, source: Keypair, poolName: string) {
   const operation = createDeployOperation(poolName, 'lendingPool', contracts, source);
-  await invokeStellarOperation(stellarRpc, operation, source);
-  return new PoolContract(contracts.getContractId(poolName), stellarRpc, contracts);
+  await invokeStellarOperation(operation, source);
+  return new PoolContract(contracts.getContractId(poolName), contracts);
 }
-export async function installPool(stellarRpc: Server, contracts: Contracts, source: Keypair) {
+export async function installPool(contracts: AddressBook, source: Keypair) {
   const operation = createInstallOperation('lendingPool', contracts);
-  await invokeStellarOperation(stellarRpc, operation, source);
+  await invokeStellarOperation(operation, source);
 }
 
 export class PoolContract {
   poolOpBuilder: Pool.PoolOpBuilder;
-  stellarRpc: Server;
-  contracts: Contracts;
-  constructor(address: string, stellarRpc: Server, contracts: Contracts) {
+  contracts: AddressBook;
+
+  constructor(address: string, contracts: AddressBook) {
     this.poolOpBuilder = new Pool.PoolOpBuilder(address);
-    this.stellarRpc = stellarRpc;
     this.contracts = contracts;
   }
 
   public async initialize(admin: string, name: string, bstop_rate: bigint, source: Keypair) {
     const oracle = this.contracts.getContractId('oracle');
     const backstop_id = this.contracts.getContractId('backstop');
-    const b_token_hash = Buffer.from(this.contracts.getWasmHash('bToken'));
-    const d_token_hash = Buffer.from(this.contracts.getWasmHash('dToken'));
+
     const blnd_id = this.contracts.getContractId('BLND');
     const usdc_id = this.contracts.getContractId('USDC');
     const xdr_op = this.poolOpBuilder.initialize({
@@ -45,105 +38,74 @@ export class PoolContract {
       oracle,
       bstop_rate,
       backstop_id,
-      b_token_hash,
-      d_token_hash,
       blnd_id,
       usdc_id,
     });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
+    await invokeStellarOperation(operation, source);
   }
 
-  public async init_reserve(
-    admin: string,
-    asset: string,
-    metadata: Pool.ReserveMetadata,
-    source: Keypair
-  ) {
-    const xdr_op = this.poolOpBuilder.init_reserve({ admin, asset, metadata });
+  public async init_reserve(asset: string, config: Pool.ReserveConfig, source: Keypair) {
+    const xdr_op = this.poolOpBuilder.init_reserve({ asset, config });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
+    await invokeStellarOperation(operation, source);
   }
 
-  public async update_reserve(
-    admin: string,
-    asset: string,
-    metadata: Pool.ReserveMetadata,
-    source: Keypair
-  ) {
-    const xdr_op = this.poolOpBuilder.update_reserve({ admin, asset, metadata });
+  public async update_reserve(asset: string, config: Pool.ReserveConfig, source: Keypair) {
+    const xdr_op = this.poolOpBuilder.update_reserve({ asset, config });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
+    await invokeStellarOperation(operation, source);
   }
 
-  public async supply(from: string, asset: string, amount: bigint, source: Keypair) {
-    const xdr_op = this.poolOpBuilder.supply({ from, asset, amount });
-    const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
-  }
-
-  public async withdraw(from: string, asset: string, amount: bigint, to: string, source: Keypair) {
-    const xdr_op = this.poolOpBuilder.withdraw({ from, asset, amount, to });
-    const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
-  }
-
-  public async borrow(from: string, asset: string, amount: bigint, to: string, source: Keypair) {
-    const xdr_op = this.poolOpBuilder.borrow({ from, asset, amount, to });
-    const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
-  }
-
-  public async repay(
+  public async submit(
     from: string,
-    asset: string,
-    amount: bigint,
-    on_behalf_of: string,
+    spender: string,
+    to: string,
+    requests: Pool.Request[],
     source: Keypair
   ) {
-    const xdr_op = this.poolOpBuilder.repay({ from, asset, amount, on_behalf_of });
+    const xdr_op = this.poolOpBuilder.submit({ from, spender, to, requests });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
+    await invokeStellarOperation(operation, source);
   }
 
   public async bad_debt(user: string, source: Keypair) {
     const xdr_op = this.poolOpBuilder.bad_debt({ user });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
+    await invokeStellarOperation(operation, source);
   }
 
-  public async update_state(source: Keypair) {
-    const xdr_op = this.poolOpBuilder.update_state();
+  public async update_status(source: Keypair) {
+    const xdr_op = this.poolOpBuilder.update_status();
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
+    await invokeStellarOperation(operation, source);
   }
 
-  public async set_status(admin: string, pool_status: number, source: Keypair) {
-    const xdr_op = this.poolOpBuilder.set_status({ admin, pool_status });
+  public async set_status(pool_status: number, source: Keypair) {
+    const xdr_op = this.poolOpBuilder.set_status({ pool_status });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
+    await invokeStellarOperation(operation, source);
   }
 
   public async update_emissions(source: Keypair) {
     const xdr_op = this.poolOpBuilder.update_emissions();
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
+    await invokeStellarOperation(operation, source);
   }
 
   public async set_emissions_config(
-    admin: string,
     res_emission_metadata: Pool.ReserveEmissionMetadata[],
     source: Keypair
   ) {
-    const xdr_op = this.poolOpBuilder.set_emissions_config({ admin, res_emission_metadata });
+    const xdr_op = this.poolOpBuilder.set_emissions_config({ res_emission_metadata });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
+    await invokeStellarOperation(operation, source);
   }
 
   public async claim(from: string, reserve_token_ids: number[], to: string, source: Keypair) {
     const xdr_op = this.poolOpBuilder.claim({ from, reserve_token_ids, to });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
+    await invokeStellarOperation(operation, source);
   }
 
   public async new_liquidation_auction(
@@ -153,24 +115,24 @@ export class PoolContract {
   ) {
     const xdr_op = this.poolOpBuilder.new_liquidation_auction({ user, data });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
+    await invokeStellarOperation(operation, source);
   }
 
   public async del_liquidation_auction(user: string, source: Keypair) {
     const xdr_op = this.poolOpBuilder.del_liquidation_auction({ user });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
+    await invokeStellarOperation(operation, source);
   }
 
   public async new_auction(auction_type: number, source: Keypair) {
     const xdr_op = this.poolOpBuilder.new_auction({ auction_type });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
+    await invokeStellarOperation(operation, source);
   }
 
   public async fill_auction(from: string, auction_type: number, user: string, source: Keypair) {
     const xdr_op = this.poolOpBuilder.fill_auction({ from, auction_type, user });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(this.stellarRpc, operation, source);
+    await invokeStellarOperation(operation, source);
   }
 }
