@@ -32,10 +32,12 @@ export class BackstopContract {
     const backstop_token = this.contracts.getContractId('backstopToken');
     const blnd_token = this.contracts.getContractId('BLND');
     const pool_factory = this.contracts.getContractId('poolFactory');
+    const drop_list = new Map<string, bigint>();
     const xdr_op = this.backstopOpBuilder.initialize({
       backstop_token,
       blnd_token,
       pool_factory,
+      drop_list,
     });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
