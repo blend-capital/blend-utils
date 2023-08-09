@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { Asset, Contract, Keypair, Operation, hash, xdr, Address } from 'soroban-client';
+import { Asset, Keypair, Operation, hash, xdr, Address, StrKey } from 'soroban-client';
 import { AddressBook } from './address_book.js';
 import { config } from './env_config.js';
 import { readFileSync } from 'fs';
@@ -59,10 +59,7 @@ export function createDeployOperation(
     })
   );
 
-  const contractId = new Contract(hash(hashIdPreimage.toXDR()).toString('hex')).contractId(
-    'strkey'
-  );
-  console.log(contractId);
+  const contractId = StrKey.encodeContract(hash(hashIdPreimage.toXDR()));
   addressBook.setContractId(contractKey, contractId);
   const wasmHash = Buffer.from(addressBook.getWasmHash(wasmKey), 'hex');
 
@@ -91,7 +88,7 @@ export function createDeployStellarAssetOperation(
       contractIdPreimage: xdr.ContractIdPreimage.contractIdPreimageFromAsset(xdrAsset),
     })
   );
-  const contractId = new Contract(hash(preimage.toXDR()).toString('hex')).contractId('strkey');
+  const contractId = StrKey.encodeContract(hash(preimage.toXDR()));
 
   addressBook.setContractId(asset.code, contractId);
   const deployFunction = xdr.HostFunction.hostFunctionTypeCreateContract(
