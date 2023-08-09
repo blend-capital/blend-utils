@@ -1,4 +1,4 @@
-import { Contract, Keypair, hash, xdr } from 'soroban-client';
+import { Keypair, StrKey, hash, xdr } from 'soroban-client';
 import { AddressBook } from '../utils/address_book.js';
 import {
   createDeployOperation,
@@ -58,15 +58,14 @@ export class PoolFactoryContract {
         contractIdPreimage: xdr.ContractIdPreimage.contractIdPreimageFromAddress(
           new xdr.ContractIdPreimageFromAddress({
             address: xdr.ScAddress.scAddressTypeContract(
-              Buffer.from(this.poolFactoryOpsBuilder._contract.contractId('hex'), 'hex')
+              StrKey.decodeContract(this.poolFactoryOpsBuilder._contract.contractId())
             ),
             salt: salt,
           })
         ),
       })
     );
-    const contractId = new Contract(hash(preimage.toXDR()).toString('hex')).contractId('strkey');
-
+    const contractId = StrKey.encodeContract(hash(preimage.toXDR()));
     this.contracts.setContractId(name, contractId);
     this.contracts.writeToFile();
   }

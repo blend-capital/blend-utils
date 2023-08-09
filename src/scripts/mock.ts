@@ -117,7 +117,7 @@ async function mock(addressBook: AddressBook) {
   await backstopToken.mint(frodo.publicKey(), BigInt(1_000_000e7), config.admin);
   await backstop.deposit(
     frodo.publicKey(),
-    starBridgePool.poolOpBuilder._contract.contractId('strkey'),
+    starBridgePool.poolOpBuilder._contract.contractId(),
     BigInt(1_000_000e7),
     frodo
   );
@@ -193,7 +193,7 @@ async function mock(addressBook: AddressBook) {
   await backstopToken.mint(frodo.publicKey(), BigInt(1_000_000e7), config.admin);
   await backstop.deposit(
     frodo.publicKey(),
-    stellarPool.poolOpBuilder._contract.contractId('strkey'),
+    stellarPool.poolOpBuilder._contract.contractId(),
     BigInt(1_000_000e7),
     frodo
   );
