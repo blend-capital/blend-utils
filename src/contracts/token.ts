@@ -25,7 +25,7 @@ export async function deployToken(
 ) {
   const operation = createDeployOperation(token_name, token_type, contracts, source);
   await invokeStellarOperation(operation, source);
-  return new BlendTokenContract(contracts.getContractId(token_name), contracts);
+  return new TokenContract(contracts.getContractId(token_name), contracts);
 }
 
 export async function deployStellarAsset(contracts: AddressBook, source: Keypair, asset: Asset) {
@@ -37,7 +37,7 @@ export async function deployStellarAsset(contracts: AddressBook, source: Keypair
   }
 }
 
-export class BlendTokenContract {
+export class TokenContract {
   tokenOpBuilder: Token.TokenOpBuilder;
   contracts: AddressBook;
 
@@ -112,26 +112,26 @@ export class BlendTokenContract {
     }
   }
 
-  public async new_admin(new_admin: string, source: Keypair) {
+  public async set_admin(new_admin: string, source: Keypair) {
     const xdr_op = this.tokenOpBuilder.set_admin({ new_admin });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
   }
 
   public async set_authorized(id: string, authorize: boolean, source: Keypair) {
-    const xdr_op = this.tokenOpBuilder.setauthorized({ id, authorize });
+    const xdr_op = this.tokenOpBuilder.set_authorized({ id, authorize });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
   }
 
-  public async increase_allowance(from: string, spender: string, amount: bigint, source: Keypair) {
-    const xdr_op = this.tokenOpBuilder.increase_allowance({ from, spender, amount });
-    const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(operation, source);
-  }
-
-  public async decrease_allowance(from: string, spender: string, amount: bigint, source: Keypair) {
-    const xdr_op = this.tokenOpBuilder.decrease_allowance({ from, spender, amount });
+  public async approve(
+    from: string,
+    spender: string,
+    amount: bigint,
+    expiration_ledger: number,
+    source: Keypair
+  ) {
+    const xdr_op = this.tokenOpBuilder.approve({ from, spender, amount, expiration_ledger });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
   }
@@ -149,7 +149,7 @@ export class BlendTokenContract {
     amount: bigint,
     source: Keypair
   ) {
-    const xdr_op = this.tokenOpBuilder.transferfrom({ from, to, spender, amount });
+    const xdr_op = this.tokenOpBuilder.transfer_from({ from, to, spender, amount });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
   }
@@ -161,13 +161,7 @@ export class BlendTokenContract {
   }
 
   public async burn_from(from: string, _spender: string, amount: bigint, source: Keypair) {
-    const xdr_op = this.tokenOpBuilder.burnfrom({ from, _spender, amount });
-    const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
-    await invokeStellarOperation(operation, source);
-  }
-
-  public async authorized(id: string, source: Keypair) {
-    const xdr_op = this.tokenOpBuilder.authorized({ id });
+    const xdr_op = this.tokenOpBuilder.burn_from({ from, _spender, amount });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
   }

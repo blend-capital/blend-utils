@@ -1,6 +1,6 @@
 import { Asset } from 'soroban-client';
 import { BackstopContract } from '../contracts/backstop';
-import { BlendTokenContract } from '../contracts/token';
+import { TokenContract } from '../contracts/token';
 import { PoolFactoryContract } from '../contracts/pool_factory';
 import { OracleContract } from '../contracts/oracle';
 import { airdropAccount } from '../utils/contract';
@@ -15,24 +15,21 @@ async function mock(addressBook: AddressBook) {
   await airdropAccount(frodo);
 
   // Initialize Contracts
-  const blnd = new BlendTokenContract(addressBook.getContractId('BLND'), addressBook);
+  const blnd = new TokenContract(addressBook.getContractId('BLND'), addressBook);
   const poolFactory = new PoolFactoryContract(
     addressBook.getContractId('poolFactory'),
     addressBook
   );
   const backstop = new BackstopContract(addressBook.getContractId('backstop'), addressBook);
-  const backstopToken = new BlendTokenContract(
-    addressBook.getContractId('backstopToken'),
-    addressBook
-  );
+  const backstopToken = new TokenContract(addressBook.getContractId('backstopToken'), addressBook);
   const oracle = new OracleContract(addressBook.getContractId('oracle'), addressBook);
-  const weth_token = new BlendTokenContract(addressBook.getContractId('WETH'), addressBook);
-  const wbtc_token = new BlendTokenContract(addressBook.getContractId('WBTC'), addressBook);
-  const usdc_token = new BlendTokenContract(addressBook.getContractId('USDC'), addressBook);
+  const weth_token = new TokenContract(addressBook.getContractId('WETH'), addressBook);
+  const wbtc_token = new TokenContract(addressBook.getContractId('WBTC'), addressBook);
+  const usdc_token = new TokenContract(addressBook.getContractId('USDC'), addressBook);
 
   console.log('Mint 10m to admin and transfer blnd admin to emitter');
   await blnd.mint(config.admin.publicKey(), BigInt(10_000_000e7), config.admin);
-  await blnd.new_admin(addressBook.getContractId('emitter'), config.admin);
+  await blnd.set_admin(addressBook.getContractId('emitter'), config.admin);
 
   console.log('Deploy Starbridge Pool');
   await poolFactory.deploy(
