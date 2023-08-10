@@ -5,7 +5,7 @@ import {
   createInstallOperation,
   invokeStellarOperation,
 } from '../utils/contract';
-import { Pool } from 'blend-sdk';
+import { Pool, u64 } from 'blend-sdk';
 
 export async function deployPool(contracts: AddressBook, source: Keypair, poolName: string) {
   const operation = createDeployOperation(poolName, 'lendingPool', contracts, source);
@@ -41,6 +41,12 @@ export class PoolContract {
       blnd_id,
       usdc_id,
     });
+    const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
+    await invokeStellarOperation(operation, source);
+  }
+
+  public async update_pool(backstop_take_rate: u64, source: Keypair) {
+    const xdr_op = this.poolOpBuilder.update_pool({ backstop_take_rate });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
   }
