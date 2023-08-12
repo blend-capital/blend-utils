@@ -71,7 +71,7 @@ export class TokenContract {
   }
 
   public async mint_stellar_asset(user: Keypair, source: Keypair, asset: Asset, amount: string) {
-    // create trustline for USDC and mint to frodo
+    // create trustline for USDC and mint to whale
     const txBuilder = await createTxBuilder(source);
     txBuilder.addOperation(
       Operation.changeTrust({

@@ -11,8 +11,8 @@ import { config } from '../utils/env_config';
 import { AddressBook } from '../utils/address_book';
 
 async function mock(addressBook: AddressBook) {
-  const frodo = config.getUser('FRODO');
-  await airdropAccount(frodo);
+  const whale = config.getUser('WHALE');
+  await airdropAccount(whale);
 
   // Initialize Contracts
   const blnd = new TokenContract(addressBook.getContractId('BLND'), addressBook);
@@ -111,12 +111,12 @@ async function mock(addressBook: AddressBook) {
   await starBridgePool.set_emissions_config(emissionMetadata, config.admin);
 
   console.log('Setup backstop for Starbridge pool');
-  await backstopToken.mint(frodo.publicKey(), BigInt(1_000_000e7), config.admin);
+  await backstopToken.mint(whale.publicKey(), BigInt(1_000_000e7), config.admin);
   await backstop.deposit(
-    frodo.publicKey(),
+    whale.publicKey(),
     starBridgePool.poolOpBuilder._contract.contractId(),
     BigInt(1_000_000e7),
-    frodo
+    whale
   );
   await starBridgePool.update_status(config.admin);
   await backstop.add_reward(
@@ -187,12 +187,12 @@ async function mock(addressBook: AddressBook) {
   await stellarPool.set_emissions_config(stellarPoolEmissionMetadata, config.admin);
 
   console.log('Setup backstop for Stellar pool');
-  await backstopToken.mint(frodo.publicKey(), BigInt(1_000_000e7), config.admin);
+  await backstopToken.mint(whale.publicKey(), BigInt(1_000_000e7), config.admin);
   await backstop.deposit(
-    frodo.publicKey(),
+    whale.publicKey(),
     stellarPool.poolOpBuilder._contract.contractId(),
     BigInt(1_000_000e7),
-    frodo
+    whale
   );
   await stellarPool.update_status(config.admin);
   await backstop.add_reward(
@@ -218,11 +218,11 @@ async function mock(addressBook: AddressBook) {
     config.admin
   );
 
-  console.log('Minting tokens to frodo');
-  await wbtc_token.mint(frodo.publicKey(), BigInt(10e7), config.admin);
-  await weth_token.mint(frodo.publicKey(), BigInt(50e7), config.admin);
+  console.log('Minting tokens to whale');
+  await wbtc_token.mint(whale.publicKey(), BigInt(10e7), config.admin);
+  await weth_token.mint(whale.publicKey(), BigInt(50e7), config.admin);
   await usdc_token.mint_stellar_asset(
-    frodo,
+    whale,
     config.admin,
     new Asset('USDC', config.admin.publicKey()),
     '200000'
@@ -240,16 +240,16 @@ async function mock(addressBook: AddressBook) {
       address: addressBook.getContractId('WETH'),
     },
   ];
-  console.log('Frodo Supply tokens and borrowing from Starbridge pool');
+  console.log('Whale Supply tokens and borrowing from Starbridge pool');
   await starBridgePool.submit(
-    frodo.publicKey(),
-    frodo.publicKey(),
-    frodo.publicKey(),
+    whale.publicKey(),
+    whale.publicKey(),
+    whale.publicKey(),
     starbridgeRequests,
-    frodo
+    whale
   );
 
-  console.log('Frodo Supply tokens and borrowing from Stellar pool');
+  console.log('Whale Supply tokens and borrowing from Stellar pool');
   const stellarRequests: Pool.Request[] = [
     {
       amount: BigInt(10000e7),
@@ -273,18 +273,18 @@ async function mock(addressBook: AddressBook) {
     },
   ];
   await stellarPool.submit(
-    frodo.publicKey(),
-    frodo.publicKey(),
-    frodo.publicKey(),
+    whale.publicKey(),
+    whale.publicKey(),
+    whale.publicKey(),
     stellarRequests,
-    frodo
+    whale
   );
 
   await backstop.queue_withdrawal(
-    frodo.publicKey(),
+    whale.publicKey(),
     addressBook.getContractId('Starbridge'),
     BigInt(1000e7),
-    frodo
+    whale
   );
 }
 
