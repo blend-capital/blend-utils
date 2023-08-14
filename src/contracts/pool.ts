@@ -1,17 +1,8 @@
 import { Keypair, xdr } from 'soroban-client';
 import { AddressBook } from '../utils/address_book';
-import {
-  createDeployOperation,
-  createInstallOperation,
-  invokeStellarOperation,
-} from '../utils/contract';
+import { createInstallOperation, invokeStellarOperation } from '../utils/contract';
 import { Pool, u64 } from 'blend-sdk';
 
-export async function deployPool(contracts: AddressBook, source: Keypair, poolName: string) {
-  const operation = createDeployOperation(poolName, 'lendingPool', contracts, source);
-  await invokeStellarOperation(operation, source);
-  return new PoolContract(contracts.getContractId(poolName), contracts);
-}
 export async function installPool(contracts: AddressBook, source: Keypair) {
   const operation = createInstallOperation('lendingPool', contracts);
   await invokeStellarOperation(operation, source);

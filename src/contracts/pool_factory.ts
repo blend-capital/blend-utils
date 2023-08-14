@@ -1,6 +1,7 @@
 import { Keypair, StrKey, hash, xdr } from 'soroban-client';
 import { AddressBook } from '../utils/address_book.js';
 import {
+  bumpContractInstance,
   createDeployOperation,
   createInstallOperation,
   invokeStellarOperation,
@@ -8,14 +9,15 @@ import {
 import { PoolFactory } from 'blend-sdk';
 import { config } from '../utils/env_config.js';
 
+export async function installPoolFactory(contracts: AddressBook, source: Keypair) {
+  const operation = createInstallOperation('poolFactory', contracts);
+  await invokeStellarOperation(operation, source);
+}
+
 export async function deployPoolFactory(contracts: AddressBook, source: Keypair) {
   const operation = createDeployOperation('poolFactory', 'poolFactory', contracts, source);
   await invokeStellarOperation(operation, source);
   return new PoolFactoryContract(contracts.getContractId('poolFactory'), contracts);
-}
-export async function installPoolFactory(contracts: AddressBook, source: Keypair) {
-  const operation = createInstallOperation('poolFactory', contracts);
-  await invokeStellarOperation(operation, source);
 }
 
 export class PoolFactoryContract {
@@ -68,5 +70,6 @@ export class PoolFactoryContract {
     const contractId = StrKey.encodeContract(hash(preimage.toXDR()));
     this.contracts.setContractId(name, contractId);
     this.contracts.writeToFile();
+    await bumpContractInstance(name, this.contracts, source);
   }
 }

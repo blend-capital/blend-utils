@@ -12,6 +12,8 @@ import { AddressBook } from '../utils/address_book';
 
 async function mock(addressBook: AddressBook) {
   const whale = config.getUser('WHALE');
+  console.log('WHALE: ', whale.publicKey());
+
   await airdropAccount(whale);
 
   // Initialize Contracts
@@ -62,7 +64,7 @@ async function mock(addressBook: AddressBook) {
   );
   const wethReserveMetaData: Pool.ReserveConfig = {
     index: 1,
-    decimals: 7,
+    decimals: 9,
     c_factor: 750_0000,
     l_factor: 750_0000,
     util: 650_0000,
@@ -80,7 +82,7 @@ async function mock(addressBook: AddressBook) {
 
   const wbtcReserveMetaData: Pool.ReserveConfig = {
     index: 2,
-    decimals: 7,
+    decimals: 6,
     c_factor: 900_0000,
     l_factor: 900_0000,
     util: 750_0000,
@@ -142,7 +144,7 @@ async function mock(addressBook: AddressBook) {
     decimals: 7,
     c_factor: 900_0000,
     l_factor: 850_0000,
-    util: 600_0000,
+    util: 500_0000,
     max_util: 950_0000,
     r_one: 30_0000,
     r_two: 200_0000,
@@ -157,9 +159,9 @@ async function mock(addressBook: AddressBook) {
   const stellarPoolUsdcReserveMetaData: Pool.ReserveConfig = {
     index: 1,
     decimals: 7,
-    c_factor: 750_0000,
-    l_factor: 750_0000,
-    util: 650_0000,
+    c_factor: 950_0000,
+    l_factor: 900_0000,
+    util: 800_0000,
     max_util: 950_0000,
     r_one: 50_0000,
     r_three: 1_500_0000,
@@ -203,7 +205,7 @@ async function mock(addressBook: AddressBook) {
 
   console.log('Distribute to pools');
   await backstop.update_emission_cycle(config.admin);
-  await starBridgePool.update_emissions(config.admin);
+  // await starBridgePool.update_emissions(config.admin);
   await stellarPool.update_emissions(config.admin);
 
   console.log('Setting Asset Prices');
@@ -219,8 +221,8 @@ async function mock(addressBook: AddressBook) {
   );
 
   console.log('Minting tokens to whale');
-  await wbtc_token.mint(whale.publicKey(), BigInt(10e7), config.admin);
-  await weth_token.mint(whale.publicKey(), BigInt(50e7), config.admin);
+  await wbtc_token.mint(whale.publicKey(), BigInt(10e6), config.admin);
+  await weth_token.mint(whale.publicKey(), BigInt(50e9), config.admin);
   await usdc_token.mint_stellar_asset(
     whale,
     config.admin,
@@ -230,12 +232,12 @@ async function mock(addressBook: AddressBook) {
 
   const starbridgeRequests: Pool.Request[] = [
     {
-      amount: BigInt(10e7),
+      amount: BigInt(10e9),
       request_type: 2,
       address: addressBook.getContractId('WETH'),
     },
     {
-      amount: BigInt(1e7),
+      amount: BigInt(1e9),
       request_type: 4,
       address: addressBook.getContractId('WETH'),
     },
