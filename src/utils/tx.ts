@@ -25,6 +25,9 @@ export async function signAndSubmitTransaction(tx: Transaction, source: Keypair)
     }
     console.log('Transaction status:', response.status);
     console.log(`Hash: ${tx_hash}\n`);
+    if (status === 'ERROR') {
+      console.log(response);
+    }
   } catch (e: any) {
     console.error(e);
     throw Error('failed to submit TX');
@@ -36,7 +39,7 @@ export async function createTxBuilder(source: Keypair): Promise<TransactionBuild
     const account: Account = await config.rpc.getAccount(source.publicKey());
 
     return new TransactionBuilder(account, {
-      fee: '1000',
+      fee: '10000',
       timebounds: { minTime: 0, maxTime: 0 },
       networkPassphrase: config.passphrase,
     });

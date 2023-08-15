@@ -104,6 +104,76 @@ export function createDeployStellarAssetOperation(
   });
 }
 
+export async function bumpContractInstance(
+  contractKey: string,
+  addressBook: AddressBook,
+  source: Keypair
+) {
+  const address = Address.fromString(addressBook.getContractId(contractKey));
+  console.log('bumping contract instance: ', address.toString());
+  const contractInstanceXDR = xdr.LedgerKey.contractData(
+    new xdr.LedgerKeyContractData({
+      contract: address.toScAddress(),
+      key: xdr.ScVal.scvLedgerKeyContractInstance(),
+      durability: xdr.ContractDataDurability.persistent(),
+      bodyType: xdr.ContractEntryBodyType.dataEntry(),
+    })
+  );
+  const bumpTransactionData = new xdr.SorobanTransactionData({
+    resources: new xdr.SorobanResources({
+      footprint: new xdr.LedgerFootprint({
+        readOnly: [contractInstanceXDR],
+        readWrite: [],
+      }),
+      instructions: 0,
+      readBytes: 0,
+      writeBytes: 0,
+      extendedMetaDataSizeBytes: 0,
+    }),
+    refundableFee: xdr.Int64.fromString('0'),
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    ext: new xdr.ExtensionPoint(0),
+  });
+
+  const txBuilder = await createTxBuilder(source);
+  txBuilder.addOperation(Operation.bumpFootprintExpiration({ ledgersToExpire: 6312000 })); // 1 year
+  txBuilder.setSorobanData(bumpTransactionData);
+  await signAndSubmitTransaction(txBuilder.build(), source);
+}
+
+export async function bumpContractCode(wasmKey: string, addressBook: AddressBook, source: Keypair) {
+  console.log('bumping contract code: ', wasmKey);
+  const wasmHash = Buffer.from(addressBook.getWasmHash(wasmKey), 'hex');
+  const contractCodeXDR = xdr.LedgerKey.contractCode(
+    new xdr.LedgerKeyContractCode({
+      hash: wasmHash,
+      bodyType: xdr.ContractEntryBodyType.dataEntry(),
+    })
+  );
+  const bumpTransactionData = new xdr.SorobanTransactionData({
+    resources: new xdr.SorobanResources({
+      footprint: new xdr.LedgerFootprint({
+        readOnly: [contractCodeXDR],
+        readWrite: [],
+      }),
+      instructions: 0,
+      readBytes: 0,
+      writeBytes: 0,
+      extendedMetaDataSizeBytes: 0,
+    }),
+    refundableFee: xdr.Int64.fromString('0'),
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    ext: new xdr.ExtensionPoint(0),
+  });
+
+  const txBuilder = await createTxBuilder(source);
+  txBuilder.addOperation(Operation.bumpFootprintExpiration({ ledgersToExpire: 6312000 })); // 1 year
+  txBuilder.setSorobanData(bumpTransactionData);
+  await signAndSubmitTransaction(txBuilder.build(), source);
+}
+
 export async function invokeStellarOperation(operation: xdr.Operation, source: Keypair) {
   const txBuilder = await createTxBuilder(source);
   txBuilder.addOperation(operation);
