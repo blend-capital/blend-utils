@@ -7,7 +7,7 @@ import {
 } from '../utils/contract';
 import { AddressBook } from '../utils/address_book';
 import { Token } from 'blend-sdk';
-import { createTxBuilder } from '../utils/tx';
+import { createTxBuilder, signAndSubmitClassicOp } from '../utils/tx';
 import { config } from '../utils/env_config';
 type txResponse = SorobanRpc.SendTransactionResponse | SorobanRpc.GetTransactionResponse;
 type txStatus = SorobanRpc.SendTransactionStatus | SorobanRpc.GetTransactionStatus;
@@ -58,6 +58,12 @@ export class TokenContract {
     await invokeStellarOperation(operation, source);
   }
 
+  public async balance(user: string, source: Keypair) {
+    const xdr_op = this.tokenOpBuilder.balance({ id: user });
+    const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
+    await invokeStellarOperation(operation, source);
+  }
+
   public async clawback(from: string, amount: bigint, source: Keypair) {
     const xdr_op = this.tokenOpBuilder.clawback({ from, amount });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
@@ -70,46 +76,23 @@ export class TokenContract {
     await invokeStellarOperation(operation, source);
   }
 
-  public async mint_stellar_asset(user: Keypair, source: Keypair, asset: Asset, amount: string) {
-    // create trustline for USDC and mint to whale
-    const txBuilder = await createTxBuilder(source);
-    txBuilder.addOperation(
-      Operation.changeTrust({
-        source: user.publicKey(),
-        asset: asset,
-      })
-    );
-    txBuilder.addOperation(
-      Operation.payment({
-        destination: user.publicKey(),
-        asset: asset,
-        amount: amount,
-        source: source.publicKey(),
-      })
-    );
-    const tx = txBuilder.build();
-    tx.sign(source);
-    tx.sign(user);
-    try {
-      let response: txResponse = await config.rpc.sendTransaction(tx);
-      let status: txStatus = response.status;
-      const tx_hash = response.hash;
-      console.log(JSON.stringify(response));
+  public async classic_trustline(user: Keypair, asset: Asset, source: Keypair) {
+    const operation = Operation.changeTrust({
+      source: user.publicKey(),
+      asset: asset,
+    });
+    await signAndSubmitClassicOp(operation, source);
+  }
 
-      // Poll this until the status is not "NOT_FOUND"
-      while (status === 'PENDING' || status === 'NOT_FOUND') {
-        // See if the transaction is complete
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        console.log('checking tx...');
-        response = await config.rpc.getTransaction(tx_hash);
-        status = response.status;
-      }
-      console.log('Transaction status:', response.status);
-      console.log(`Hash: ${tx_hash}\n`);
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
+  public async classic_mint(user: Keypair, asset: Asset, amount: string, source: Keypair) {
+    const operation = Operation.payment({
+      amount: amount,
+      asset: asset,
+      destination: user.publicKey(),
+      source: source.publicKey(),
+    });
+    console.log('operation: ', operation.toXDR().toString('base64'));
+    await signAndSubmitClassicOp(operation, source);
   }
 
   public async set_admin(new_admin: string, source: Keypair) {

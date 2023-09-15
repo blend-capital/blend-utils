@@ -29,13 +29,15 @@ export class BackstopContract {
   }
 
   public async initialize(source: Keypair) {
-    const backstop_token = this.contracts.getContractId('backstopToken');
+    const backstop_token = this.contracts.getContractId('comet');
     const blnd_token = this.contracts.getContractId('BLND');
+    const usdc_token = this.contracts.getContractId('USDC');
     const pool_factory = this.contracts.getContractId('poolFactory');
     const drop_list = new Map<string, bigint>();
     const xdr_op = this.backstopOpBuilder.initialize({
       backstop_token,
       blnd_token,
+      usdc_token,
       pool_factory,
       drop_list,
     });
@@ -109,6 +111,12 @@ export class BackstopContract {
 
   public async donate(pool_address: string, from: string, amount: bigint, source: Keypair) {
     const xdr_op = this.backstopOpBuilder.donate({ pool_address, from, amount });
+    const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
+    await invokeStellarOperation(operation, source);
+  }
+
+  public async update_token_val(source: Keypair) {
+    const xdr_op = this.backstopOpBuilder.update_token_value();
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
   }

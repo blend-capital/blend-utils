@@ -1,4 +1,12 @@
-import { Transaction, TransactionBuilder, Keypair, Account, SorobanRpc } from 'soroban-client';
+import {
+  Transaction,
+  TransactionBuilder,
+  Keypair,
+  Account,
+  SorobanRpc,
+  xdr,
+  Operation,
+} from 'soroban-client';
 import { config } from './env_config';
 
 type txResponse = SorobanRpc.SendTransactionResponse | SorobanRpc.GetTransactionResponse;
@@ -46,5 +54,35 @@ export async function createTxBuilder(source: Keypair): Promise<TransactionBuild
   } catch (e: any) {
     console.error(e);
     throw Error('unable to create txBuilder');
+  }
+}
+
+export async function signAndSubmitClassicOp(operation: xdr.Operation<Operation>, source: Keypair) {
+  const txBuilder = await createTxBuilder(source);
+  txBuilder.addOperation(operation);
+  const tx = txBuilder.build();
+  tx.sign(source);
+  try {
+    let response: txResponse = await config.rpc.sendTransaction(tx);
+    let status: txStatus = response.status;
+    const tx_hash = response.hash;
+    console.log(JSON.stringify(response));
+
+    // Poll this until the status is not "NOT_FOUND"
+    while (status === 'PENDING' || status === 'NOT_FOUND') {
+      // See if the transaction is complete
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      console.log('checking tx...');
+      response = await config.rpc.getTransaction(tx_hash);
+      status = response.status;
+    }
+    console.log('Transaction status:', response.status);
+    console.log(`Hash: ${tx_hash}\n`);
+    if (status === 'ERROR') {
+      console.log(response);
+    }
+  } catch (e) {
+    console.error(e);
+    throw Error('failed to submit classic op TX');
   }
 }

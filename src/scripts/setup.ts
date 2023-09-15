@@ -9,6 +9,7 @@ import { PoolFactory } from 'blend-sdk';
 import { airdropAccount, bumpContractCode, bumpContractInstance } from '../utils/contract';
 import { installPool } from '../contracts/pool';
 import { config } from '../utils/env_config';
+import { deployComet, installComet } from '../contracts/comet';
 
 export async function deployAndInitContracts(addressBook: AddressBook) {
   await airdropAccount(config.admin);
@@ -25,31 +26,22 @@ export async function deployAndInitContracts(addressBook: AddressBook) {
   await installPool(addressBook, config.admin);
   await bumpContractCode('lendingPool', addressBook, config.admin);
 
-  console.log('Deploying and Initializing Tokens');
-  const blnd = await deployToken(addressBook, config.admin, 'token', 'BLND');
-  await blnd.initialize(config.admin.publicKey(), 7, 'BLND Token', 'BLND', config.admin);
-  await bumpContractInstance('BLND', addressBook, config.admin);
-
   if (network != 'mainnet') {
+    // mocks
+    console.log('Installing and deploying: Blend Mocked Contracts');
     await installMockOracle(addressBook, config.admin);
     await bumpContractCode('oracle', addressBook, config.admin);
     await deployMockOracle(addressBook, config.admin);
     await bumpContractInstance('oracle', addressBook, config.admin);
+
+    // Tokens
+    console.log('Installing and deploying: Tokens');
     const wbtc = await deployToken(addressBook, config.admin, 'token', 'WBTC');
     await wbtc.initialize(config.admin.publicKey(), 6, 'WBTC Token', 'WBTC', config.admin);
     await bumpContractInstance('WBTC', addressBook, config.admin);
     const weth = await deployToken(addressBook, config.admin, 'token', 'WETH');
     await weth.initialize(config.admin.publicKey(), 9, 'WETH Token', 'WETH', config.admin);
     await bumpContractInstance('WETH', addressBook, config.admin);
-    const blndusdc = await deployToken(addressBook, config.admin, 'token', 'backstopToken');
-    await blndusdc.initialize(
-      config.admin.publicKey(),
-      7,
-      'BLND-USDC Token',
-      'BLND-USDC',
-      config.admin
-    );
-    await bumpContractInstance('backstopToken', addressBook, config.admin);
 
     await deployStellarAsset(addressBook, config.admin, Asset.native());
     await bumpContractInstance('XLM', addressBook, config.admin);
@@ -59,6 +51,18 @@ export async function deployAndInitContracts(addressBook: AddressBook) {
       new Asset('USDC', config.admin.publicKey())
     );
     await bumpContractInstance('USDC', addressBook, config.admin);
+    await deployStellarAsset(
+      addressBook,
+      config.admin,
+      new Asset('BLND', config.admin.publicKey())
+    );
+    await bumpContractInstance('BLND', addressBook, config.admin);
+
+    // Comet LP
+    await installComet(addressBook, config.admin);
+    const comet = await deployComet(addressBook, config.admin);
+    await bumpContractInstance('comet', addressBook, config.admin);
+    await comet.init(config.admin.publicKey(), config.admin);
   }
 
   console.log('Deploying and Initializing Blend');

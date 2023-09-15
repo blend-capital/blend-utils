@@ -20,6 +20,7 @@ export class PoolContract {
   public async initialize(admin: string, name: string, bstop_rate: bigint, source: Keypair) {
     const oracle = this.contracts.getContractId('oracle');
     const backstop_id = this.contracts.getContractId('backstop');
+    console.log('backstop_id: ', backstop_id);
 
     const blnd_id = this.contracts.getContractId('BLND');
     const usdc_id = this.contracts.getContractId('USDC');

@@ -6,12 +6,14 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createTxBuilder, signAndSubmitTransaction } from './tx';
+import { Key } from 'readline';
 
 // Relative paths from __dirname
 const CONTRACT_REL_PATH: object = {
   token: '../../../blend-contracts/soroban_token_contract.wasm',
+  comet: '../../../blend-contracts/comet.wasm',
   oracle: '../../../blend-contracts/target/wasm32-unknown-unknown/release/mock_oracle.wasm',
-  emitter: '../../../blend-contracts/target/wasm32-unknown-unknown/release/emitter.wasm',
+  emitter: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/emitter.wasm',
   poolFactory: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/pool_factory.wasm',
   backstop: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/backstop_module.wasm',
   lendingPool: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/lending_pool.wasm',
@@ -29,6 +31,7 @@ export function createInstallOperation(
   );
   const wasmHash = hash(contractWasm);
   addressBook.setWasmHash(wasmKey, wasmHash.toString('hex'));
+  console.log('installing ', wasmKey, wasmHash.toString('hex'));
   const op = Operation.invokeHostFunction({
     func: xdr.HostFunction.hostFunctionTypeUploadContractWasm(contractWasm),
     auth: [],
@@ -58,7 +61,7 @@ export function createDeployOperation(
       contractIdPreimage: contractIdPreimage,
     })
   );
-
+  console.log('deploying wasm', wasmKey, 'for', contractKey);
   const contractId = StrKey.encodeContract(hash(hashIdPreimage.toXDR()));
   addressBook.setContractId(contractKey, contractId);
   const wasmHash = Buffer.from(addressBook.getWasmHash(wasmKey), 'hex');
@@ -171,6 +174,84 @@ export async function bumpContractCode(wasmKey: string, addressBook: AddressBook
   const txBuilder = await createTxBuilder(source);
   txBuilder.addOperation(Operation.bumpFootprintExpiration({ ledgersToExpire: 6312000 })); // 1 year
   txBuilder.setSorobanData(bumpTransactionData);
+  await signAndSubmitTransaction(txBuilder.build(), source);
+}
+
+export async function bumpContractData(
+  contractKey: string,
+  addressBook: AddressBook,
+  dataKey: xdr.ScVal,
+  source: Keypair
+) {
+  const address = Address.fromString(addressBook.getContractId(contractKey));
+  console.log('bumping contract ledger entry: ', address.toString());
+  const contractDataXDR = xdr.LedgerKey.contractData(
+    new xdr.LedgerKeyContractData({
+      contract: address.toScAddress(),
+      key: dataKey,
+      durability: xdr.ContractDataDurability.persistent(),
+      bodyType: xdr.ContractEntryBodyType.dataEntry(),
+    })
+  );
+  const bumpTransactionData = new xdr.SorobanTransactionData({
+    resources: new xdr.SorobanResources({
+      footprint: new xdr.LedgerFootprint({
+        readOnly: [contractDataXDR],
+        readWrite: [],
+      }),
+      instructions: 0,
+      readBytes: 0,
+      writeBytes: 0,
+      extendedMetaDataSizeBytes: 0,
+    }),
+    refundableFee: xdr.Int64.fromString('0'),
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    ext: new xdr.ExtensionPoint(0),
+  });
+
+  const txBuilder = await createTxBuilder(source);
+  txBuilder.addOperation(Operation.bumpFootprintExpiration({ ledgersToExpire: 6312000 })); // 1 year
+  txBuilder.setSorobanData(bumpTransactionData);
+  await signAndSubmitTransaction(txBuilder.build(), source);
+}
+
+export async function restoreContractData(
+  contractKey: string,
+  addressBook: AddressBook,
+  dataKey: xdr.ScVal,
+  source: Keypair
+) {
+  const address = Address.fromString(addressBook.getContractId(contractKey));
+  console.log('restoring contract ledger entry: ', address.toString());
+  const contractDataXDR = xdr.LedgerKey.contractData(
+    new xdr.LedgerKeyContractData({
+      contract: address.toScAddress(),
+      key: dataKey,
+      durability: xdr.ContractDataDurability.persistent(),
+      bodyType: xdr.ContractEntryBodyType.dataEntry(),
+    })
+  );
+  const restoreTransactionData = new xdr.SorobanTransactionData({
+    resources: new xdr.SorobanResources({
+      footprint: new xdr.LedgerFootprint({
+        readOnly: [],
+        readWrite: [contractDataXDR],
+      }),
+      instructions: 0,
+      readBytes: 0,
+      writeBytes: 0,
+      extendedMetaDataSizeBytes: 0,
+    }),
+    refundableFee: xdr.Int64.fromString('0'),
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    ext: new xdr.ExtensionPoint(0),
+  });
+
+  const txBuilder = await createTxBuilder(source);
+  txBuilder.addOperation(Operation.restoreFootprint({}));
+  txBuilder.setSorobanData(restoreTransactionData);
   await signAndSubmitTransaction(txBuilder.build(), source);
 }
 
