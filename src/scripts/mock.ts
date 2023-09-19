@@ -1,12 +1,12 @@
-import { Asset } from 'soroban-client';
+import { Asset, xdr } from 'soroban-client';
 import { BackstopContract } from '../contracts/backstop';
 import { TokenContract } from '../contracts/token';
 import { PoolFactoryContract } from '../contracts/pool_factory';
 import { OracleContract } from '../contracts/oracle';
-import { airdropAccount } from '../utils/contract';
+import { airdropAccount, bumpContractData, restoreContractData } from '../utils/contract';
 import { PoolContract } from '../contracts/pool';
 import { randomBytes } from 'crypto';
-import { Pool } from 'blend-sdk';
+import { Backstop, Pool } from 'blend-sdk';
 import { config } from '../utils/env_config';
 import { AddressBook } from '../utils/address_book';
 import { CometContract } from '../contracts/comet';
@@ -34,9 +34,9 @@ async function mock(addressBook: AddressBook) {
 
   console.log('Create BLND-USDC Pool and mint ');
   await blnd_token.classic_trustline(whale, blnd_asset, whale);
-  await blnd_token.classic_mint(whale, blnd_asset, '10000005', config.admin);
+  await blnd_token.classic_mint(whale, blnd_asset, '100000050', config.admin);
   await usdc_token.classic_trustline(whale, usdc_asset, whale);
-  await usdc_token.classic_mint(whale, usdc_asset, '25005', config.admin);
+  await usdc_token.classic_mint(whale, usdc_asset, '250050', config.admin);
   const current_ledger = await config.rpc.getLatestLedger();
   const approval_ledger = current_ledger.sequence + 6311000;
   await blnd_token.approve(
@@ -66,6 +66,12 @@ async function mock(addressBook: AddressBook) {
   await comet.setPublicSwap(true, config.admin);
 
   // mint 100k tokens to whale
+  await comet.joinPool(
+    BigInt(100_000e7),
+    [BigInt(1_001_000e7), BigInt(25_001e7)],
+    whale.publicKey(),
+    whale
+  );
   await comet.joinPool(
     BigInt(100_000e7),
     [BigInt(1_001_000e7), BigInt(25_001e7)],
@@ -236,10 +242,58 @@ async function mock(addressBook: AddressBook) {
   await backstop.deposit(
     whale.publicKey(),
     stellarPool.poolOpBuilder._contract.contractId(),
-    BigInt(50_000e7),
+    BigInt(100_000e7),
     whale
   );
+  console.log('Check pool data');
+  const backstop_data_string = Backstop.BackstopDataKeyToXDR({
+    tag: 'PoolBalance',
+    values: [stellarPool.poolOpBuilder._contract.contractId()],
+  }).toXDR();
+  // await restoreContractData(
+  //   'backstop',
+  //   addressBook,
+  //   xdr.ScVal.fromXDR(backstop_data_string),
+  //   config.admin
+  // );
+  // await bumpContractData(
+  //   'backstop',
+  //   addressBook,
+  //   xdr.ScVal.fromXDR(backstop_data_string),
+  //   config.admin
+  // );
+  const backstop_result = await config.rpc.getContractData(
+    addressBook.getContractId('backstop'),
+    xdr.ScVal.fromXDR(backstop_data_string)
+  );
+  console.log('pool balance: ', backstop_result.xdr);
+  // const Pool_Data = Backstop.PoolDataFromXDR(backstop_result.xdr);
+  // console.log('tokens: ', Pool_Data.tokens);
+  // console.log('q4w_pct: ', Pool_Data.q4w_pct);
+  // console.log('blnd: ', Pool_Data.blnd);
+  // console.log('usdc: ', Pool_Data.usdc);
+
   await stellarPool.update_status(config.admin);
+  console.log('Check status');
+  const string_to_restore = Pool.PoolDataKeyToXDR({
+    tag: 'PoolConfig',
+  }).toXDR();
+
+  const result = await config.rpc.getContractData(
+    addressBook.getContractId('Stellar'),
+    xdr.ScVal.fromXDR(string_to_restore)
+  );
+  console.log('update call: ', result.xdr);
+  await stellarPool.set_status(0, config.admin);
+  console.log('Check status 2');
+  const string_to_restore_2 = Pool.PoolDataKeyToXDR({
+    tag: 'PoolConfig',
+  }).toXDR();
+  const result_2 = await config.rpc.getContractData(
+    addressBook.getContractId('Stellar'),
+    xdr.ScVal.fromXDR(string_to_restore)
+  );
+  console.log('set call: ', result.xdr);
   await backstop.add_reward(
     addressBook.getContractId('Stellar'),
     addressBook.getContractId('Stellar'),

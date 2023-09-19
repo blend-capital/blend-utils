@@ -84,6 +84,11 @@ export class BackstopContract {
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
   }
+  public async pool_data(pool_address: string, source: Keypair) {
+    const xdr_op = this.backstopOpBuilder.pool_backstop_data({ pool: pool_address });
+    const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
+    await invokeStellarOperation(operation, source);
+  }
 
   public async update_emission_cycle(source: Keypair) {
     const xdr_op = this.backstopOpBuilder.update_emission_cycle();

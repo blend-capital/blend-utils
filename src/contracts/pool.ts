@@ -106,12 +106,8 @@ export class PoolContract {
     await invokeStellarOperation(operation, source);
   }
 
-  public async new_liquidation_auction(
-    user: string,
-    data: Pool.LiquidationMetadata,
-    source: Keypair
-  ) {
-    const xdr_op = this.poolOpBuilder.new_liquidation_auction({ user, data });
+  public async new_liquidation_auction(user: string, percent_liquidated: u64, source: Keypair) {
+    const xdr_op = this.poolOpBuilder.new_liquidation_auction({ user, percent_liquidated });
     const operation = xdr.Operation.fromXDR(xdr_op, 'base64');
     await invokeStellarOperation(operation, source);
   }
