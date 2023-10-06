@@ -1,15 +1,17 @@
 {
-  "extends": "@stellar/tsconfig",
   "compilerOptions": {
-    "declaration": true,
-    "declarationDir": "lib",
-    "lib": ["ESNext"],
-    "moduleResolution": "node",
-    "rootDir": "src",
-    "outDir": "lib",
-    "target": "ESNext",
-    "module": "ESNext",
-    "noUnusedLocals": false,
+    "lib": ["es2023"],
+    "module": "node16",
+    "target": "es2022",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node16",
+    "outDir": "./lib",
   },
-  "include": ["src"]
+  "include": [
+    "src",
+    "lib"
+  ]
 }
