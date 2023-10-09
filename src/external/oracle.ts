@@ -7,11 +7,6 @@ export interface AssetPrices {
   assetId: string;
 }
 
-export interface AssetPrices {
-  price: bigint;
-  assetKey: string;
-}
-
 export interface PriceData {
   price: i128;
   timestamp: u64;
