@@ -32,7 +32,7 @@ If the network is mainnet, no mocked contracts will be deployed (like the `mock_
 
 To deploy the contracts on a "network_name" network, run:
 ```bash
-node --es-module-specifier-resolution=node ./lib/scripts/setup.js network_name
+node ./lib/scripts/setup.js network_name
 ```
 
 ## Mock
@@ -48,5 +48,5 @@ Test environments optionally come with default data. The `mock` script does a fe
 
 To add mock data to the Blend protocol in a the "network_name" test network, run:
 ```bash
-node --es-module-specifier-resolution=node ./lib/scripts/mock.js network_name
+node ./lib/scripts/mock.js network_name
 ```

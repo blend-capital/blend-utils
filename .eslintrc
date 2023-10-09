@@ -10,6 +10,7 @@
   ],
   "ignorePatterns": ["dist"],
   "rules": {
-    "prettier/prettier": 2
+    "prettier/prettier": 2,
+    "@typescript-eslint/no-explicit-any": 0
   }
 }
