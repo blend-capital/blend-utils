@@ -27,9 +27,10 @@ export async function signWithKeypair(
 export async function logInvocation(invocation: Promise<ContractResult<any>>) {
   console.log('invoking contract...');
   const result = await invocation;
+  console.log('Hash: ', result.hash);
   console.log(result.toString());
   result.unwrap();
-  console.log('\n');
+  console.log();
 }
 
 export async function invokeAndUnwrap<T>(

@@ -198,9 +198,6 @@ async function mock(addressBook: AddressBook) {
     backstop.updateEmissionCycle(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
   );
   await logInvocation(
-    backstop.updateEmissionCycle(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
-  );
-  await logInvocation(
     stellarPool.updateEmissions(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
   );
 
