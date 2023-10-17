@@ -9,7 +9,7 @@ import {
   assembleTransaction,
 } from 'soroban-client';
 import { config } from './env_config.js';
-import { ContractResult } from 'blend-sdk';
+import { ContractResult, Resources } from 'blend-sdk';
 
 type txResponse = SorobanRpc.SendTransactionResponse | SorobanRpc.GetTransactionResponse;
 type txStatus = SorobanRpc.SendTransactionStatus | SorobanRpc.GetTransactionStatus;
@@ -28,6 +28,7 @@ export async function logInvocation(invocation: Promise<ContractResult<any>>) {
   console.log('invoking contract...');
   const result = await invocation;
   console.log('Hash: ', result.hash);
+  console.log(JSON.stringify(result.resources));
   console.log(result.toString());
   result.unwrap();
   console.log();
@@ -64,12 +65,29 @@ export async function invokeTransaction<T>(
   sim: boolean,
   parse: (value: string | xdr.ScVal | undefined) => T | undefined
 ) {
-  const hash = tx.hash().toString('hex');
+  // simulate the TX
   const simulation_resp = await config.rpc.simulateTransaction(tx);
-  if (sim || SorobanRpc.isSimulationError(simulation_resp)) {
-    console.log('simulation failure!', JSON.stringify(simulation_resp));
-    // allow the response formatter to fetch the error or return the simulation results
-    return ContractResult.fromResponse(hash, simulation_resp, parse);
+  if (SorobanRpc.isSimulationError(simulation_resp)) {
+    // No resource estimation available from a simulation error. Allow the response formatter
+    // to fetch the error.
+    const empty_resources = new Resources(0, 0, 0, 0, 0, 0, 0);
+    return ContractResult.fromResponse(
+      tx.hash().toString('hex'),
+      empty_resources,
+      simulation_resp,
+      parse
+    );
+  } else if (sim) {
+    // Only simulate the TX. Assemble the TX to borrow the resource estimation algorithm in
+    // `assembleTransaction` and return the simulation results.
+    const prepped_tx = assembleTransaction(tx, config.passphrase, simulation_resp).build();
+    const resources = Resources.fromTransaction(prepped_tx.toXDR());
+    return ContractResult.fromResponse(
+      prepped_tx.hash().toString('hex'),
+      resources,
+      simulation_resp,
+      parse
+    );
   }
 
   console.log('submitting tx...');
@@ -87,7 +105,8 @@ export async function invokeTransaction<T>(
     response = await config.rpc.getTransaction(tx_hash);
     status = response.status;
   }
-  return ContractResult.fromResponse(hash, response, parse);
+  const resources = Resources.fromTransaction(prepped_tx.toXDR());
+  return ContractResult.fromResponse(tx_hash, resources, response, parse);
 }
 
 export async function createTxBuilder(source: Keypair): Promise<TransactionBuilder> {
@@ -106,6 +125,7 @@ export async function createTxBuilder(source: Keypair): Promise<TransactionBuild
 }
 
 export async function invokeClassicOp(operation: xdr.Operation<Operation>, source: Keypair) {
+  console.log('invoking classic op...');
   const txBuilder = await createTxBuilder(source);
   txBuilder.addOperation(operation);
   const tx = txBuilder.build();
