@@ -14,8 +14,8 @@ const CONTRACT_REL_PATH: object = {
   oracle: '../../../blend-contracts/target/wasm32-unknown-unknown/release/mock_oracle.wasm',
   emitter: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/emitter.wasm',
   poolFactory: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/pool_factory.wasm',
-  backstop: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/backstop_module.wasm',
-  lendingPool: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/lending_pool.wasm',
+  backstop: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/backstop.wasm',
+  lendingPool: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/pool.wasm',
 };
 
 const __filename = fileURLToPath(import.meta.url);
