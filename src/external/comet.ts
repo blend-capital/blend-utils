@@ -1,6 +1,4 @@
-import { Address, Contract, Keypair, xdr } from 'soroban-client';
-
-import { scval_converter } from 'blend-sdk';
+import { Address, Contract, Keypair, nativeToScVal, xdr } from 'soroban-client';
 import { invokeAndUnwrap } from '../utils/tx.js';
 
 export class CometClient {
@@ -28,7 +26,7 @@ export class CometClient {
     const invokeArgs = {
       method: 'set_swap_fee',
       args: [
-        ((i) => xdr.ScVal.fromXDR(scval_converter.bigintToI128(i).toXDR()))(fee),
+        ((i) => nativeToScVal(i, { type: 'i128' }))(fee),
         ((i) => Address.fromString(i).toScVal())(source.publicKey()),
       ],
     };
@@ -67,14 +65,8 @@ export class CometClient {
       method: 'bundle_bind',
       args: [
         ((i) => xdr.ScVal.scvVec(i.map((i) => Address.fromString(i).toScVal())))(token),
-        ((i) =>
-          xdr.ScVal.scvVec(
-            i.map((i) => xdr.ScVal.fromXDR(scval_converter.bigintToI128(i).toXDR()))
-          ))(balance),
-        ((i) =>
-          xdr.ScVal.scvVec(
-            i.map((i) => xdr.ScVal.fromXDR(scval_converter.bigintToI128(i).toXDR()))
-          ))(denorm),
+        ((i) => xdr.ScVal.scvVec(i.map((i) => nativeToScVal(i, { type: 'i128' }))))(balance),
+        ((i) => xdr.ScVal.scvVec(i.map((i) => nativeToScVal(i, { type: 'i128' }))))(denorm),
       ],
     };
     const operation = this.comet.call(invokeArgs.method, ...invokeArgs.args);
@@ -86,8 +78,8 @@ export class CometClient {
       method: 'bind',
       args: [
         ((i) => Address.fromString(i).toScVal())(token),
-        ((i) => xdr.ScVal.fromXDR(scval_converter.bigintToI128(i).toXDR()))(balance),
-        ((i) => xdr.ScVal.fromXDR(scval_converter.bigintToI128(i).toXDR()))(denorm),
+        ((i) => nativeToScVal(i, { type: 'i128' }))(balance),
+        ((i) => nativeToScVal(i, { type: 'i128' }))(denorm),
         ((i) => Address.fromString(i.publicKey()).toScVal())(source),
       ],
     };
@@ -104,11 +96,8 @@ export class CometClient {
     const invokeArgs = {
       method: 'join_pool',
       args: [
-        ((i) => xdr.ScVal.fromXDR(scval_converter.bigintToI128(i).toXDR()))(pool_amount_out),
-        ((i) =>
-          xdr.ScVal.scvVec(
-            i.map((i) => xdr.ScVal.fromXDR(scval_converter.bigintToI128(i).toXDR()))
-          ))(max_amounts_in),
+        ((i) => nativeToScVal(i, { type: 'i128' }))(pool_amount_out),
+        ((i) => xdr.ScVal.scvVec(i.map((i) => nativeToScVal(i, { type: 'i128' }))))(max_amounts_in),
         ((i) => Address.fromString(i).toScVal())(user),
       ],
     };

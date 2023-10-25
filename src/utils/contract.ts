@@ -9,9 +9,9 @@ import { createTxBuilder, invokeAndUnwrap, invokeTransaction } from './tx.js';
 
 // Relative paths from __dirname
 const CONTRACT_REL_PATH: object = {
-  token: '../../../blend-contracts/soroban_token_contract.wasm',
+  token: '../../src/external/token.wasm',
   comet: '../../../blend-contracts/comet.wasm',
-  oracle: '../../../blend-contracts/target/wasm32-unknown-unknown/release/mock_oracle.wasm',
+  oracle: '../../src/external/oracle.wasm',
   emitter: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/emitter.wasm',
   poolFactory: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/pool_factory.wasm',
   backstop: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/backstop.wasm',

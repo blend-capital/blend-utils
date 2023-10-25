@@ -23,7 +23,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "blend-sdk": "../blend-sdk-js",
+    "@blend-capital/blend-sdk": "^0.0.2",
     "dotenv": "^16.1.4",
     "soroban-client": "1.0.0-beta.2"
   }

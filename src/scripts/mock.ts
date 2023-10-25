@@ -1,9 +1,12 @@
-import { Asset, StrKey, hash, xdr } from 'soroban-client';
+import { Address, Asset, StrKey, hash, xdr } from 'soroban-client';
 import { TokenClient } from '../external/token.js';
 import { OracleClient } from '../external/oracle.js';
 import { airdropAccount } from '../utils/contract.js';
 import { randomBytes } from 'node:crypto';
-import { Pool, Backstop, PoolFactory, Network, TxOptions } from 'blend-sdk';
+import { Network, TxOptions } from '@blend-capital/blend-sdk';
+import * as PoolFactory from '@blend-capital/blend-sdk/pool-factory';
+import * as Backstop from '@blend-capital/blend-sdk/backstop';
+import * as Pool from '@blend-capital/blend-sdk/pool';
 import { config } from '../utils/env_config.js';
 import { AddressBook } from '../utils/address_book.js';
 import { CometClient } from '../external/comet.js';
@@ -202,9 +205,31 @@ async function mock(addressBook: AddressBook) {
   );
 
   console.log('Setting Asset Prices');
-  await oracle.set_price(addressBook.getContractId('USDC'), BigInt(1e7), config.admin);
-  await oracle.set_price(addressBook.getContractId('XLM'), BigInt(0.1e7), config.admin);
-  await oracle.set_price(addressBook.getContractId('BLND'), BigInt(0.05e7), config.admin);
+  await oracle.setData(
+    Address.fromString(config.admin.publicKey()),
+    {
+      tag: 'Other',
+      values: ['USD'],
+    },
+    [
+      {
+        tag: 'Stellar',
+        values: [Address.fromString(addressBook.getContractId('USDC'))],
+      },
+      {
+        tag: 'Stellar',
+        values: [Address.fromString(addressBook.getContractId('BLND'))],
+      },
+      {
+        tag: 'Stellar',
+        values: [Address.fromString(addressBook.getContractId('XLM'))],
+      },
+    ],
+    7,
+    300,
+    config.admin
+  );
+  await oracle.setPriceStable([BigInt(1e7), BigInt(0.1e7), BigInt(0.05e7)], config.admin);
 
   console.log('Minting tokens to whale');
   await usdc_token.classic_mint(

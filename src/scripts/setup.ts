@@ -1,7 +1,10 @@
 import { Asset } from 'soroban-client';
 import { AddressBook } from '../utils/address_book.js';
 import { tryDeployStellarAsset } from '../external/token.js';
-import { PoolFactory, Backstop, Emitter, Network, TxOptions } from 'blend-sdk';
+import { Network, TxOptions } from '@blend-capital/blend-sdk';
+import * as PoolFactory from '@blend-capital/blend-sdk/pool-factory';
+import * as Backstop from '@blend-capital/blend-sdk/backstop';
+import * as Emitter from '@blend-capital/blend-sdk/emitter';
 import {
   airdropAccount,
   bumpContractCode,
@@ -40,13 +43,6 @@ export async function deployAndInitContracts(addressBook: AddressBook) {
 
     // Tokens
     console.log('Installing and deploying: Tokens');
-    // const wbtc = await deployToken(addressBook, config.admin, 'token', 'WBTC');
-    // await wbtc.initialize(config.admin.publicKey(), 6, 'WBTC Token', 'WBTC', config.admin);
-    // // await bumpContractInstance('WBTC', addressBook, config.admin);
-    // const weth = await deployToken(addressBook, config.admin, 'token', 'WETH');
-    // await weth.initialize(config.admin.publicKey(), 9, 'WETH Token', 'WETH', config.admin);
-    // // await bumpContractInstance('WETH', addressBook, config.admin);
-
     await tryDeployStellarAsset(addressBook, config.admin, Asset.native());
     await bumpContractInstance('XLM', addressBook, config.admin);
     await tryDeployStellarAsset(
