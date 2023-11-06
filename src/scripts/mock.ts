@@ -1,9 +1,19 @@
-import { Asset, StrKey, hash, xdr } from 'soroban-client';
+import { Address, Asset, StrKey, hash, xdr } from 'soroban-client';
 import { TokenClient } from '../external/token.js';
 import { OracleClient } from '../external/oracle.js';
 import { airdropAccount } from '../utils/contract.js';
 import { randomBytes } from 'node:crypto';
-import { Pool, Backstop, PoolFactory, Network, TxOptions } from 'blend-sdk';
+import {
+  BackstopClient,
+  EmitterClient,
+  Network,
+  PoolClient,
+  PoolFactoryClient,
+  Request,
+  ReserveConfig,
+  ReserveEmissionMetadata,
+  TxOptions,
+} from '@blend-capital/blend-sdk';
 import { config } from '../utils/env_config.js';
 import { AddressBook } from '../utils/address_book.js';
 import { CometClient } from '../external/comet.js';
@@ -21,8 +31,9 @@ async function mock(addressBook: AddressBook) {
   // Initialize Contracts
   const blnd_token = new TokenClient(addressBook.getContractId('BLND'));
   const blnd_asset = new Asset('BLND', config.admin.publicKey());
-  const poolFactory = new PoolFactory.PoolFactoryClient(addressBook.getContractId('poolFactory'));
-  const backstop = new Backstop.BackstopClient(addressBook.getContractId('backstop'));
+  const poolFactory = new PoolFactoryClient(addressBook.getContractId('poolFactory'));
+  const backstop = new BackstopClient(addressBook.getContractId('backstop'));
+  const emitter = new EmitterClient(addressBook.getContractId('emitter'));
   const oracle = new OracleClient(addressBook.getContractId('oracle'));
   const usdc_token = new TokenClient(addressBook.getContractId('USDC'));
   const usdc_asset = new Asset('USDC', config.admin.publicKey());
@@ -115,8 +126,8 @@ async function mock(addressBook: AddressBook) {
   addressBook.writeToFile();
 
   console.log('Setup Stellar pool reserves and emissions');
-  const stellarPool = new Pool.PoolClient(addressBook.getContractId('Stellar'));
-  const stellarPoolXlmReserveMetaData: Pool.ReserveConfig = {
+  const stellarPool = new PoolClient(addressBook.getContractId('Stellar'));
+  const stellarPoolXlmReserveMetaData: ReserveConfig = {
     index: 0,
     decimals: 7,
     c_factor: 900_0000,
@@ -134,7 +145,7 @@ async function mock(addressBook: AddressBook) {
       config: stellarPoolXlmReserveMetaData,
     })
   );
-  const stellarPoolUsdcReserveMetaData: Pool.ReserveConfig = {
+  const stellarPoolUsdcReserveMetaData: ReserveConfig = {
     index: 1,
     decimals: 7,
     c_factor: 950_0000,
@@ -153,7 +164,7 @@ async function mock(addressBook: AddressBook) {
     })
   );
 
-  const stellarPoolEmissionMetadata: Pool.ReserveEmissionMetadata[] = [
+  const stellarPoolEmissionMetadata: ReserveEmissionMetadata[] = [
     {
       res_index: 0, // XLM
       res_type: 0, // d_token
@@ -195,6 +206,9 @@ async function mock(addressBook: AddressBook) {
 
   console.log('Distribute to pools');
   await logInvocation(
+    emitter.distribute(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
+  );
+  await logInvocation(
     backstop.updateEmissionCycle(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
   );
   await logInvocation(
@@ -202,9 +216,31 @@ async function mock(addressBook: AddressBook) {
   );
 
   console.log('Setting Asset Prices');
-  await oracle.set_price(addressBook.getContractId('USDC'), BigInt(1e7), config.admin);
-  await oracle.set_price(addressBook.getContractId('XLM'), BigInt(0.1e7), config.admin);
-  await oracle.set_price(addressBook.getContractId('BLND'), BigInt(0.05e7), config.admin);
+  await oracle.setData(
+    Address.fromString(config.admin.publicKey()),
+    {
+      tag: 'Other',
+      values: ['USD'],
+    },
+    [
+      {
+        tag: 'Stellar',
+        values: [Address.fromString(addressBook.getContractId('USDC'))],
+      },
+      {
+        tag: 'Stellar',
+        values: [Address.fromString(addressBook.getContractId('BLND'))],
+      },
+      {
+        tag: 'Stellar',
+        values: [Address.fromString(addressBook.getContractId('XLM'))],
+      },
+    ],
+    7,
+    300,
+    config.admin
+  );
+  await oracle.setPriceStable([BigInt(1e7), BigInt(0.1e7), BigInt(0.05e7)], config.admin);
 
   console.log('Minting tokens to whale');
   await usdc_token.classic_mint(
@@ -215,7 +251,7 @@ async function mock(addressBook: AddressBook) {
   );
 
   console.log('Whale Supply tokens and borrowing from Stellar pool');
-  const stellarRequests: Pool.Request[] = [
+  const stellarRequests: Request[] = [
     {
       amount: BigInt(20000e7),
       request_type: 2,

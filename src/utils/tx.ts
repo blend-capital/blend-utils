@@ -9,7 +9,7 @@ import {
   assembleTransaction,
 } from 'soroban-client';
 import { config } from './env_config.js';
-import { ContractResult, Resources } from 'blend-sdk';
+import { ContractResult, Resources } from '@blend-capital/blend-sdk';
 
 type txResponse = SorobanRpc.SendTransactionResponse | SorobanRpc.GetTransactionResponse;
 type txStatus = SorobanRpc.SendTransactionStatus | SorobanRpc.GetTransactionStatus;

@@ -1,7 +1,14 @@
 import { Asset } from 'soroban-client';
 import { AddressBook } from '../utils/address_book.js';
 import { tryDeployStellarAsset } from '../external/token.js';
-import { PoolFactory, Backstop, Emitter, Network, TxOptions } from 'blend-sdk';
+import {
+  BackstopClient,
+  EmitterClient,
+  Network,
+  PoolFactoryClient,
+  PoolInitMeta,
+  TxOptions,
+} from '@blend-capital/blend-sdk';
 import {
   airdropAccount,
   bumpContractCode,
@@ -40,13 +47,6 @@ export async function deployAndInitContracts(addressBook: AddressBook) {
 
     // Tokens
     console.log('Installing and deploying: Tokens');
-    // const wbtc = await deployToken(addressBook, config.admin, 'token', 'WBTC');
-    // await wbtc.initialize(config.admin.publicKey(), 6, 'WBTC Token', 'WBTC', config.admin);
-    // // await bumpContractInstance('WBTC', addressBook, config.admin);
-    // const weth = await deployToken(addressBook, config.admin, 'token', 'WETH');
-    // await weth.initialize(config.admin.publicKey(), 9, 'WETH Token', 'WETH', config.admin);
-    // // await bumpContractInstance('WETH', addressBook, config.admin);
-
     await tryDeployStellarAsset(addressBook, config.admin, Asset.native());
     await bumpContractInstance('XLM', addressBook, config.admin);
     await tryDeployStellarAsset(
@@ -74,13 +74,13 @@ export async function deployAndInitContracts(addressBook: AddressBook) {
   console.log('Deploying and Initializing Blend');
   await deployContract('backstop', 'backstop', addressBook, config.admin);
   await bumpContractInstance('backstop', addressBook, config.admin);
-  const backstop = new Backstop.BackstopClient(addressBook.getContractId('backstop'));
+  const backstop = new BackstopClient(addressBook.getContractId('backstop'));
   await deployContract('emitter', 'emitter', addressBook, config.admin);
   await bumpContractInstance('emitter', addressBook, config.admin);
-  const emitter = new Emitter.EmitterClient(addressBook.getContractId('emitter'));
+  const emitter = new EmitterClient(addressBook.getContractId('emitter'));
   await deployContract('poolFactory', 'poolFactory', addressBook, config.admin);
   await bumpContractInstance('poolFactory', addressBook, config.admin);
-  const poolFactory = new PoolFactory.PoolFactoryClient(addressBook.getContractId('poolFactory'));
+  const poolFactory = new PoolFactoryClient(addressBook.getContractId('poolFactory'));
   addressBook.writeToFile();
 
   await logInvocation(
@@ -99,7 +99,7 @@ export async function deployAndInitContracts(addressBook: AddressBook) {
     })
   );
 
-  const poolInitMeta: PoolFactory.PoolInitMeta = {
+  const poolInitMeta: PoolInitMeta = {
     backstop: addressBook.getContractId('backstop'),
     blnd_id: addressBook.getContractId('BLND'),
     usdc_id: addressBook.getContractId('USDC'),
