@@ -28,7 +28,7 @@ export async function logInvocation(invocation: Promise<ContractResult<any>>) {
   console.log('invoking contract...');
   const result = await invocation;
   console.log('Hash: ', result.hash);
-  console.log(JSON.stringify(result.resources));
+  console.log(JSON.stringify(result.resources, null, 2));
   console.log(result.toString());
   result.unwrap();
   console.log();
@@ -40,8 +40,9 @@ export async function invokeAndUnwrap<T>(
   parse: (value: string | xdr.ScVal | undefined) => T | undefined
 ): Promise<void> {
   const result = await invoke(operation, source, false, parse);
-  console.log(result.toString(), '\n');
+  console.log(result.toString());
   result.unwrap();
+  console.log();
 }
 
 export async function invoke<T>(
@@ -112,7 +113,6 @@ export async function invokeTransaction<T>(
 export async function createTxBuilder(source: Keypair): Promise<TransactionBuilder> {
   try {
     const account: Account = await config.rpc.getAccount(source.publicKey());
-
     return new TransactionBuilder(account, {
       fee: '10000',
       timebounds: { minTime: 0, maxTime: 0 },

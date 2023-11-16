@@ -3,7 +3,7 @@ import { config } from '../utils/env_config.js';
 import { AddressBook } from '../utils/address_book.js';
 import { logInvocation, signWithKeypair } from '../utils/tx.js';
 
-async function mock(addressBook: AddressBook) {
+async function submit(addressBook: AddressBook) {
   const whale = config.getUser('WHALE');
   console.log('WHALE: ', whale.publicKey());
   const signWithWhale = (txXdr: string) => signWithKeypair(txXdr, rpc_network.passphrase, whale);
@@ -46,4 +46,4 @@ const tx_options: TxOptions = {
     networkPassphrase: config.passphrase,
   },
 };
-await mock(addressBook);
+await submit(addressBook);
