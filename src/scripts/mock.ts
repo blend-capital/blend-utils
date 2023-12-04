@@ -1,4 +1,4 @@
-import { Address, Asset, StrKey, hash, xdr } from 'soroban-client';
+import { Address, Asset, StrKey, hash, xdr } from 'stellar-sdk';
 import { TokenClient } from '../external/token.js';
 import { OracleClient } from '../external/oracle.js';
 import { airdropAccount } from '../utils/contract.js';

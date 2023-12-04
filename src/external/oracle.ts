@@ -1,4 +1,4 @@
-import { Contract, Keypair, Address, ContractSpec } from 'soroban-client';
+import { Contract, Keypair, Address, ContractSpec } from 'stellar-sdk';
 import { i128, u64 } from '@blend-capital/blend-sdk';
 import { invokeAndUnwrap } from '../utils/tx.js';
 

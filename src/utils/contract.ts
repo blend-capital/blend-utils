@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { Asset, Keypair, Operation, hash, xdr, Address, StrKey } from 'soroban-client';
+import { Asset, Keypair, Operation, hash, xdr, Address, StrKey } from 'stellar-sdk';
 import { AddressBook } from './address_book.js';
 import { config } from './env_config.js';
 import { readFileSync } from 'fs';

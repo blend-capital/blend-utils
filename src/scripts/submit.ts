@@ -9,9 +9,10 @@ async function submit(addressBook: AddressBook) {
   const signWithWhale = (txXdr: string) => signWithKeypair(txXdr, rpc_network.passphrase, whale);
 
   const stellarPool = new PoolClient(addressBook.getContractId('Stellar'));
+
   const stellarRequests: Request[] = [
     {
-      amount: BigInt(10e7),
+      amount: BigInt(1e7),
       request_type: 2,
       address: addressBook.getContractId('USDC'),
     },

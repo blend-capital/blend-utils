@@ -1,4 +1,4 @@
-import { Asset } from 'soroban-client';
+import { Asset } from 'stellar-sdk';
 import { AddressBook } from '../utils/address_book.js';
 import { tryDeployStellarAsset } from '../external/token.js';
 import {
