@@ -1,4 +1,4 @@
-import { Asset } from 'soroban-client';
+import { Asset } from 'stellar-sdk';
 import { AddressBook } from '../utils/address_book.js';
 import { tryDeployStellarAsset } from '../external/token.js';
 import {
@@ -61,6 +61,18 @@ export async function deployAndInitContracts(addressBook: AddressBook) {
       new Asset('BLND', config.admin.publicKey())
     );
     await bumpContractInstance('BLND', addressBook, config.admin);
+    await tryDeployStellarAsset(
+      addressBook,
+      config.admin,
+      new Asset('wETH', config.admin.publicKey())
+    );
+    await bumpContractInstance('wETH', addressBook, config.admin);
+    await tryDeployStellarAsset(
+      addressBook,
+      config.admin,
+      new Asset('wBTC', config.admin.publicKey())
+    );
+    await bumpContractInstance('wBTC', addressBook, config.admin);
 
     // Comet LP
     await installContract('comet', addressBook, config.admin);

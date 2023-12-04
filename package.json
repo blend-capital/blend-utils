@@ -23,8 +23,8 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "@blend-capital/blend-sdk": "^0.0.4",
+    "@blend-capital/blend-sdk": "../blend-sdk-js",
     "dotenv": "^16.1.4",
-    "soroban-client": "1.0.0-beta.2"
+    "stellar-sdk": "../../stellar/js-stellar-sdk"
   }
 }

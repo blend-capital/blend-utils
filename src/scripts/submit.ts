@@ -3,15 +3,16 @@ import { config } from '../utils/env_config.js';
 import { AddressBook } from '../utils/address_book.js';
 import { logInvocation, signWithKeypair } from '../utils/tx.js';
 
-async function mock(addressBook: AddressBook) {
+async function submit(addressBook: AddressBook) {
   const whale = config.getUser('WHALE');
   console.log('WHALE: ', whale.publicKey());
   const signWithWhale = (txXdr: string) => signWithKeypair(txXdr, rpc_network.passphrase, whale);
 
   const stellarPool = new PoolClient(addressBook.getContractId('Stellar'));
+
   const stellarRequests: Request[] = [
     {
-      amount: BigInt(10e7),
+      amount: BigInt(1e7),
       request_type: 2,
       address: addressBook.getContractId('USDC'),
     },
@@ -46,4 +47,4 @@ const tx_options: TxOptions = {
     networkPassphrase: config.passphrase,
   },
 };
-await mock(addressBook);
+await submit(addressBook);

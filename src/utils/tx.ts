@@ -6,13 +6,12 @@ import {
   SorobanRpc,
   xdr,
   Operation,
-  assembleTransaction,
-} from 'soroban-client';
+} from 'stellar-sdk';
 import { config } from './env_config.js';
 import { ContractResult, Resources } from '@blend-capital/blend-sdk';
 
-type txResponse = SorobanRpc.SendTransactionResponse | SorobanRpc.GetTransactionResponse;
-type txStatus = SorobanRpc.SendTransactionStatus | SorobanRpc.GetTransactionStatus;
+type txResponse = SorobanRpc.Api.SendTransactionResponse | SorobanRpc.Api.GetTransactionResponse;
+type txStatus = SorobanRpc.Api.SendTransactionStatus | SorobanRpc.Api.GetTransactionStatus;
 
 export async function signWithKeypair(
   txXdr: string,
@@ -28,7 +27,7 @@ export async function logInvocation(invocation: Promise<ContractResult<any>>) {
   console.log('invoking contract...');
   const result = await invocation;
   console.log('Hash: ', result.hash);
-  console.log(JSON.stringify(result.resources));
+  console.log(JSON.stringify(result.resources, null, 2));
   console.log(result.toString());
   result.unwrap();
   console.log();
@@ -40,8 +39,9 @@ export async function invokeAndUnwrap<T>(
   parse: (value: string | xdr.ScVal | undefined) => T | undefined
 ): Promise<void> {
   const result = await invoke(operation, source, false, parse);
-  console.log(result.toString(), '\n');
+  console.log(result.toString());
   result.unwrap();
+  console.log();
 }
 
 export async function invoke<T>(
@@ -67,7 +67,7 @@ export async function invokeTransaction<T>(
 ) {
   // simulate the TX
   const simulation_resp = await config.rpc.simulateTransaction(tx);
-  if (SorobanRpc.isSimulationError(simulation_resp)) {
+  if (SorobanRpc.Api.isSimulationError(simulation_resp)) {
     // No resource estimation available from a simulation error. Allow the response formatter
     // to fetch the error.
     const empty_resources = new Resources(0, 0, 0, 0, 0, 0, 0);
@@ -80,7 +80,7 @@ export async function invokeTransaction<T>(
   } else if (sim) {
     // Only simulate the TX. Assemble the TX to borrow the resource estimation algorithm in
     // `assembleTransaction` and return the simulation results.
-    const prepped_tx = assembleTransaction(tx, config.passphrase, simulation_resp).build();
+    const prepped_tx = SorobanRpc.assembleTransaction(tx, simulation_resp).build();
     const resources = Resources.fromTransaction(prepped_tx.toXDR());
     return ContractResult.fromResponse(
       prepped_tx.hash().toString('hex'),
@@ -91,7 +91,7 @@ export async function invokeTransaction<T>(
   }
 
   console.log('submitting tx...');
-  const prepped_tx = assembleTransaction(tx, config.passphrase, simulation_resp).build();
+  const prepped_tx = SorobanRpc.assembleTransaction(tx, simulation_resp).build();
   prepped_tx.sign(source);
   let response: txResponse = await config.rpc.sendTransaction(prepped_tx);
   let status: txStatus = response.status;
@@ -112,7 +112,6 @@ export async function invokeTransaction<T>(
 export async function createTxBuilder(source: Keypair): Promise<TransactionBuilder> {
   try {
     const account: Account = await config.rpc.getAccount(source.publicKey());
-
     return new TransactionBuilder(account, {
       fee: '10000',
       timebounds: { minTime: 0, maxTime: 0 },
