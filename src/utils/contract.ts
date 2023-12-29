@@ -95,7 +95,7 @@ export async function deployStellarAsset(asset: Asset, addressBook: AddressBook,
   const deployFunction = xdr.HostFunction.hostFunctionTypeCreateContract(
     new xdr.CreateContractArgs({
       contractIdPreimage: xdr.ContractIdPreimage.contractIdPreimageFromAsset(xdrAsset),
-      executable: xdr.ContractExecutable.contractExecutableToken(),
+      executable: xdr.ContractExecutable.contractExecutableStellarAsset(),
     })
   );
   await invokeAndUnwrap(
@@ -132,14 +132,14 @@ export async function bumpContractInstance(
       readBytes: 0,
       writeBytes: 0,
     }),
-    refundableFee: xdr.Int64.fromString('0'),
+    resourceFee: xdr.Int64.fromString('0'),
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     ext: new xdr.ExtensionPoint(0),
   });
 
   const txBuilder = await createTxBuilder(source);
-  txBuilder.addOperation(Operation.bumpFootprintExpiration({ ledgersToExpire: 535670 })); // 1 year
+  txBuilder.addOperation(Operation.extendFootprintTtl({ extendTo: 535670 })); // 1 year
   txBuilder.setSorobanData(bumpTransactionData);
   const result = await invokeTransaction(txBuilder.build(), source, false, () => undefined);
   console.log(result.toString(), '\n');
@@ -163,14 +163,14 @@ export async function bumpContractCode(wasmKey: string, addressBook: AddressBook
       readBytes: 0,
       writeBytes: 0,
     }),
-    refundableFee: xdr.Int64.fromString('0'),
+    resourceFee: xdr.Int64.fromString('0'),
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     ext: new xdr.ExtensionPoint(0),
   });
 
   const txBuilder = await createTxBuilder(source);
-  txBuilder.addOperation(Operation.bumpFootprintExpiration({ ledgersToExpire: 535670 })); // 1 year
+  txBuilder.addOperation(Operation.extendFootprintTtl({ extendTo: 535670 })); // 1 year
   txBuilder.setSorobanData(bumpTransactionData);
   const result = await invokeTransaction(txBuilder.build(), source, false, () => undefined);
   console.log(result.toString(), '\n');
@@ -201,14 +201,14 @@ export async function bumpContractData(
       readBytes: 0,
       writeBytes: 0,
     }),
-    refundableFee: xdr.Int64.fromString('0'),
+    resourceFee: xdr.Int64.fromString('0'),
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     ext: new xdr.ExtensionPoint(0),
   });
 
   const txBuilder = await createTxBuilder(source);
-  txBuilder.addOperation(Operation.bumpFootprintExpiration({ ledgersToExpire: 535670 })); // 1 year
+  txBuilder.addOperation(Operation.extendFootprintTtl({ extendTo: 535670 })); // 1 year
   txBuilder.setSorobanData(bumpTransactionData);
   const result = await invokeTransaction(txBuilder.build(), source, false, () => undefined);
   console.log(result.toString(), '\n');
@@ -239,7 +239,7 @@ export async function restoreContractData(
       readBytes: 0,
       writeBytes: 0,
     }),
-    refundableFee: xdr.Int64.fromString('0'),
+    resourceFee: xdr.Int64.fromString('0'),
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     ext: new xdr.ExtensionPoint(0),

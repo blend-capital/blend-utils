@@ -44,7 +44,6 @@ export async function deployAndInitContracts(addressBook: AddressBook) {
     await bumpContractCode('oracle', addressBook, config.admin);
     await deployContract('oracle', 'oracle', addressBook, config.admin);
     await bumpContractInstance('oracle', addressBook, config.admin);
-
     // Tokens
     console.log('Installing and deploying: Tokens');
     await tryDeployStellarAsset(addressBook, config.admin, Asset.native());
@@ -73,7 +72,6 @@ export async function deployAndInitContracts(addressBook: AddressBook) {
       new Asset('wBTC', config.admin.publicKey())
     );
     await bumpContractInstance('wBTC', addressBook, config.admin);
-
     // Comet LP
     await installContract('comet', addressBook, config.admin);
     await bumpContractCode('comet', addressBook, config.admin);
@@ -84,30 +82,32 @@ export async function deployAndInitContracts(addressBook: AddressBook) {
   }
 
   console.log('Deploying and Initializing Blend');
-  await deployContract('backstop', 'backstop', addressBook, config.admin);
-  await bumpContractInstance('backstop', addressBook, config.admin);
-  const backstop = new BackstopClient(addressBook.getContractId('backstop'));
   await deployContract('emitter', 'emitter', addressBook, config.admin);
   await bumpContractInstance('emitter', addressBook, config.admin);
   const emitter = new EmitterClient(addressBook.getContractId('emitter'));
+  await deployContract('backstop', 'backstop', addressBook, config.admin);
+  await bumpContractInstance('backstop', addressBook, config.admin);
+  const backstop = new BackstopClient(addressBook.getContractId('backstop'));
   await deployContract('poolFactory', 'poolFactory', addressBook, config.admin);
   await bumpContractInstance('poolFactory', addressBook, config.admin);
   const poolFactory = new PoolFactoryClient(addressBook.getContractId('poolFactory'));
-  addressBook.writeToFile();
+
+  await logInvocation(
+    emitter.initialize(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options, {
+      blnd_token: addressBook.getContractId('BLND'),
+      backstop: addressBook.getContractId('backstop'),
+      backstop_token: addressBook.getContractId('comet'),
+    })
+  );
 
   await logInvocation(
     backstop.initialize(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options, {
       backstop_token: addressBook.getContractId('comet'),
+      emitter: addressBook.getContractId('emitter'),
       usdc_token: addressBook.getContractId('USDC'),
       blnd_token: addressBook.getContractId('BLND'),
       pool_factory: addressBook.getContractId('poolFactory'),
       drop_list: new Map(),
-    })
-  );
-  await logInvocation(
-    emitter.initialize(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options, {
-      backstop: addressBook.getContractId('backstop'),
-      blnd_token_id: addressBook.getContractId('BLND'),
     })
   );
 
