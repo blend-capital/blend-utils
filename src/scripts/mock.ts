@@ -5,7 +5,6 @@ import { airdropAccount } from '../utils/contract.js';
 import { randomBytes } from 'node:crypto';
 import {
   BackstopClient,
-  EmitterClient,
   Network,
   PoolClient,
   PoolFactoryClient,
@@ -33,7 +32,6 @@ async function mock(addressBook: AddressBook) {
   const blnd_asset = new Asset('BLND', config.admin.publicKey());
   const poolFactory = new PoolFactoryClient(addressBook.getContractId('poolFactory'));
   const backstop = new BackstopClient(addressBook.getContractId('backstop'));
-  const emitter = new EmitterClient(addressBook.getContractId('emitter'));
   const oracle = new OracleClient(addressBook.getContractId('oracle'));
   const usdc_token = new TokenClient(addressBook.getContractId('USDC'));
   const usdc_asset = new Asset('USDC', config.admin.publicKey());
@@ -305,20 +303,6 @@ async function mock(addressBook: AddressBook) {
       to_add: bridgePool.address,
       to_remove: bridgePool.address,
     })
-  );
-
-  console.log('Distribute to pools');
-  await logInvocation(
-    emitter.distribute(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
-  );
-  await logInvocation(
-    backstop.updateEmissionCycle(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
-  );
-  await logInvocation(
-    stellarPool.updateEmissions(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
-  );
-  await logInvocation(
-    bridgePool.updateEmissions(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
   );
 
   console.log('Setting Asset Prices');

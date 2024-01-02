@@ -43,7 +43,6 @@ Test environments optionally come with default data. The `mock` script does a fe
 2. Sets prices for the test tokens on the mock oracle.
 3. Creates two pools with a set of assets.
 4. Deposits into the backstop for the pools with `WHALE` and adds the pools into the reward zone.
-5. Starts the next emission cycle.
 6. Deposits and borrows assets from each pool from `WHALE`.
 
 To add mock data to the Blend protocol in a the "network_name" test network, run:

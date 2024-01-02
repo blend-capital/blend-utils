@@ -3,6 +3,8 @@ dist
 lib
 .DS_Store
 
+src/scripts/temp.ts
+
 # configuration files
 .env
 *.contracts.json

@@ -70,6 +70,7 @@ export async function invokeTransaction<T>(
   if (SorobanRpc.Api.isSimulationError(simulation_resp)) {
     // No resource estimation available from a simulation error. Allow the response formatter
     // to fetch the error.
+    console.log(simulation_resp);
     const empty_resources = new Resources(0, 0, 0, 0, 0, 0, 0);
     return ContractResult.fromResponse(
       tx.hash().toString('hex'),
@@ -90,12 +91,28 @@ export async function invokeTransaction<T>(
     );
   }
 
-  console.log('submitting tx...');
-  const prepped_tx = SorobanRpc.assembleTransaction(tx, simulation_resp).build();
+  // assemble and sign the TX
+  // TODO: Patch this once simulation for brand new accounts is working
+  const txResources = simulation_resp.transactionData.build().resources();
+  simulation_resp.minResourceFee = (Number(simulation_resp.minResourceFee) + 10000000).toString();
+  const sim_tx_data = simulation_resp.transactionData
+    .setResources(
+      txResources.instructions() == 0 ? 0 : txResources.instructions() + 500000,
+      txResources.readBytes(),
+      txResources.writeBytes()
+    )
+    .build();
+  const assemble_tx = SorobanRpc.assembleTransaction(tx, simulation_resp);
+  sim_tx_data.resourceFee(
+    xdr.Int64.fromString((Number(sim_tx_data.resourceFee().toString()) + 100000).toString())
+  );
+  const prepped_tx = assemble_tx.setSorobanData(sim_tx_data).build();
   prepped_tx.sign(source);
+  const tx_hash = prepped_tx.hash().toString('hex');
+
+  console.log('submitting tx...');
   let response: txResponse = await config.rpc.sendTransaction(prepped_tx);
   let status: txStatus = response.status;
-  const tx_hash = response.hash;
   console.log(`Hash: ${tx_hash}`);
   // Poll this until the status is not "NOT_FOUND"
   while (status === 'PENDING' || status === 'NOT_FOUND') {

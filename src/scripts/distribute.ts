@@ -8,7 +8,6 @@ import {
 import { config } from '../utils/env_config.js';
 import { AddressBook } from '../utils/address_book.js';
 import { logInvocation, signWithKeypair } from '../utils/tx.js';
-import { OracleClient } from '../external/oracle.js';
 
 async function distribute(addressBook: AddressBook) {
   const signWithAdmin = (txXdr: string) =>
@@ -17,24 +16,24 @@ async function distribute(addressBook: AddressBook) {
   // Initialize Contracts
   const backstop = new BackstopClient(addressBook.getContractId('backstop'));
   const emitter = new EmitterClient(addressBook.getContractId('emitter'));
-  const oracle = new OracleClient(addressBook.getContractId('oracle'));
   const stellarPool = new PoolClient(addressBook.getContractId('Stellar'));
   const bridgePool = new PoolClient(addressBook.getContractId('Bridge'));
 
-  await oracle.setPriceStable([BigInt(1e7), BigInt(0.1e7), BigInt(0.05e7)], config.admin);
-
-  console.log('Distribute to pools');
+  console.log('Emitter distribute');
   await logInvocation(
     emitter.distribute(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
   );
+  console.log('Backstop gulp');
   await logInvocation(
-    backstop.updateEmissionCycle(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
+    backstop.gulpEmissions(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
   );
+  console.log('Stellar Pool gulp');
   await logInvocation(
-    stellarPool.updateEmissions(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
+    stellarPool.gulpEmissions(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
   );
+  console.log('Bridge Pool gulp');
   await logInvocation(
-    bridgePool.updateEmissions(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
+    bridgePool.gulpEmissions(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
   );
 }
 
