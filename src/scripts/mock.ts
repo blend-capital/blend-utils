@@ -1,8 +1,3 @@
-import { Address, Asset, StrKey, hash, xdr } from 'stellar-sdk';
-import { TokenClient } from '../external/token.js';
-import { OracleClient } from '../external/oracle.js';
-import { airdropAccount } from '../utils/contract.js';
-import { randomBytes } from 'node:crypto';
 import {
   BackstopClient,
   Network,
@@ -13,9 +8,14 @@ import {
   ReserveEmissionMetadata,
   TxOptions,
 } from '@blend-capital/blend-sdk';
-import { config } from '../utils/env_config.js';
-import { AddressBook } from '../utils/address_book.js';
+import { randomBytes } from 'node:crypto';
+import { Address, Asset, StrKey, hash, xdr } from 'stellar-sdk';
 import { CometClient } from '../external/comet.js';
+import { OracleClient } from '../external/oracle.js';
+import { TokenClient } from '../external/token.js';
+import { AddressBook } from '../utils/address_book.js';
+import { airdropAccount } from '../utils/contract.js';
+import { config } from '../utils/env_config.js';
 import { logInvocation, signWithKeypair } from '../utils/tx.js';
 
 async function mock(addressBook: AddressBook) {
@@ -79,7 +79,8 @@ async function mock(addressBook: AddressBook) {
       name: 'Stellar',
       salt: stellarPoolSalt,
       oracle: addressBook.getContractId('oracle'),
-      backstop_take_rate: BigInt(10000000),
+      backstop_take_rate: 0.1e7,
+      max_positions: 4,
     })
   );
 
@@ -114,11 +115,21 @@ async function mock(addressBook: AddressBook) {
     reactivity: 500,
   };
   await logInvocation(
-    stellarPool.initReserve(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options, {
+    stellarPool.queueSetReserve(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options, {
       asset: addressBook.getContractId('XLM'),
-      config: stellarPoolXlmReserveMetaData,
+      metadata: stellarPoolXlmReserveMetaData,
     })
   );
+  await logInvocation(
+    stellarPool.setReserve(
+      config.admin.publicKey(),
+      signWithAdmin,
+      rpc_network,
+      tx_options,
+      addressBook.getContractId('XLM')
+    )
+  );
+
   const stellarPoolUsdcReserveMetaData: ReserveConfig = {
     index: 1,
     decimals: 7,
@@ -132,10 +143,19 @@ async function mock(addressBook: AddressBook) {
     reactivity: 1000,
   };
   await logInvocation(
-    stellarPool.initReserve(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options, {
+    stellarPool.queueSetReserve(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options, {
       asset: addressBook.getContractId('USDC'),
-      config: stellarPoolUsdcReserveMetaData,
+      metadata: stellarPoolUsdcReserveMetaData,
     })
+  );
+  await logInvocation(
+    stellarPool.setReserve(
+      config.admin.publicKey(),
+      signWithAdmin,
+      rpc_network,
+      tx_options,
+      addressBook.getContractId('USDC')
+    )
   );
 
   const stellarPoolEmissionMetadata: ReserveEmissionMetadata[] = [
@@ -171,7 +191,8 @@ async function mock(addressBook: AddressBook) {
       name: 'Bridge',
       salt: bridgePoolSalt,
       oracle: addressBook.getContractId('oracle'),
-      backstop_take_rate: BigInt(10000000),
+      backstop_take_rate: 0.1e7,
+      max_positions: 6,
     })
   );
 
@@ -204,11 +225,21 @@ async function mock(addressBook: AddressBook) {
     reactivity: 500,
   };
   await logInvocation(
-    bridgePool.initReserve(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options, {
+    bridgePool.queueSetReserve(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options, {
       asset: addressBook.getContractId('XLM'),
-      config: bridgePoolXlmReserveMetaData,
+      metadata: bridgePoolXlmReserveMetaData,
     })
   );
+  await logInvocation(
+    bridgePool.setReserve(
+      config.admin.publicKey(),
+      signWithAdmin,
+      rpc_network,
+      tx_options,
+      addressBook.getContractId('XLM')
+    )
+  );
+
   const wethReserveMetaData: ReserveConfig = {
     index: 1,
     decimals: 7,
@@ -222,10 +253,19 @@ async function mock(addressBook: AddressBook) {
     reactivity: 1000,
   };
   await logInvocation(
-    bridgePool.initReserve(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options, {
+    bridgePool.queueSetReserve(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options, {
       asset: addressBook.getContractId('wETH'),
-      config: wethReserveMetaData,
+      metadata: wethReserveMetaData,
     })
+  );
+  await logInvocation(
+    bridgePool.setReserve(
+      config.admin.publicKey(),
+      signWithAdmin,
+      rpc_network,
+      tx_options,
+      addressBook.getContractId('wETH')
+    )
   );
 
   const wbtcReserveMetaData: ReserveConfig = {
@@ -241,10 +281,19 @@ async function mock(addressBook: AddressBook) {
     reactivity: 1000,
   };
   await logInvocation(
-    bridgePool.initReserve(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options, {
+    bridgePool.queueSetReserve(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options, {
       asset: addressBook.getContractId('wBTC'),
-      config: wbtcReserveMetaData,
+      metadata: wbtcReserveMetaData,
     })
+  );
+  await logInvocation(
+    bridgePool.setReserve(
+      config.admin.publicKey(),
+      signWithAdmin,
+      rpc_network,
+      tx_options,
+      addressBook.getContractId('wBTC')
+    )
   );
 
   const bridgeEmissionMetadata: ReserveEmissionMetadata[] = [
