@@ -1,6 +1,6 @@
 import { Network, PoolClient, Request, TxOptions } from '@blend-capital/blend-sdk';
-import { config } from '../utils/env_config.js';
 import { AddressBook } from '../utils/address_book.js';
+import { config } from '../utils/env_config.js';
 import { logInvocation, signWithKeypair } from '../utils/tx.js';
 
 async function submit(addressBook: AddressBook) {
