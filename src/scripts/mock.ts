@@ -4,6 +4,7 @@ import {
   PoolClient,
   PoolFactoryClient,
   Request,
+  RequestType,
   ReserveConfig,
   ReserveEmissionMetadata,
   TxOptions,
@@ -399,22 +400,22 @@ async function mock(addressBook: AddressBook) {
   const stellarRequests: Request[] = [
     {
       amount: BigInt(20000e7),
-      request_type: 2,
+      request_type: RequestType.SupplyCollateral,
       address: addressBook.getContractId('USDC'),
     },
     {
       amount: BigInt(5000e7),
-      request_type: 2,
+      request_type: RequestType.SupplyCollateral,
       address: addressBook.getContractId('XLM'),
     },
     {
       amount: BigInt(15000e7),
-      request_type: 4,
+      request_type: RequestType.Borrow,
       address: addressBook.getContractId('USDC'),
     },
     {
       amount: BigInt(2000e7),
-      request_type: 4,
+      request_type: RequestType.Borrow,
       address: addressBook.getContractId('XLM'),
     },
   ];
@@ -431,17 +432,17 @@ async function mock(addressBook: AddressBook) {
   const bridgeSupplyRequests: Request[] = [
     {
       amount: BigInt(5000e7),
-      request_type: 2,
+      request_type: RequestType.SupplyCollateral,
       address: addressBook.getContractId('XLM'),
     },
     {
       amount: BigInt(5e7),
-      request_type: 2,
+      request_type: RequestType.SupplyCollateral,
       address: addressBook.getContractId('wETH'),
     },
     {
       amount: BigInt(0.5e7),
-      request_type: 2,
+      request_type: RequestType.SupplyCollateral,
       address: addressBook.getContractId('wBTC'),
     },
   ];
@@ -458,17 +459,17 @@ async function mock(addressBook: AddressBook) {
   const bridgeBorrowRequests: Request[] = [
     {
       amount: BigInt(2500e7),
-      request_type: 4,
+      request_type: RequestType.Borrow,
       address: addressBook.getContractId('XLM'),
     },
     {
       amount: BigInt(3e7),
-      request_type: 4,
+      request_type: RequestType.Borrow,
       address: addressBook.getContractId('wETH'),
     },
     {
       amount: BigInt(0.2e7),
-      request_type: 4,
+      request_type: RequestType.Borrow,
       address: addressBook.getContractId('wBTC'),
     },
   ];
