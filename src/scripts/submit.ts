@@ -1,4 +1,4 @@
-import { Network, PoolClient, Request, TxOptions } from '@blend-capital/blend-sdk';
+import { Network, PoolClient, Request, RequestType, TxOptions } from '@blend-capital/blend-sdk';
 import { AddressBook } from '../utils/address_book.js';
 import { config } from '../utils/env_config.js';
 import { logInvocation, signWithKeypair } from '../utils/tx.js';
@@ -13,7 +13,7 @@ async function submit(addressBook: AddressBook) {
   const stellarRequests: Request[] = [
     {
       amount: BigInt(1e7),
-      request_type: 2,
+      request_type: RequestType.SupplyCollateral,
       address: addressBook.getContractId('USDC'),
     },
   ];
