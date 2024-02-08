@@ -9,7 +9,7 @@ import {
   ReserveEmissionMetadata,
   TxOptions,
 } from '@blend-capital/blend-sdk';
-import { randomBytes } from 'node:crypto';
+import { randomBytes } from 'crypto';
 import { Address, Asset, StrKey, hash, xdr } from 'stellar-sdk';
 import { CometClient } from '../external/comet.js';
 import { OracleClient } from '../external/oracle.js';
@@ -33,7 +33,7 @@ async function mock(addressBook: AddressBook) {
   const blnd_asset = new Asset('BLND', config.admin.publicKey());
   const poolFactory = new PoolFactoryClient(addressBook.getContractId('poolFactory'));
   const backstop = new BackstopClient(addressBook.getContractId('backstop'));
-  const oracle = new OracleClient(addressBook.getContractId('oracle'));
+  const oracle = new OracleClient(addressBook.getContractId('oraclemock'));
   const usdc_token = new TokenClient(addressBook.getContractId('USDC'));
   const usdc_asset = new Asset('USDC', config.admin.publicKey());
   const weth_token = new TokenClient(addressBook.getContractId('wETH'));
