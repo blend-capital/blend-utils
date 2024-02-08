@@ -1,17 +1,17 @@
 import { randomBytes } from 'crypto';
-import { Asset, Keypair, Operation, hash, xdr, Address, StrKey } from 'stellar-sdk';
-import { AddressBook } from './address_book.js';
-import { config } from './env_config.js';
 import { readFileSync } from 'fs';
 import path from 'path';
+import { Address, Asset, Keypair, Operation, StrKey, hash, xdr } from 'stellar-sdk';
 import { fileURLToPath } from 'url';
+import { AddressBook } from './address_book.js';
+import { config } from './env_config.js';
 import { createTxBuilder, invokeAndUnwrap, invokeTransaction } from './tx.js';
 
 // Relative paths from __dirname
 const CONTRACT_REL_PATH: object = {
   token: '../../src/external/token.wasm',
   comet: '../../../blend-contracts/comet.wasm',
-  oracle: '../../src/external/oracle.wasm',
+  oraclemock: '../../src/external/oracle.wasm',
   emitter: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/emitter.wasm',
   poolFactory: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/pool_factory.wasm',
   backstop: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/backstop.wasm',

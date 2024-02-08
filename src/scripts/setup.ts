@@ -1,6 +1,3 @@
-import { Asset } from 'stellar-sdk';
-import { AddressBook } from '../utils/address_book.js';
-import { tryDeployStellarAsset } from '../external/token.js';
 import {
   BackstopClient,
   EmitterClient,
@@ -9,6 +6,10 @@ import {
   PoolInitMeta,
   TxOptions,
 } from '@blend-capital/blend-sdk';
+import { Asset } from 'stellar-sdk';
+import { CometClient } from '../external/comet.js';
+import { tryDeployStellarAsset } from '../external/token.js';
+import { AddressBook } from '../utils/address_book.js';
 import {
   airdropAccount,
   bumpContractCode,
@@ -18,7 +19,6 @@ import {
 } from '../utils/contract.js';
 import { config } from '../utils/env_config.js';
 import { logInvocation, signWithKeypair } from '../utils/tx.js';
-import { CometClient } from '../external/comet.js';
 
 export async function deployAndInitContracts(addressBook: AddressBook) {
   const signWithAdmin = (txXdr: string) =>
@@ -40,10 +40,10 @@ export async function deployAndInitContracts(addressBook: AddressBook) {
   if (network != 'mainnet') {
     // mocks
     console.log('Installing and deploying: Blend Mocked Contracts');
-    await installContract('oracle', addressBook, config.admin);
-    await bumpContractCode('oracle', addressBook, config.admin);
-    await deployContract('oracle', 'oracle', addressBook, config.admin);
-    await bumpContractInstance('oracle', addressBook, config.admin);
+    await installContract('oraclemock', addressBook, config.admin);
+    await bumpContractCode('oraclemock', addressBook, config.admin);
+    await deployContract('oraclemock', 'oraclemock', addressBook, config.admin);
+    await bumpContractInstance('oraclemock', addressBook, config.admin);
     // Tokens
     console.log('Installing and deploying: Tokens');
     await tryDeployStellarAsset(addressBook, config.admin, Asset.native());
