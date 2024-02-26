@@ -42,32 +42,32 @@ async function mock(addressBook: AddressBook) {
   const wbtc_asset = new Asset('wBTC', config.admin.publicKey());
   const comet = new CometClient(addressBook.getContractId('comet'));
 
-  console.log('Create BLND-USDC Pool and mint ');
-  await blnd_token.classic_trustline(whale, blnd_asset, whale);
-  await blnd_token.classic_mint(whale, blnd_asset, '10000000', config.admin);
-  await usdc_token.classic_trustline(whale, usdc_asset, whale);
-  await usdc_token.classic_mint(whale, usdc_asset, '100000', config.admin);
+  // console.log('Create BLND-USDC Pool and mint ');
+  // await blnd_token.classic_trustline(whale, blnd_asset, whale);
+  // await blnd_token.classic_mint(whale, blnd_asset, '10000000', config.admin);
+  // await usdc_token.classic_trustline(whale, usdc_asset, whale);
+  // await usdc_token.classic_mint(whale, usdc_asset, '100000', config.admin);
 
-  // setup BLND-USDC Pool
-  await comet.bind(addressBook.getContractId('BLND'), BigInt(1_000e7), BigInt(8e7), config.admin);
-  await comet.bind(addressBook.getContractId('USDC'), BigInt(25e7), BigInt(2e7), config.admin);
-  await comet.setSwapFee(BigInt(0.003e7), config.admin);
-  await comet.finalize(config.admin);
-  await comet.setPublicSwap(true, config.admin);
+  // // setup BLND-USDC Pool
+  // await comet.bind(addressBook.getContractId('BLND'), BigInt(1_000e7), BigInt(8e7), config.admin);
+  // await comet.bind(addressBook.getContractId('USDC'), BigInt(25e7), BigInt(2e7), config.admin);
+  // await comet.setSwapFee(BigInt(0.003e7), config.admin);
+  // await comet.finalize(config.admin);
+  // await comet.setPublicSwap(true, config.admin);
 
-  // mint 200k tokens to whale
-  await comet.joinPool(
-    BigInt(200_000e7),
-    [BigInt(2_001_000e7), BigInt(50_001e7)],
-    whale.publicKey(),
-    whale
-  );
-  await logInvocation(
-    backstop.updateTokenValue(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
-  );
+  // // mint 200k tokens to whale
+  // await comet.joinPool(
+  //   BigInt(200_000e7),
+  //   [BigInt(2_001_000e7), BigInt(50_001e7)],
+  //   whale.publicKey(),
+  //   whale
+  // );
+  // await logInvocation(
+  //   backstop.updateTokenValue(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
+  // );
 
-  console.log('Transfer blnd admin to emitter');
-  await blnd_token.set_admin(addressBook.getContractId('emitter'), config.admin);
+  // console.log('Transfer blnd admin to emitter');
+  // await blnd_token.set_admin(addressBook.getContractId('emitter'), config.admin);
 
   //********** Stellar Pool (XLM, USDC) **********//
 
@@ -79,7 +79,7 @@ async function mock(addressBook: AddressBook) {
       admin: config.admin.publicKey(),
       name: 'Stellar',
       salt: stellarPoolSalt,
-      oracle: addressBook.getContractId('oracle'),
+      oracle: addressBook.getContractId('oraclemock'),
       backstop_take_rate: 0.1e7,
       max_positions: 4,
     })
@@ -191,7 +191,7 @@ async function mock(addressBook: AddressBook) {
       admin: config.admin.publicKey(),
       name: 'Bridge',
       salt: bridgePoolSalt,
-      oracle: addressBook.getContractId('oracle'),
+      oracle: addressBook.getContractId('oraclemock'),
       backstop_take_rate: 0.1e7,
       max_positions: 6,
     })

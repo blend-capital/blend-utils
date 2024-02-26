@@ -4,10 +4,10 @@ import { OracleClient } from '../external/oracle.js';
 
 async function set_oracle_prices(addressBook: AddressBook) {
   // Initialize Contracts
-  const oracle = new OracleClient(addressBook.getContractId('oracle'));
+  const oracle = new OracleClient(addressBook.getContractId('oraclemock'));
 
   await oracle.setPriceStable(
-    [BigInt(1e7), BigInt(0.05e7), BigInt(2000e7), BigInt(36000e7)],
+    [BigInt(1e7), BigInt(0.15e7), BigInt(2000e7), BigInt(36000e7)],
     config.admin
   );
 }

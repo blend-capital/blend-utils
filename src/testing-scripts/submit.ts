@@ -2,10 +2,19 @@ import { Network, PoolClient, Request, RequestType, TxOptions } from '@blend-cap
 import { AddressBook } from '../utils/address_book.js';
 import { config } from '../utils/env_config.js';
 import { logInvocation, signWithKeypair } from '../utils/tx.js';
+import { airdropAccount } from '../utils/contract.js';
+import { TokenClient } from '../external/token.js';
+import { Asset } from 'stellar-sdk';
 
 async function submit(addressBook: AddressBook) {
-  const whale = config.getUser('WHALE');
-  console.log('WHALE: ', whale.publicKey());
+  const whale = config.getUser('OLDWHALE');
+  console.log('OLDWHALE: ', whale.publicKey());
+  await airdropAccount(whale);
+  const usdc_token = new TokenClient(addressBook.getContractId('USDC'));
+  const usdc_asset = new Asset('USDC', config.admin.publicKey());
+  await usdc_token.classic_trustline(whale, usdc_asset, whale);
+  await usdc_token.classic_mint(whale, usdc_asset, '100000', config.admin);
+
   const signWithWhale = (txXdr: string) => signWithKeypair(txXdr, rpc_network.passphrase, whale);
 
   const stellarPool = new PoolClient(addressBook.getContractId('Stellar'));
@@ -15,6 +24,11 @@ async function submit(addressBook: AddressBook) {
       amount: BigInt(1e7),
       request_type: RequestType.SupplyCollateral,
       address: addressBook.getContractId('USDC'),
+    },
+    {
+      amount: BigInt(10e7),
+      request_type: RequestType.Borrow,
+      address: addressBook.getContractId('XLM'),
     },
   ];
   await logInvocation(
