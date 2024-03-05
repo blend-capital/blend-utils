@@ -15,7 +15,7 @@ import { config } from '../utils/env_config.js';
 import { invokeClassicOp, logInvocation, signWithKeypair } from '../utils/tx.js';
 
 /// Deployment Constants
-const deposit_asset = 0; // BLND, USDC, Both
+const deposit_asset = 0; // 0=BLND, 1=USDC, 2=Both
 const blnd_max = BigInt(200_000e7);
 const usdc_max = BigInt(50_000e7);
 const mint_amount = BigInt(200_000e7);
@@ -31,18 +31,20 @@ const reserve_configs: ReserveConfig[] = [
     l_factor: 850_0000,
     util: 500_0000,
     max_util: 950_0000,
+    r_base: 100,
     r_one: 30_0000,
     r_two: 200_0000,
     r_three: 1_000_0000,
     reactivity: 500,
   },
   {
-    index: 0,
+    index: 1,
     decimals: 7,
     c_factor: 900_0000,
     l_factor: 850_0000,
     util: 500_0000,
     max_util: 950_0000,
+    r_base: 100,
     r_one: 30_0000,
     r_two: 200_0000,
     r_three: 1_000_0000,
@@ -63,6 +65,7 @@ const poolEmissionMetadata: ReserveEmissionMetadata[] = [
 ];
 const startingStatus = 0; // 0 for active, 2 for admin on ice, 3 for on ice, 4 for admin frozen
 const addToRewardZone = true;
+const poolToRemove = 'Stellar';
 const revokeAdmin = false;
 
 async function deploy(addressBook: AddressBook) {
@@ -197,7 +200,7 @@ async function deploy(addressBook: AddressBook) {
     await logInvocation(
       backstop.addReward(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options, {
         to_add: newPool.address,
-        to_remove: newPool.address,
+        to_remove: addressBook.getContractId(poolToRemove),
       })
     );
   }
