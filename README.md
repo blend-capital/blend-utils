@@ -60,9 +60,9 @@ node ./lib/scripts/testing-scripts/mock.js network_name
 
 Blend utils also helps deploy blend pools. The `deploy-pool` script takes in a single "network" parameter that defines what network the pool is deployed on.
 
-The script requires that the `<NETWORK-NAME>.contracts.json` file exists and is up to date.
+The script requires that the `<NETWORK-NAME>.contracts.json` file exists and is up to date. If they wish to use a different oracle than standard they should update the file with the address of the oracle smart contract they wish to use. Additionally, all the token contracts that the pool will use must be defined in the file.
 
-Additionally, the user must have the `ADMIN` key defined in the `.env` file as well as the network passphrase and rpc url.
+Finally, the user must have the `ADMIN` key defined in the `.env` file as well as the network passphrase and rpc url.
 
 The `ADMIN` account must be sufficiently funded to pay for the deployment transaction fees and the initial pool backstop deposit.
 
