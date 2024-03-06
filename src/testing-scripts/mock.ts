@@ -20,7 +20,7 @@ import { config } from '../utils/env_config.js';
 import { logInvocation, signWithKeypair } from '../utils/tx.js';
 
 async function mock(addressBook: AddressBook) {
-  const whale = config.getUser('WHALE');
+  const whale = config.getUser('LIQUIDATOR');
   console.log('WHALE: ', whale.publicKey());
   const signWithWhale = (txXdr: string) => signWithKeypair(txXdr, rpc_network.passphrase, whale);
   const signWithAdmin = (txXdr: string) =>
@@ -42,7 +42,7 @@ async function mock(addressBook: AddressBook) {
   const wbtc_asset = new Asset('wBTC', config.admin.publicKey());
   const comet = new CometClient(addressBook.getContractId('comet'));
 
-  console.log('Create BLND-USDC Pool and mint ');
+  // console.log('Create BLND-USDC Pool and mint ');
   await blnd_token.classic_trustline(whale, blnd_asset, whale);
   await blnd_token.classic_mint(whale, blnd_asset, '10000000', config.admin);
   await usdc_token.classic_trustline(whale, usdc_asset, whale);
@@ -69,7 +69,7 @@ async function mock(addressBook: AddressBook) {
   console.log('Transfer blnd admin to emitter');
   await blnd_token.set_admin(addressBook.getContractId('emitter'), config.admin);
 
-  //********** Stellar Pool (XLM, USDC) **********//
+  // ********** Stellar Pool (XLM, USDC) **********//
 
   console.log('Deploy Stellar Pool');
   const stellarPoolSalt = randomBytes(32);
@@ -79,7 +79,7 @@ async function mock(addressBook: AddressBook) {
       admin: config.admin.publicKey(),
       name: 'Stellar',
       salt: stellarPoolSalt,
-      oracle: addressBook.getContractId('oracle'),
+      oracle: addressBook.getContractId('oraclemock'),
       backstop_take_rate: 0.1e7,
       max_positions: 4,
     })
@@ -110,6 +110,7 @@ async function mock(addressBook: AddressBook) {
     l_factor: 850_0000,
     util: 500_0000,
     max_util: 950_0000,
+    r_base: 100,
     r_one: 30_0000,
     r_two: 200_0000,
     r_three: 1_000_0000,
@@ -138,6 +139,7 @@ async function mock(addressBook: AddressBook) {
     l_factor: 900_0000,
     util: 800_0000,
     max_util: 950_0000,
+    r_base: 100,
     r_one: 50_0000,
     r_three: 1_500_0000,
     r_two: 500_0000,
@@ -191,7 +193,7 @@ async function mock(addressBook: AddressBook) {
       admin: config.admin.publicKey(),
       name: 'Bridge',
       salt: bridgePoolSalt,
-      oracle: addressBook.getContractId('oracle'),
+      oracle: addressBook.getContractId('oraclemock'),
       backstop_take_rate: 0.1e7,
       max_positions: 6,
     })
@@ -220,6 +222,7 @@ async function mock(addressBook: AddressBook) {
     l_factor: 900_0000,
     util: 500_0000,
     max_util: 950_0000,
+    r_base: 100,
     r_one: 30_0000,
     r_two: 200_0000,
     r_three: 1_000_0000,
@@ -248,6 +251,7 @@ async function mock(addressBook: AddressBook) {
     l_factor: 800_0000,
     util: 650_0000,
     max_util: 950_0000,
+    r_base: 100,
     r_one: 50_0000,
     r_three: 1_500_0000,
     r_two: 500_0000,
@@ -276,6 +280,7 @@ async function mock(addressBook: AddressBook) {
     l_factor: 900_0000,
     util: 750_0000,
     max_util: 950_0000,
+    r_base: 100,
     r_one: 50_0000,
     r_three: 1_500_0000,
     r_two: 500_0000,

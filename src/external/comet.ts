@@ -104,4 +104,24 @@ export class CometClient {
     const operation = this.comet.call(invokeArgs.method, ...invokeArgs.args);
     await invokeAndUnwrap(operation, source, () => undefined);
   }
+
+  public async deposit_single_max_in(
+    token_in: string,
+    pool_amount_out: bigint,
+    max_amount_in: bigint,
+    user: string,
+    source: Keypair
+  ) {
+    const invokeArgs = {
+      method: 'dep_lp_tokn_amt_out_get_tokn_in',
+      args: [
+        ((i) => Address.fromString(i).toScVal())(token_in),
+        ((i) => nativeToScVal(i, { type: 'i128' }))(pool_amount_out),
+        ((i) => nativeToScVal(i, { type: 'i128' }))(max_amount_in),
+        ((i) => Address.fromString(i).toScVal())(user),
+      ],
+    };
+    const operation = this.comet.call(invokeArgs.method, ...invokeArgs.args);
+    await invokeAndUnwrap(operation, source, () => undefined);
+  }
 }
