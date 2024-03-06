@@ -13,54 +13,55 @@ import { CometClient } from '../external/comet.js';
 import { AddressBook } from '../utils/address_book.js';
 import { config } from '../utils/env_config.js';
 import { invokeClassicOp, logInvocation, signWithKeypair } from '../utils/tx.js';
+import { airdropAccount } from '../utils/contract.js';
 
 /// Deployment Constants
-const deposit_asset = 0; // 0=BLND, 1=USDC, 2=Both
-const blnd_max = BigInt(200_000e7);
-const usdc_max = BigInt(50_000e7);
-const mint_amount = BigInt(200_000e7);
-const pool_name = 'New-Pool';
-const backstop_take_rate = 0.1e7;
-const max_positions = 4;
-const reserves = ['USDC', 'wETH', 'wBTC'];
+const deposit_asset = BigInt(2); // 0=BLND, 1=USDC, 2=Both
+const blnd_max = BigInt(9_000_000e7);
+const usdc_max = BigInt(100_000e7);
+const mint_amount = BigInt(60_000e7);
+const pool_name = 'PairTrade';
+const backstop_take_rate = 0.5e7;
+const max_positions = 2;
+const reserves = ['XLM', 'wBTC'];
 const reserve_configs: ReserveConfig[] = [
+  {
+    index: 0, // Does not matter
+    decimals: 7,
+    c_factor: 980_0000,
+    l_factor: 980_0000,
+    util: 900_0000, //must be under 950_0000
+    max_util: 980_0000, //must be greater than util
+    r_base: 100,
+    r_one: 50_0000,
+    r_two: 100_0000,
+    r_three: 1_000_0000,
+    reactivity: 1000, //must be 1000 or under
+  },
   {
     index: 0,
     decimals: 7,
-    c_factor: 900_0000,
-    l_factor: 850_0000,
-    util: 500_0000,
-    max_util: 950_0000,
+    c_factor: 980_0000,
+    l_factor: 980_0000,
+    util: 900_0000,
+    max_util: 980_0000,
     r_base: 100,
-    r_one: 30_0000,
-    r_two: 200_0000,
+    r_one: 50_0000,
+    r_two: 100_0000,
     r_three: 1_000_0000,
-    reactivity: 500,
-  },
-  {
-    index: 1,
-    decimals: 7,
-    c_factor: 900_0000,
-    l_factor: 850_0000,
-    util: 500_0000,
-    max_util: 950_0000,
-    r_base: 100,
-    r_one: 30_0000,
-    r_two: 200_0000,
-    r_three: 1_000_0000,
-    reactivity: 500,
+    reactivity: 1000,
   },
 ];
 const poolEmissionMetadata: ReserveEmissionMetadata[] = [
   {
     res_index: 0, // first reserve
-    res_type: 0, // 0 for d_token 1 for b_token
-    share: BigInt(0.7e7), // Share of total emissions
+    res_type: 1, // 0 for d_token 1 for b_token
+    share: BigInt(0.5e7), // Share of total emissions
   },
   {
     res_index: 1, // second reserve
     res_type: 1, // 0 for d_token 1 for b_token
-    share: BigInt(0.3e7), // Share of total emissions
+    share: BigInt(0.5e7), // Share of total emissions
   },
 ];
 const startingStatus = 0; // 0 for active, 2 for admin on ice, 3 for on ice, 4 for admin frozen
@@ -79,7 +80,7 @@ async function deploy(addressBook: AddressBook) {
 
   // mint lp with blnd
   if (mint_amount > 0) {
-    if (deposit_asset == 0) {
+    if (deposit_asset == BigInt(0)) {
       comet.deposit_single_max_in(
         addressBook.getContractId('BLND'),
         blnd_max,
@@ -88,7 +89,7 @@ async function deploy(addressBook: AddressBook) {
         config.admin
       );
       // mint lp with usdc
-    } else if (deposit_asset == 1) {
+    } else if (deposit_asset == BigInt(1)) {
       comet.deposit_single_max_in(
         addressBook.getContractId('USDC'),
         usdc_max,
@@ -98,7 +99,7 @@ async function deploy(addressBook: AddressBook) {
       );
     } else {
       await comet.joinPool(
-        BigInt(200_000e7),
+        mint_amount,
         [blnd_max, usdc_max],
         config.admin.publicKey(),
         config.admin
@@ -206,6 +207,10 @@ async function deploy(addressBook: AddressBook) {
   }
 
   if (revokeAdmin) {
+    console.log('Revoking Admin');
+    if (network != 'mainnet') {
+      airdropAccount(config.getUser('NEWADMIN'));
+    }
     //switch ownership to new admin
     await logInvocation(
       newPool.setAdmin(
@@ -216,13 +221,13 @@ async function deploy(addressBook: AddressBook) {
         config.getUser('NEWADMIN').publicKey()
       )
     );
+    // revoke new admin signing power
+    const revokeOp = Operation.setOptions({
+      masterWeight: 0,
+      source: config.admin.publicKey(),
+    });
+    await invokeClassicOp(revokeOp, config.admin);
   }
-  // revoke new admin signing power
-  const revokeOp = Operation.setOptions({
-    masterWeight: 0,
-    source: config.admin.publicKey(),
-  });
-  await invokeClassicOp(revokeOp, config.admin);
 }
 
 const network = process.argv[2];
