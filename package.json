@@ -23,7 +23,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "@blend-capital/blend-sdk": "^0.4.0",
+    "@blend-capital/blend-sdk": "file:../blend-sdk-js",
     "dotenv": "^16.1.4",
     "stellar-sdk": "^11.2.0"
   }
