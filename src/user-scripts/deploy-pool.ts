@@ -20,6 +20,11 @@ import { airdropAccount } from '../utils/contract.js';
 import { setupPool } from '../pool/pool-setup.js';
 import { setupReserve } from '../pool/reserve-setup.js';
 
+/**
+ * Deploy a pool with the following parameters (Parmeters can be changed as needed)
+ * example: node ./lib/user-scripts/deploy-pool.js testnet
+ */
+
 let txParams: TxParams = {
   account: await config.rpc.getAccount(config.admin.publicKey()),
   txBuilderOptions: {

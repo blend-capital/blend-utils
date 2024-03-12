@@ -3,6 +3,14 @@ import { invokeSorobanOperation, signWithKeypair, TxParams } from '../utils/tx.j
 import { config } from '../utils/env_config.js';
 import { addressBook } from '../utils/address-book.js';
 
+/**
+ * Distribute emissions to pools and backstop
+ * example: node ./lib/user-scripts/distribute.js testnet user1 '["pool1","pool2"]' true
+ *
+ * Distribute emissions to just pools
+ * example: node ./lib/user-scripts/distribute.js testnet user1 '["pool1","pool2"]' false
+ */
+
 if (process.argv.length < 4) {
   throw new Error(
     'Arguments required: `network` `user` `pools` `includeBackstop`(Optional Argument Default: true)'
