@@ -19,7 +19,6 @@ export async function setupPool(
     poolFactory.parsers.deploy,
     txParams
   );
-  addressBook.setContractId(deployPoolArgs.name, poolAddress);
   await bumpContractInstance(deployPoolArgs.name, txParams);
   addressBook.setContractId(deployPoolArgs.name, poolAddress);
   addressBook.writeToFile();
