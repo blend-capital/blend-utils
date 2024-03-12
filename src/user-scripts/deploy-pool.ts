@@ -4,8 +4,8 @@ import {
   ReserveConfig,
   ReserveEmissionMetadata,
 } from '@blend-capital/blend-sdk';
-import { randomBytes, sign } from 'crypto';
-import { Operation, Soroban, SorobanRpc, Transaction, TransactionBuilder, xdr } from 'stellar-sdk';
+import { randomBytes } from 'crypto';
+import { Operation, SorobanRpc, Transaction, TransactionBuilder, xdr } from 'stellar-sdk';
 import { CometContract } from '../external/comet.js';
 import { addressBook } from '../utils/address-book.js';
 import { config } from '../utils/env_config.js';
@@ -19,7 +19,6 @@ import {
 import { airdropAccount } from '../utils/contract.js';
 import { setupPool } from '../pool/pool-setup.js';
 import { setupReserve } from '../pool/reserve-setup.js';
-import { send } from 'process';
 
 let txParams: TxParams = {
   account: await config.rpc.getAccount(config.admin.publicKey()),
@@ -49,39 +48,39 @@ const reserve_configs: ReserveConfig[] = [
   {
     index: 0, // Does not matter
     decimals: 7,
-    c_factor: 980_0000,
-    l_factor: 980_0000,
-    util: 900_0000, //must be under 950_0000
-    max_util: 980_0000, //must be greater than util
-    r_base: 1001,
-    r_one: 50_0000,
-    r_two: 100_0000,
-    r_three: 1_000_0000,
-    reactivity: 1000, //must be 1000 or under
+    c_factor: 980_0000, // (0_9800000)
+    l_factor: 980_0000, // (0_9800000)
+    util: 900_0000, // (0_9000000) must be under 950_0000
+    max_util: 980_0000, // (0_9800000) must be greater than util
+    r_base: 50000, // (0_0050000)
+    r_one: 500000, // (0_0500000)
+    r_two: 1000000, // (0_1000000)
+    r_three: 1_0000000,
+    reactivity: 1000, // must be 1000 or under
   },
   {
     index: 0,
     decimals: 7,
-    c_factor: 980_0000,
-    l_factor: 980_0000,
-    util: 900_0000,
-    max_util: 980_0000,
-    r_base: 1001,
-    r_one: 50_0000,
-    r_two: 100_0000,
-    r_three: 1_000_0000,
+    c_factor: 980_0000, // (0_9800000)
+    l_factor: 980_0000, // (0_9800000)
+    util: 900_0000, // (0_9000000)
+    max_util: 980_0000, // (0_9800000)
+    r_base: 50000, // (0_0050000)
+    r_one: 500000, // (0_0500000)
+    r_two: 1000000, // (0_1000000)
+    r_three: 1_0000000,
     reactivity: 1000,
   },
 ];
 const poolEmissionMetadata: ReserveEmissionMetadata[] = [
   {
     res_index: 0, // first reserve
-    res_type: 1, // 0 for d_token 1 for b_token
+    res_type: 1, // 0 for borrow emissions : 1 for supply emissions
     share: BigInt(0.5e7), // Share of total emissions
   },
   {
     res_index: 1, // second reserve
-    res_type: 1, // 0 for d_token 1 for b_token
+    res_type: 1, // 0 for borrow emissions : 1 for supply emissions
     share: BigInt(0.5e7), // Share of total emissions
   },
 ];
@@ -239,7 +238,6 @@ async function deploy() {
     await sendTransaction(signedTx, () => undefined);
 
     // revoke new admin signing power
-
     const revokeOp = Operation.setOptions({
       masterWeight: 0,
     });
