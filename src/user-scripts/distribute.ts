@@ -2,15 +2,19 @@ import { BackstopContract, EmitterContract, PoolContract } from '@blend-capital/
 import { invokeSorobanOperation, signWithKeypair, TxParams } from '../utils/tx.js';
 import { config } from '../utils/env_config.js';
 import { addressBook } from '../utils/address-book.js';
-// Set this user to desired user
 
 if (process.argv.length < 4) {
-  throw new Error('Arguments required: `network` `user` `pool`');
+  throw new Error(
+    'Arguments required: `network` `user` `pools` `includeBackstop`(Optional Argument Default: true)'
+  );
 }
 
 const user = config.getUser(process.argv[3]);
-const poolAddress = addressBook.getContractId(process.argv[4]);
-console.log(user, poolAddress);
+const pools = (JSON.parse(process.argv[4]) as string[]).map((pool) =>
+  addressBook.getContractId(pool)
+);
+const includeBackstop = process.argv[5] === undefined ? true : process.argv[5] === 'true';
+
 const txParams: TxParams = {
   account: await config.rpc.getAccount(user.publicKey()),
   txBuilderOptions: {
@@ -27,21 +31,26 @@ const txParams: TxParams = {
 };
 // The name of the pool in the address book
 
-await distribute(poolAddress, txParams);
+await distribute(pools, includeBackstop, txParams);
 
-export async function distribute(poolAddress: string, txParams: TxParams) {
-  // Initialize Contracts
-  const backstop = new BackstopContract(addressBook.getContractId('backstop'));
+export async function distribute(pools: string[], includeBackstop: boolean, txParams: TxParams) {
   const emitter = new EmitterContract(addressBook.getContractId('emitter'));
-  const pool = new PoolContract(poolAddress);
-
-  console.log('Emitter distribute');
-
   await invokeSorobanOperation(emitter.distribute(), emitter.parsers.distribute, txParams);
+  console.log('Emitter distributed');
 
-  console.log('Backstop gulp');
+  if (includeBackstop) {
+    const backstop = new BackstopContract(addressBook.getContractId('backstop'));
+    await invokeSorobanOperation(
+      backstop.gulpEmissions(),
+      backstop.parsers.gulpEmissions,
+      txParams
+    );
+    console.log('Backstop gulped');
+  }
 
-  await invokeSorobanOperation(backstop.gulpEmissions(), backstop.parsers.gulpEmissions, txParams);
-  console.log('Pool gulp');
-  await invokeSorobanOperation(pool.gulpEmissions(), pool.parsers.gulpEmissions, txParams);
+  for (const poolId of pools) {
+    const pool = new PoolContract(poolId);
+    await invokeSorobanOperation(pool.gulpEmissions(), pool.parsers.gulpEmissions, txParams);
+    console.log(`Gulped Pool with ID: ${poolId}`);
+  }
 }
