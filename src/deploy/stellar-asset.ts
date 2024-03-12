@@ -1,5 +1,5 @@
 import { Account, Asset, Operation, StrKey, hash, xdr } from 'stellar-sdk';
-import { AddressBook, addressBook } from '../utils/address_book.js';
+import { AddressBook, addressBook } from '../utils/address-book.js';
 import { config } from '../utils/env_config.js';
 import { TxParams, invokeClassicOp, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
 

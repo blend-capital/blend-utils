@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import { Address, Keypair, Operation, StrKey, hash, xdr } from 'stellar-sdk';
 import { fileURLToPath } from 'url';
-import { addressBook } from './address_book.js';
+import { addressBook } from './address-book.js';
 import { config } from './env_config.js';
 import { TxParams, invokeSorobanOperation } from './tx.js';
 

@@ -1,7 +1,7 @@
 import { BackstopContract, EmitterContract, PoolContract } from '@blend-capital/blend-sdk';
 import { invokeSorobanOperation, signWithKeypair, TxParams } from '../utils/tx.js';
 import { config } from '../utils/env_config.js';
-import { addressBook } from '../utils/address_book.js';
+import { addressBook } from '../utils/address-book.js';
 // Set this user to desired user
 
 if (process.argv.length < 4) {

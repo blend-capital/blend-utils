@@ -7,7 +7,7 @@ import {
 import { randomBytes, sign } from 'crypto';
 import { Operation, Soroban, SorobanRpc, Transaction, TransactionBuilder, xdr } from 'stellar-sdk';
 import { CometContract } from '../external/comet.js';
-import { addressBook } from '../utils/address_book.js';
+import { addressBook } from '../utils/address-book.js';
 import { config } from '../utils/env_config.js';
 import {
   invokeClassicOp,

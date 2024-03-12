@@ -6,7 +6,7 @@ import {
 } from '@blend-capital/blend-sdk';
 import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
 import { xdr } from 'stellar-sdk';
-import { addressBook } from '../utils/address_book.js';
+import { addressBook } from '../utils/address-book.js';
 import { bumpContractInstance } from '../utils/contract.js';
 
 export async function setupPool(

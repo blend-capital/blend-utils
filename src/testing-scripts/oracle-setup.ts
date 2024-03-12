@@ -8,7 +8,7 @@ import {
 } from '../utils/contract.js';
 import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
 import { config } from '../utils/env_config.js';
-import { addressBook } from '../utils/address_book.js';
+import { addressBook } from '../utils/address-book.js';
 
 export async function setupMockOracle(txParams: TxParams): Promise<OracleContract> {
   await installContract('oraclemock', txParams);
