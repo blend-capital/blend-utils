@@ -1,6 +1,5 @@
-import { Contract, Keypair, Address, ContractSpec } from 'stellar-sdk';
+import { Address, ContractSpec, Contract } from 'stellar-sdk';
 import { i128, u64 } from '@blend-capital/blend-sdk';
-import { invokeAndUnwrap } from '../utils/tx.js';
 
 /**
  * PriceData type
@@ -17,14 +16,11 @@ export type Asset =
   | { tag: 'Stellar'; values: readonly [Address] }
   | { tag: 'Other'; values: readonly [string] };
 
-export class OracleClient {
-  address: string;
+export class OracleContract extends Contract {
   spec: ContractSpec;
-  _contract: Contract;
 
   constructor(address: string) {
-    this.address = address;
-    this._contract = new Contract(address);
+    super(address);
     this.spec = new ContractSpec([
       'AAAABAAAACFUaGUgZXJyb3IgY29kZXMgZm9yIHRoZSBjb250cmFjdC4AAAAAAAAAAAAAEFByaWNlT3JhY2xlRXJyb3IAAAABAAAAUVRoZSBjb25maWcgYXNzZXRzIGRvbid0IGNvbnRhaW4gcGVyc2lzdGVudCBhc3NldC4gRGVsZXRlIGFzc2V0cyBpcyBub3Qgc3VwcG9ydGVkLgAAAAAAAAxBc3NldE1pc3NpbmcAAAAC',
       'AAAAAAAAAAAAAAAIc2V0X2RhdGEAAAAFAAAAAAAAAAVhZG1pbgAAAAAAABMAAAAAAAAABGJhc2UAAAfQAAAABUFzc2V0AAAAAAAAAAAAAAZhc3NldHMAAAAAA+oAAAfQAAAABUFzc2V0AAAAAAAAAAAAAAhkZWNpbWFscwAAAAQAAAAAAAAACnJlc29sdXRpb24AAAAAAAQAAAAA',
@@ -42,13 +38,12 @@ export class OracleClient {
     ]);
   }
 
-  public async setData(
+  public setData(
     admin: Address,
     base: Asset,
     assets: Array<Asset>,
     decimals: number,
-    resolution: number,
-    source: Keypair
+    resolution: number
   ) {
     const invokeArgs = this.spec.funcArgsToScVals('set_data', {
       admin,
@@ -57,19 +52,19 @@ export class OracleClient {
       decimals,
       resolution,
     });
-    const operation = this._contract.call('set_data', ...invokeArgs);
-    await invokeAndUnwrap(operation, source, () => undefined);
+    const operation = this.call('set_data', ...invokeArgs);
+    return operation.toXDR('base64');
   }
 
-  async setPrice(prices: Array<bigint>, timestamp: number, source: Keypair) {
+  setPrice(prices: Array<bigint>, timestamp: number) {
     const invokeArgs = this.spec.funcArgsToScVals('set_price', { prices, timestamp });
-    const operation = this._contract.call('set_price', ...invokeArgs);
-    await invokeAndUnwrap(operation, source, () => undefined);
+    const operation = this.call('set_price', ...invokeArgs);
+    return operation.toXDR('base64');
   }
 
-  async setPriceStable(prices: Array<bigint>, source: Keypair) {
+  setPriceStable(prices: Array<bigint>) {
     const invokeArgs = this.spec.funcArgsToScVals('set_price_stable', { prices });
-    const operation = this._contract.call('set_price_stable', ...invokeArgs);
-    await invokeAndUnwrap(operation, source, () => undefined);
+    const operation = this.call('set_price_stable', ...invokeArgs);
+    return operation.toXDR('base64');
   }
 }
