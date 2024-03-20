@@ -65,7 +65,7 @@ const poolEmissionMetadata: ReserveEmissionMetadata[] = [
   },
 ];
 const startingStatus = 0; // 0 for active, 2 for admin on ice, 3 for on ice, 4 for admin frozen
-const addToRewardZone = true;
+const addToRewardZone = false;
 const poolToRemove = 'Stellar';
 const revokeAdmin = false;
 
