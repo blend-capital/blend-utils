@@ -26,9 +26,9 @@ async function mock(addressBook: AddressBook) {
   const signWithAdmin = (txXdr: string) =>
     signWithKeypair(txXdr, rpc_network.passphrase, config.admin);
 
-  await airdropAccount(whale);
+  // await airdropAccount(whale);
 
-  // Initialize Contracts
+  // // Initialize Contracts
   const blnd_token = new TokenClient(addressBook.getContractId('BLND'));
   const blnd_asset = new Asset('BLND', config.admin.publicKey());
   const poolFactory = new PoolFactoryClient(addressBook.getContractId('poolFactory'));
@@ -42,29 +42,29 @@ async function mock(addressBook: AddressBook) {
   const wbtc_asset = new Asset('wBTC', config.admin.publicKey());
   const comet = new CometClient(addressBook.getContractId('comet'));
 
-  // console.log('Create BLND-USDC Pool and mint ');
-  await blnd_token.classic_trustline(whale, blnd_asset, whale);
+  // // console.log('Create BLND-USDC Pool and mint ');
+  // await blnd_token.classic_trustline(whale, blnd_asset, whale);
   await blnd_token.classic_mint(whale, blnd_asset, '10000000', config.admin);
-  await usdc_token.classic_trustline(whale, usdc_asset, whale);
+  // await usdc_token.classic_trustline(whale, usdc_asset, whale);
   await usdc_token.classic_mint(whale, usdc_asset, '100000', config.admin);
 
-  // setup BLND-USDC Pool
-  await comet.bind(addressBook.getContractId('BLND'), BigInt(1_000e7), BigInt(8e7), config.admin);
-  await comet.bind(addressBook.getContractId('USDC'), BigInt(25e7), BigInt(2e7), config.admin);
-  await comet.setSwapFee(BigInt(0.003e7), config.admin);
-  await comet.finalize(config.admin);
-  await comet.setPublicSwap(true, config.admin);
+  // // setup BLND-USDC Pool
+  // await comet.bind(addressBook.getContractId('BLND'), BigInt(1_000e7), BigInt(8e7), config.admin);
+  // await comet.bind(addressBook.getContractId('USDC'), BigInt(25e7), BigInt(2e7), config.admin);
+  // await comet.setSwapFee(BigInt(0.003e7), config.admin);
+  // await comet.finalize(config.admin);
+  // await comet.setPublicSwap(true, config.admin);
 
-  // mint 200k tokens to whale
-  await comet.joinPool(
-    BigInt(200_000e7),
-    [BigInt(2_001_000e7), BigInt(50_001e7)],
-    whale.publicKey(),
-    whale
-  );
-  await logInvocation(
-    backstop.updateTokenValue(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
-  );
+  // // mint 200k tokens to whale
+  // await comet.joinPool(
+  //   BigInt(200_000e7),
+  //   [BigInt(2_001_000e7), BigInt(50_001e7)],
+  //   whale.publicKey(),
+  //   whale
+  // );
+  // await logInvocation(
+  //   backstop.updateTokenValue(config.admin.publicKey(), signWithAdmin, rpc_network, tx_options)
+  // );
 
   console.log('Transfer blnd admin to emitter');
   await blnd_token.set_admin(addressBook.getContractId('emitter'), config.admin);
@@ -385,12 +385,12 @@ async function mock(addressBook: AddressBook) {
         values: [Address.fromString(addressBook.getContractId('wBTC'))],
       },
     ],
-    7,
+    9,
     300,
     config.admin
   );
   await oracle.setPriceStable(
-    [BigInt(1e7), BigInt(0.05e7), BigInt(2000e7), BigInt(36000e7)],
+    [BigInt(1e9), BigInt(0.05e9), BigInt(2000e9), BigInt(36000e9)],
     config.admin
   );
 
@@ -408,21 +408,21 @@ async function mock(addressBook: AddressBook) {
       request_type: RequestType.SupplyCollateral,
       address: addressBook.getContractId('USDC'),
     },
-    {
-      amount: BigInt(5000e7),
-      request_type: RequestType.SupplyCollateral,
-      address: addressBook.getContractId('XLM'),
-    },
+    // {
+    //   amount: BigInt(5000e7),
+    //   request_type: RequestType.SupplyCollateral,
+    //   address: addressBook.getContractId('XLM'),
+    // },
     {
       amount: BigInt(15000e7),
       request_type: RequestType.Borrow,
       address: addressBook.getContractId('USDC'),
     },
-    {
-      amount: BigInt(2000e7),
-      request_type: RequestType.Borrow,
-      address: addressBook.getContractId('XLM'),
-    },
+    // {
+    //   amount: BigInt(2000e7),
+    //   request_type: RequestType.Borrow,
+    //   address: addressBook.getContractId('XLM'),
+    // },
   ];
   await logInvocation(
     stellarPool.submit(whale.publicKey(), signWithWhale, rpc_network, tx_options, {
@@ -435,11 +435,11 @@ async function mock(addressBook: AddressBook) {
 
   console.log('Whale Supply tokens to Bridge pool');
   const bridgeSupplyRequests: Request[] = [
-    {
-      amount: BigInt(5000e7),
-      request_type: RequestType.SupplyCollateral,
-      address: addressBook.getContractId('XLM'),
-    },
+    // {
+    //   amount: BigInt(5000e7),
+    //   request_type: RequestType.SupplyCollateral,
+    //   address: addressBook.getContractId('XLM'),
+    // },
     {
       amount: BigInt(5e7),
       request_type: RequestType.SupplyCollateral,
@@ -462,11 +462,11 @@ async function mock(addressBook: AddressBook) {
 
   console.log('Whale Borrow tokens from Bridge pool');
   const bridgeBorrowRequests: Request[] = [
-    {
-      amount: BigInt(2500e7),
-      request_type: RequestType.Borrow,
-      address: addressBook.getContractId('XLM'),
-    },
+    // {
+    //   amount: BigInt(2500e7),
+    //   request_type: RequestType.Borrow,
+    //   address: addressBook.getContractId('XLM'),
+    // },
     {
       amount: BigInt(3e7),
       request_type: RequestType.Borrow,

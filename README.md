@@ -102,3 +102,18 @@ After setting the constants, the user can run the `deploy-pool` script to deploy
 ```bash
 node ./lib/user-scripts/deploy-pool.js network_name
 ```
+
+## Docker
+
+To setup a local network instance run
+
+```
+docker build . \
+ --tag soroban-preview:11 \
+ --force-rm \
+ --rm
+```
+
+```
+sh quickstart.sh local
+```

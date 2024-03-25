@@ -39,7 +39,7 @@ async function set_oracle_prices(addressBook: AddressBook) {
   //   config.admin
   // );
   await oracle.setPriceStable(
-    [BigInt(1e7), BigInt(0.15e7), BigInt(2000e7), BigInt(36000e7), BigInt(100_0000)],
+    [BigInt(1e9), BigInt(0.05e9), BigInt(2000e9), BigInt(36000e9)],
     config.admin
   );
 }
