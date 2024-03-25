@@ -46,23 +46,23 @@ export async function setupPoolBackstop(
       amount: BigInt(50_000e7),
     }),
 
-    backstop.parsers.deposit,
+    BackstopContract.parsers.deposit,
     whaleTxParams
   );
 
   await invokeSorobanOperation(
     backstop.updateTokenValue(),
-    backstop.parsers.updateTknVal,
+    BackstopContract.parsers.updateTknVal,
     adminTxParams
   );
 
-  await invokeSorobanOperation(pool.setStatus(0), pool.parsers.setStatus, adminTxParams);
+  await invokeSorobanOperation(pool.setStatus(0), PoolContract.parsers.setStatus, adminTxParams);
   await invokeSorobanOperation(
     backstop.addReward({
       to_add: pool.contractId(),
       to_remove: pool.contractId(),
     }),
-    backstop.parsers.addReward,
+    BackstopContract.parsers.addReward,
     adminTxParams
   );
   console.log('Successfully setup pool backstop\n');

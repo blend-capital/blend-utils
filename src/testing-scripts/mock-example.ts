@@ -1,4 +1,6 @@
 import {
+  BackstopContract,
+  PoolContract,
   Request,
   RequestType,
   ReserveConfig,
@@ -146,7 +148,7 @@ async function mock() {
   ];
   await invokeSorobanOperation(
     stellarPool.setEmissionsConfig(stellarPoolEmissionMetadata),
-    stellarPool.parsers.setEmissionsConfig,
+    PoolContract.parsers.setEmissionsConfig,
     adminTxParams
   );
 
@@ -254,7 +256,7 @@ async function mock() {
   ];
   await invokeSorobanOperation(
     bridgePool.setEmissionsConfig(bridgeEmissionMetadata),
-    bridgePool.parsers.setEmissionsConfig,
+    PoolContract.parsers.setEmissionsConfig,
     adminTxParams
   );
 
@@ -316,7 +318,7 @@ async function mock() {
       to: whale.publicKey(),
       requests: stellarRequests,
     }),
-    stellarPool.parsers.submit,
+    PoolContract.parsers.submit,
     whaleTxParams
   );
 
@@ -345,7 +347,7 @@ async function mock() {
       to: whale.publicKey(),
       requests: bridgeSupplyRequests,
     }),
-    bridgePool.parsers.submit,
+    PoolContract.parsers.submit,
     whaleTxParams
   );
 
@@ -374,7 +376,7 @@ async function mock() {
       to: whale.publicKey(),
       requests: bridgeBorrowRequests,
     }),
-    bridgePool.parsers.submit,
+    PoolContract.parsers.submit,
     whaleTxParams
   );
 
@@ -384,7 +386,7 @@ async function mock() {
       pool_address: stellarPool.contractId(),
       amount: BigInt(1000e7),
     }),
-    backstopContract.parsers.queueWithdrawal,
+    BackstopContract.parsers.queueWithdrawal,
     whaleTxParams
   );
 }
