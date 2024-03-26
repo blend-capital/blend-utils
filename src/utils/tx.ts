@@ -5,13 +5,10 @@ import {
   Account,
   SorobanRpc,
   xdr,
-  Operation,
   TimeoutInfinite,
 } from 'stellar-sdk';
 import { config } from './env_config.js';
-import { ContractError, parseError, parseResult } from '@blend-capital/blend-sdk';
-import { parse } from 'path';
-import { report } from 'process';
+import { parseError, parseResult } from '@blend-capital/blend-sdk';
 
 export type TxParams = {
   account: Account;
@@ -62,10 +59,12 @@ export async function sendTransaction<T>(
     await new Promise((resolve) => setTimeout(resolve, 1000));
     get_tx_response = await config.rpc.getTransaction(send_tx_response.hash);
   }
+
   if (get_tx_response.status !== 'SUCCESS') {
     let error = parseError(get_tx_response);
     throw error;
   }
+
   let result = parseResult(get_tx_response, parser);
   return result;
 }
@@ -76,16 +75,16 @@ export async function invokeSorobanOperation<T>(
   txParams: TxParams,
   sorobanData?: xdr.SorobanTransactionData
 ): Promise<T | undefined> {
-  let txBuilder = new TransactionBuilder(txParams.account, txParams.txBuilderOptions)
+  let account = await config.rpc.getAccount(txParams.account.accountId());
+  let txBuilder = new TransactionBuilder(account, txParams.txBuilderOptions)
     .addOperation(xdr.Operation.fromXDR(operation, 'base64'))
     .setTimeout(TimeoutInfinite);
   if (sorobanData) {
     txBuilder.setSorobanData(sorobanData);
   }
   let transaction = txBuilder.build();
-
+  console.log('Transaction Hash:', transaction.hash().toString('hex'));
   let simulation = await config.rpc.simulateTransaction(transaction);
-
   if (SorobanRpc.Api.isSimulationError(simulation)) {
     const error = parseError(simulation);
     console.error(error);
@@ -102,7 +101,8 @@ export async function invokeSorobanOperation<T>(
 }
 
 export async function invokeClassicOp(operation: string, txParams: TxParams) {
-  let txBuilder = new TransactionBuilder(txParams.account, txParams.txBuilderOptions)
+  let account = await config.rpc.getAccount(txParams.account.accountId());
+  let txBuilder = new TransactionBuilder(account, txParams.txBuilderOptions)
     .addOperation(xdr.Operation.fromXDR(operation, 'base64'))
     .setTimeout(TimeoutInfinite);
   let transaction = txBuilder.build();
@@ -111,7 +111,7 @@ export async function invokeClassicOp(operation: string, txParams: TxParams) {
     config.passphrase
   );
   try {
-    let result = await sendTransaction(signedTx, () => undefined);
+    await sendTransaction(signedTx, () => undefined);
   } catch (e) {
     console.error(e);
     throw Error('failed to submit classic op TX');
