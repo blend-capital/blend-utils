@@ -43,14 +43,14 @@ await distribute(pools, includeBackstop, txParams);
 
 export async function distribute(pools: string[], includeBackstop: boolean, txParams: TxParams) {
   const emitter = new EmitterContract(addressBook.getContractId('emitter'));
-  await invokeSorobanOperation(emitter.distribute(), emitter.parsers.distribute, txParams);
+  await invokeSorobanOperation(emitter.distribute(), EmitterContract.parsers.distribute, txParams);
   console.log('Emitter distributed');
 
   if (includeBackstop) {
     const backstop = new BackstopContract(addressBook.getContractId('backstop'));
     await invokeSorobanOperation(
       backstop.gulpEmissions(),
-      backstop.parsers.gulpEmissions,
+      BackstopContract.parsers.gulpEmissions,
       txParams
     );
     console.log('Backstop gulped');
@@ -58,7 +58,11 @@ export async function distribute(pools: string[], includeBackstop: boolean, txPa
 
   for (const poolId of pools) {
     const pool = new PoolContract(poolId);
-    await invokeSorobanOperation(pool.gulpEmissions(), pool.parsers.gulpEmissions, txParams);
+    await invokeSorobanOperation(
+      pool.gulpEmissions(),
+      PoolContract.parsers.gulpEmissions,
+      txParams
+    );
     console.log(`Gulped Pool with ID: ${poolId}`);
   }
 }

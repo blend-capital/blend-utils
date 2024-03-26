@@ -16,9 +16,12 @@ export async function setupPool(
   let poolFactory = new PoolFactoryContract(addressBook.getContractId('poolFactory'));
   let poolAddress = await invokeSorobanOperation(
     poolFactory.deploy(deployPoolArgs),
-    poolFactory.parsers.deploy,
+    PoolFactoryContract.parsers.deploy,
     txParams
   );
+  if (!poolAddress) {
+    throw new Error('Failed to deploy pool');
+  }
   addressBook.setContractId(deployPoolArgs.name, poolAddress);
   addressBook.writeToFile();
   await bumpContractInstance(deployPoolArgs.name, txParams);

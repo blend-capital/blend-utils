@@ -17,7 +17,7 @@ export async function setupReserve(
 
   await invokeSorobanOperation(
     pool.queueSetReserve(initReserveArgs),
-    pool.parsers.queueSetReserve,
+    PoolContract.parsers.queueSetReserve,
     txParams
   );
 
@@ -25,7 +25,7 @@ export async function setupReserve(
   try {
     await invokeSorobanOperation(
       pool.setReserve(initReserveArgs.asset),
-      pool.parsers.setReserve,
+      PoolContract.parsers.setReserve,
       txParams
     );
     console.log(`Successfully set ${initReserveArgs.asset} reserve.\n`);

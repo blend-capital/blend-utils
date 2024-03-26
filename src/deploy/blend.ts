@@ -49,7 +49,7 @@ export async function deployBlend(
   };
   await invokeSorobanOperation(
     emitter.initialize(emitterInitArgs),
-    emitter.parsers.initialize,
+    EmitterContract.parsers.initialize,
     txParams
   );
 
@@ -61,7 +61,7 @@ export async function deployBlend(
   };
   await invokeSorobanOperation(
     poolFactory.initialize(factoryInitArgs),
-    poolFactory.parsers.initialize,
+    PoolFactoryContract.parsers.initialize,
     txParams
   );
 
@@ -75,7 +75,7 @@ export async function deployBlend(
   };
   await invokeSorobanOperation(
     backstop.initialize(backstopInitArgs),
-    backstop.parsers.initialize,
+    BackstopContract.parsers.initialize,
     txParams
   );
 

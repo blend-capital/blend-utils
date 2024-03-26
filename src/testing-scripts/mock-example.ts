@@ -1,4 +1,6 @@
 import {
+  BackstopContract,
+  PoolContract,
   Request,
   RequestType,
   ReserveConfig,
@@ -64,8 +66,8 @@ async function mock() {
     new Asset('wBTC', config.admin.publicKey()),
     adminTxParams
   );
-  let mockOracle = await setupMockOracle(adminTxParams);
   const cometContract = await deployComet(adminTxParams);
+  let mockOracle = await setupMockOracle(adminTxParams);
   const [backstopContract, emitterContract, poolFactoryContract] = await deployBlend(
     BLND.contractId(),
     cometContract.contractId(),
@@ -146,7 +148,7 @@ async function mock() {
   ];
   await invokeSorobanOperation(
     stellarPool.setEmissionsConfig(stellarPoolEmissionMetadata),
-    stellarPool.parsers.setEmissionsConfig,
+    PoolContract.parsers.setEmissionsConfig,
     adminTxParams
   );
 
@@ -254,7 +256,7 @@ async function mock() {
   ];
   await invokeSorobanOperation(
     bridgePool.setEmissionsConfig(bridgeEmissionMetadata),
-    bridgePool.parsers.setEmissionsConfig,
+    PoolContract.parsers.setEmissionsConfig,
     adminTxParams
   );
 
@@ -275,9 +277,6 @@ async function mock() {
     () => undefined,
     adminTxParams
   );
-
-  console.log('Setting Asset Prices\n');
-  setupMockOracle(adminTxParams);
 
   console.log('Minting tokens to whale\n');
   await invokeClassicOp(wETH.classic_trustline(whale.publicKey()), whaleTxParams);
@@ -316,7 +315,7 @@ async function mock() {
       to: whale.publicKey(),
       requests: stellarRequests,
     }),
-    stellarPool.parsers.submit,
+    PoolContract.parsers.submit,
     whaleTxParams
   );
 
@@ -345,7 +344,7 @@ async function mock() {
       to: whale.publicKey(),
       requests: bridgeSupplyRequests,
     }),
-    bridgePool.parsers.submit,
+    PoolContract.parsers.submit,
     whaleTxParams
   );
 
@@ -374,7 +373,7 @@ async function mock() {
       to: whale.publicKey(),
       requests: bridgeBorrowRequests,
     }),
-    bridgePool.parsers.submit,
+    PoolContract.parsers.submit,
     whaleTxParams
   );
 
@@ -384,7 +383,7 @@ async function mock() {
       pool_address: stellarPool.contractId(),
       amount: BigInt(1000e7),
     }),
-    backstopContract.parsers.queueWithdrawal,
+    BackstopContract.parsers.queueWithdrawal,
     whaleTxParams
   );
 }
