@@ -20,19 +20,19 @@ export async function setupPoolBackstop(
   let comet = new CometContract(cometAddress);
   await invokeClassicOp(BLND.classic_trustline(whaleTxParams.account.accountId()), whaleTxParams);
   await invokeClassicOp(
-    BLND.classic_mint(whaleTxParams.account.accountId(), '10000000'),
+    BLND.classic_mint(whaleTxParams.account.accountId(), '500100'),
     adminTxParams
   );
   await invokeClassicOp(USDC.classic_trustline(whaleTxParams.account.accountId()), whaleTxParams);
   await invokeClassicOp(
-    USDC.classic_mint(whaleTxParams.account.accountId(), '100000'),
+    USDC.classic_mint(whaleTxParams.account.accountId(), '12501'),
     adminTxParams
   );
 
   await invokeSorobanOperation(
     comet.joinPool(
-      BigInt(100_000e7),
-      [BigInt(1_001_000e7), BigInt(25_001e7)],
+      BigInt(50000e7),
+      [BigInt(500100e7), BigInt(12501e7)],
       whaleTxParams.account.accountId()
     ),
     () => undefined,

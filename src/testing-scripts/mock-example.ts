@@ -66,8 +66,8 @@ async function mock() {
     new Asset('wBTC', config.admin.publicKey()),
     adminTxParams
   );
-  let mockOracle = await setupMockOracle(adminTxParams);
   const cometContract = await deployComet(adminTxParams);
+  let mockOracle = await setupMockOracle(adminTxParams);
   const [backstopContract, emitterContract, poolFactoryContract] = await deployBlend(
     BLND.contractId(),
     cometContract.contractId(),
@@ -277,9 +277,6 @@ async function mock() {
     () => undefined,
     adminTxParams
   );
-
-  console.log('Setting Asset Prices\n');
-  setupMockOracle(adminTxParams);
 
   console.log('Minting tokens to whale\n');
   await invokeClassicOp(wETH.classic_trustline(whale.publicKey()), whaleTxParams);
