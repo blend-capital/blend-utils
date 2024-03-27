@@ -1,50 +1,37 @@
-import { Asset, Contract, Keypair, Operation, nativeToScVal } from 'stellar-sdk';
-import { AddressBook } from '../utils/address_book.js';
-import { invokeAndUnwrap, invokeClassicOp } from '../utils/tx.js';
-import { deployStellarAsset } from '../utils/contract.js';
+import { Asset, Contract, Keypair, Operation, nativeToScVal, xdr } from 'stellar-sdk';
 
-export async function tryDeployStellarAsset(contracts: AddressBook, source: Keypair, asset: Asset) {
-  try {
-    await deployStellarAsset(asset, contracts, source);
-  } catch (e) {
-    console.error('unable to deploy stellar asset', asset.code, e);
-  }
-}
-
-export class TokenClient {
-  address: string;
-  private contract: Contract;
-
-  constructor(address: string) {
-    this.address = address;
-    this.contract = new Contract(address);
+export class TokenContract extends Contract {
+  private stellarAsset?: Asset;
+  constructor(address: string, asset?: Asset) {
+    super(address);
+    this.stellarAsset = asset;
   }
 
-  public async classic_trustline(user: Keypair, asset: Asset, source: Keypair) {
+  get asset(): Asset {
+    if (!this.stellarAsset) throw new Error('Asset not set');
+    return this.stellarAsset;
+  }
+  public classic_trustline(user: string) {
+    if (!this.asset) throw new Error('Asset not set');
     const operation = Operation.changeTrust({
-      source: user.publicKey(),
-      asset: asset,
+      source: user,
+      asset: this.asset,
     });
-    await invokeClassicOp(operation, source);
+    return operation.toXDR('base64');
   }
 
-  public async classic_mint(user: Keypair, asset: Asset, amount: string, source: Keypair) {
+  public classic_mint(user: string, amount: string) {
+    if (!this.asset) throw new Error('Asset not set');
     const operation = Operation.payment({
       amount: amount,
-      asset: asset,
-      destination: user.publicKey(),
-      source: source.publicKey(),
+      asset: this.asset,
+      destination: user,
+      source: this.asset.issuer,
     });
-    await invokeClassicOp(operation, source);
+    return operation.toXDR('base64');
   }
 
-  public async initialize(
-    admin: string,
-    decimal: number,
-    name: string,
-    symbol: string,
-    source: Keypair
-  ) {
+  public initialize(admin: string, decimal: number, name: string, symbol: string) {
     const invokeArgs = {
       method: 'initialize',
       args: [
@@ -54,44 +41,41 @@ export class TokenClient {
         nativeToScVal(symbol, { type: 'string' }),
       ],
     };
-    const operation = this.contract
-      .call(invokeArgs.method, ...invokeArgs.args)
-      .toXDR()
-      .toString('base64');
-    await invokeAndUnwrap(operation, source, () => undefined);
+    const operation = this.call(invokeArgs.method, ...invokeArgs.args);
+    return operation.toXDR('base64');
   }
 
-  public async mint(to: string, amount: bigint, source: Keypair) {
+  public mint(to: string, amount: bigint) {
     const invokeArgs = {
       method: 'mint',
       args: [nativeToScVal(to, { type: 'address' }), nativeToScVal(amount, { type: 'i128' })],
     };
-    const operation = this.contract
-      .call(invokeArgs.method, ...invokeArgs.args)
-      .toXDR()
-      .toString('base64');
-    await invokeAndUnwrap(operation, source, () => undefined);
+    const operation = this.call(invokeArgs.method, ...invokeArgs.args);
+
+    return operation.toXDR('base64');
   }
 
-  public async set_admin(new_admin: string, source: Keypair) {
+  public set_admin(new_admin: string) {
     const invokeArgs = {
       method: 'set_admin',
       args: [nativeToScVal(new_admin, { type: 'address' })],
     };
-    const operation = this.contract
-      .call(invokeArgs.method, ...invokeArgs.args)
-      .toXDR()
-      .toString('base64');
-    await invokeAndUnwrap(operation, source, () => undefined);
+    const operation = this.call(invokeArgs.method, ...invokeArgs.args);
+
+    return operation.toXDR('base64');
   }
 
-  public async approve(
-    from: string,
-    spender: string,
-    amount: bigint,
-    expiration_ledger: number,
-    source: Keypair
-  ) {
+  public admin() {
+    const invokeArgs = {
+      method: 'admin',
+      args: [],
+    };
+    const operation = this.call(invokeArgs.method, ...invokeArgs.args);
+
+    return operation.toXDR('base64');
+  }
+
+  public approve(from: string, spender: string, amount: bigint, expiration_ledger: number) {
     const invokeArgs = {
       method: 'approve',
       args: [
@@ -101,14 +85,12 @@ export class TokenClient {
         nativeToScVal(expiration_ledger, { type: 'u32' }),
       ],
     };
-    const operation = this.contract
-      .call(invokeArgs.method, ...invokeArgs.args)
-      .toXDR()
-      .toString('base64');
-    await invokeAndUnwrap(operation, source, () => undefined);
+    const operation = this.call(invokeArgs.method, ...invokeArgs.args);
+
+    return operation.toXDR('base64');
   }
 
-  public async transfer(from: string, to: string, amount: bigint, source: Keypair) {
+  public transfer(from: string, to: string, amount: bigint) {
     const invokeArgs = {
       method: 'transfer',
       args: [
@@ -117,20 +99,12 @@ export class TokenClient {
         nativeToScVal(amount, { type: 'i128' }),
       ],
     };
-    const operation = this.contract
-      .call(invokeArgs.method, ...invokeArgs.args)
-      .toXDR()
-      .toString('base64');
-    await invokeAndUnwrap(operation, source, () => undefined);
+    const operation = this.call(invokeArgs.method, ...invokeArgs.args);
+
+    return operation.toXDR('base64');
   }
 
-  public async transfer_from(
-    spender: string,
-    from: string,
-    to: string,
-    amount: bigint,
-    source: Keypair
-  ) {
+  public transfer_from(spender: string, from: string, to: string, amount: bigint) {
     const invokeArgs = {
       method: 'transfer_from',
       args: [
@@ -140,10 +114,8 @@ export class TokenClient {
         nativeToScVal(amount, { type: 'i128' }),
       ],
     };
-    const operation = this.contract
-      .call(invokeArgs.method, ...invokeArgs.args)
-      .toXDR()
-      .toString('base64');
-    await invokeAndUnwrap(operation, source, () => undefined);
+    const operation = this.call(invokeArgs.method, ...invokeArgs.args);
+
+    return operation.toXDR('base64');
   }
 }
