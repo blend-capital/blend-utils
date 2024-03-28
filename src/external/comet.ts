@@ -102,4 +102,22 @@ export class CometContract extends Contract {
     };
     return this.call(invokeArgs.method, ...invokeArgs.args).toXDR('base64');
   }
+
+  public deposit_single_max_out(
+    token_in: string,
+    token_amount_in: bigint,
+    min_amount_out: bigint,
+    user: string
+  ) {
+    const invokeArgs = {
+      method: 'dep_tokn_amt_in_get_lp_tokns_out',
+      args: [
+        ((i) => Address.fromString(i).toScVal())(token_in),
+        ((i) => nativeToScVal(i, { type: 'i128' }))(token_amount_in),
+        ((i) => nativeToScVal(i, { type: 'i128' }))(min_amount_out),
+        ((i) => Address.fromString(i).toScVal())(user),
+      ],
+    };
+    return this.call(invokeArgs.method, ...invokeArgs.args).toXDR('base64');
+  }
 }

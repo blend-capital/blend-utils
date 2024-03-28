@@ -34,14 +34,14 @@ async function mock() {
   const whale = config.getUser('WHALE');
   await airdropAccount(whale);
   await airdropAccount(config.admin);
-  let adminTxParams: TxParams = {
+  const adminTxParams: TxParams = {
     account: await config.rpc.getAccount(config.admin.publicKey()),
     txBuilderOptions,
     signerFunction: async (txXDR: string) => {
       return signWithKeypair(txXDR, config.passphrase, config.admin);
     },
   };
-  let whaleTxParams: TxParams = {
+  const whaleTxParams: TxParams = {
     account: await config.rpc.getAccount(whale.publicKey()),
     txBuilderOptions,
     signerFunction: async (txXDR: string) => {
@@ -67,7 +67,7 @@ async function mock() {
     adminTxParams
   );
   const cometContract = await deployComet(adminTxParams);
-  let mockOracle = await setupMockOracle(adminTxParams);
+  const mockOracle = await setupMockOracle(adminTxParams);
   const [backstopContract, emitterContract, poolFactoryContract] = await deployBlend(
     BLND.contractId(),
     cometContract.contractId(),
@@ -80,7 +80,7 @@ async function mock() {
 
   // ********** Stellar Pool (XLM, USDC) **********//
 
-  let stellarPool = await setupPool(
+  const stellarPool = await setupPool(
     {
       admin: config.admin.publicKey(),
       name: 'Stellar',
@@ -164,7 +164,7 @@ async function mock() {
 
   //********** Bridge Pool (XLM, USDC) **********//
 
-  let bridgePool = await setupPool(
+  const bridgePool = await setupPool(
     {
       admin: config.admin.publicKey(),
       name: 'Bridge',
@@ -270,13 +270,13 @@ async function mock() {
     whaleTxParams
   );
 
-  console.log('Transfer blnd admin to emitter\n');
+  // console.log('Transfer blnd admin to emitter\n');
 
-  await invokeSorobanOperation(
-    BLND.set_admin(emitterContract.contractId()),
-    () => undefined,
-    adminTxParams
-  );
+  // await invokeSorobanOperation(
+  //   BLND.set_admin(emitterContract.contractId()),
+  //   () => undefined,
+  //   whaleTxParams
+  // );
 
   console.log('Minting tokens to whale\n');
   await invokeClassicOp(wETH.classic_trustline(whale.publicKey()), whaleTxParams);

@@ -13,10 +13,10 @@ import { addressBook } from '../utils/address-book.js';
 export async function setupMockOracle(txParams: TxParams): Promise<OracleContract> {
   await installContract('oraclemock', txParams);
   await bumpContractCode('oraclemock', txParams);
-  let oracleAddress = await deployContract('oraclemock', 'oraclemock', txParams);
+  const oracleAddress = await deployContract('oraclemock', 'oraclemock', txParams);
   await bumpContractInstance('oraclemock', txParams);
 
-  let oracle = new OracleContract(oracleAddress);
+  const oracle = new OracleContract(oracleAddress);
   await invokeSorobanOperation(
     oracle.setData(
       Address.fromString(config.admin.publicKey()),

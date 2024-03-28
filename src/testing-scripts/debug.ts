@@ -61,21 +61,21 @@ async function debug(addressBook: AddressBook) {
 
   const user1 = config.getUser('TEST');
   console.log(user1.publicKey());
-  let resp = await config.rpc.getTransaction(
+  const resp = await config.rpc.getTransaction(
     '0000000000000000000000000000000000000000000000000000000000000000'
   );
   // await airdropAccount(user1);
   await airdropAccount(config.admin);
-  let old_admin = config.getUser('OLD_ADMIN');
-  let user1Sign = (txXdr: string) => signWithKeypair(txXdr, rpc_network.passphrase, user1);
+  const old_admin = config.getUser('OLD_ADMIN');
+  const user1Sign = (txXdr: string) => signWithKeypair(txXdr, rpc_network.passphrase, user1);
 
-  let oracle = new OracleContract(addressBook.getContractId('oracle'));
+  const oracle = new OracleContract(addressBook.getContractId('oracle'));
   const asset = xdr.ScVal.scvVec([
     xdr.ScVal.scvSymbol('Stellar'),
     Address.fromString(addressBook.getContractId('USDC')).toScVal(),
   ]);
-  let account = await config.rpc.getAccount(user1.publicKey());
-  let tx_builder = new TransactionBuilder(account, {
+  const account = await config.rpc.getAccount(user1.publicKey());
+  const tx_builder = new TransactionBuilder(account, {
     fee: '10000',
     networkPassphrase: config.passphrase,
   }).setTimeout(TimeoutInfinite);

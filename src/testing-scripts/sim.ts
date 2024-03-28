@@ -1,24 +1,22 @@
 import { config } from '../utils/env_config.js';
-import { AddressBook } from '../utils/address_book.js';
-import { OracleClient } from '../external/oracle.js';
-import { Address, Asset } from 'stellar-sdk';
+import { Account, Address, Asset } from 'stellar-sdk';
 import {
-  BackstopClient,
+  BackstopContract,
   Network,
-  PoolClient,
-  PoolFactoryClient,
+  PoolContract,
   Request,
   RequestType,
   ReserveConfig,
   ReserveEmissionMetadata,
-  TxOptions,
   u128,
 } from '@blend-capital/blend-sdk';
 import { Keypair } from 'stellar-sdk';
 import { airdropAccount } from '../utils/contract.js';
-import { TokenClient } from '../external/token.js';
-import { logInvocation, signWithKeypair } from '../utils/tx.js';
-import { CometClient } from '../external/comet.js';
+import { TxParams, invokeClassicOp, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
+import { TokenContract } from '../external/token.js';
+import { AddressBook } from '../utils/address-book.js';
+import { CometContract } from '../external/comet.js';
+import { OracleContract } from '../external/oracle.js';
 
 interface User {
   keypair: Keypair;
@@ -79,38 +77,26 @@ const user: User = {
 // oracle is 9 decimals
 const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
-const usdc_token = new TokenClient(addressBook.getContractId('USDC'));
 const usdc_asset = new Asset('USDC', config.admin.publicKey());
-const weth_token = new TokenClient(addressBook.getContractId('wETH'));
+const usdc_token = new TokenContract(addressBook.getContractId('USDC'), usdc_asset);
 const weth_asset = new Asset('wETH', config.admin.publicKey());
-const wbtc_token = new TokenClient(addressBook.getContractId('wBTC'));
+const weth_token = new TokenContract(addressBook.getContractId('wETH'), weth_asset);
+const wbtc_asset = new Asset('wBTC', config.admin.publicKey());
+const wbtc_token = new TokenContract(addressBook.getContractId('wBTC'), wbtc_asset);
 const rpc_network: Network = {
   rpc: config.rpc.serverURL.toString(),
   passphrase: config.passphrase,
   opts: { allowHttp: true },
 };
-const tx_options: TxOptions = {
-  sim: false,
-  pollingInterval: 2000,
-  timeout: 30000,
-  builderOptions: {
-    fee: '10000',
-    timebounds: {
-      minTime: 0,
-      maxTime: 0,
-    },
-    networkPassphrase: config.passphrase,
-  },
-};
-const wbtc_asset = new Asset('wBTC', config.admin.publicKey());
 
 async function randomize_prices(
   addressBook: AddressBook,
   last_prices: bigint[],
-  vol: bigint
+  vol: bigint,
+  admin_tx_options: TxParams
 ): Promise<bigint[]> {
   // Initialize Contracts
-  const oracle = new OracleClient(addressBook.getContractId('oraclemock'));
+  const oracle = new OracleContract(addressBook.getContractId('oraclemock'));
   // Randomize Prices
   const new_prices = last_prices.map((price) => {
     if (price == BigInt(1_000_000_000)) return price;
@@ -124,25 +110,53 @@ async function randomize_prices(
   console.log('new prices: ', new_prices);
   console.log('');
 
-  await oracle.setPriceStable(new_prices, config.admin);
+  await invokeSorobanOperation(
+    oracle.setPriceStable(new_prices),
+    () => undefined,
+    admin_tx_options
+  );
   return new_prices;
 }
 async function randomize_user_action(
   addressBook: AddressBook,
   last_prices: bigint[],
-  users: User[]
+  users: User[],
+  admin_tx_options: TxParams
 ): Promise<User[]> {
   let user: User;
+  let user_tx_options: TxParams;
   if (Math.random() > 0.8 || users.length == 0) {
     const new_kp = Keypair.random();
     await airdropAccount(new_kp);
+    let account: Account;
+    try {
+      account = await config.rpc.getAccount(new_kp.publicKey());
+    } catch (error) {
+      console.log('Error getting account.. trying again');
+      await new Promise((resolve) => setTimeout(resolve, 100000));
+      account = await config.rpc.getAccount(new_kp.publicKey());
+      // Handle error here
+    }
+
+    user_tx_options = {
+      account: account,
+      signerFunction: (txXdr: string) => signWithKeypair(txXdr, rpc_network.passphrase, new_kp),
+      txBuilderOptions: {
+        fee: '10000',
+        timebounds: {
+          minTime: 0,
+          maxTime: 0,
+        },
+        networkPassphrase: config.passphrase,
+      },
+    };
     console.log('new user created');
-    await usdc_token.classic_trustline(new_kp, usdc_asset, new_kp);
-    await usdc_token.classic_mint(new_kp, usdc_asset, '10000', config.admin);
-    await weth_token.classic_trustline(new_kp, weth_asset, new_kp);
-    await weth_token.classic_mint(new_kp, weth_asset, '10', config.admin);
-    await wbtc_token.classic_trustline(new_kp, wbtc_asset, new_kp);
-    await wbtc_token.classic_mint(new_kp, wbtc_asset, '1', config.admin);
+    await invokeClassicOp(usdc_token.classic_trustline(new_kp.publicKey()), user_tx_options);
+    await invokeClassicOp(usdc_token.classic_mint(new_kp.publicKey(), '10000'), admin_tx_options);
+    await invokeClassicOp(weth_token.classic_trustline(new_kp.publicKey()), user_tx_options);
+    await invokeClassicOp(weth_token.classic_mint(new_kp.publicKey(), '10'), admin_tx_options);
+    await invokeClassicOp(wbtc_token.classic_trustline(new_kp.publicKey()), user_tx_options);
+    await invokeClassicOp(wbtc_token.classic_mint(new_kp.publicKey(), '1'), admin_tx_options);
     console.log('assets minted');
     user = {
       keypair: new_kp,
@@ -173,17 +187,30 @@ async function randomize_user_action(
     };
   } else {
     user = users.splice(Math.floor(Math.random() * users.length))[0];
+    user_tx_options = {
+      account: await config.rpc.getAccount(user.keypair.publicKey()),
+      signerFunction: (txXdr: string) =>
+        signWithKeypair(txXdr, rpc_network.passphrase, user.keypair),
+      txBuilderOptions: {
+        fee: '10000',
+        timebounds: {
+          minTime: 0,
+          maxTime: 0,
+        },
+        networkPassphrase: config.passphrase,
+      },
+    };
   }
   let pool;
   let pool_client;
   if (Math.floor(Math.random() * 10) % 2 == 0) {
     console.log('using bridge pool');
     pool = 'bridge';
-    pool_client = new PoolClient(addressBook.getContractId('Bridge'));
+    pool_client = new PoolContract(addressBook.getContractId('Bridge'));
   } else {
     console.log('using stellar pool');
     pool = 'stellar';
-    pool_client = new PoolClient(addressBook.getContractId('Stellar'));
+    pool_client = new PoolContract(addressBook.getContractId('Stellar'));
   }
   const num_requests = Math.floor(Math.random() * 10) % 3;
   const requests: Request[] = [];
@@ -219,7 +246,7 @@ async function randomize_user_action(
     const asset_seed = Math.random();
     if (pool == 'bridge') {
       if (Math.floor(asset_seed * 10) % 3 == 0) {
-        address = weth_token.address;
+        address = weth_token.address().toString();
         wallet_balance = user.wallet.weth;
         pool_collateral = user.bridge_pool_collateral.weth;
         pool_liability = user.bridge_pool_liabilities.weth;
@@ -227,7 +254,7 @@ async function randomize_user_action(
         dFactor = BigInt(80);
         price = last_prices[2];
       } else if (Math.floor(asset_seed * 10) % 3 == 1) {
-        address = wbtc_token.address;
+        address = wbtc_token.address().toString();
         wallet_balance = user.wallet.wbtc;
         pool_collateral = user.bridge_pool_collateral.wbtc;
         pool_liability = user.bridge_pool_liabilities.wbtc;
@@ -245,7 +272,7 @@ async function randomize_user_action(
       }
     } else {
       if (Math.floor(asset_seed * 10) % 2 == 0) {
-        address = usdc_token.address;
+        address = usdc_token.address().toString();
         wallet_balance = user.wallet.usdc;
         pool_collateral = user.stellar_pool_collateral.usdc;
         pool_liability = user.stellar_pool_liabilities.usdc;
@@ -276,13 +303,13 @@ async function randomize_user_action(
         } else {
           user.stellar_pool_collateral.xlm += amount;
         }
-      } else if (address == usdc_token.address) {
+      } else if (address == usdc_token.address().toString()) {
         if (user.stellar_pool_collateral.xlm > BigInt(0)) {
           continue;
         }
         user.wallet.usdc -= amount;
         user.stellar_pool_collateral.usdc += amount;
-      } else if (address == weth_token.address) {
+      } else if (address == weth_token.address().toString()) {
         if (user.bridge_pool_collateral.wbtc > BigInt(0)) {
           continue;
         }
@@ -297,6 +324,7 @@ async function randomize_user_action(
       }
       borrowing_power += (((amount * price) / BigInt(1e9)) * cFactor) / BigInt(100);
     } else if (Math.floor(action_seed * 10) % 4 == 1) {
+      continue; //TODO remove - we just wanna force liqs
       request_type = RequestType.Repay;
       amount = BigInt(Math.floor(Number(pool_liability / BigInt(5))));
 
@@ -311,10 +339,10 @@ async function randomize_user_action(
         } else {
           user.stellar_pool_liabilities.xlm -= amount;
         }
-      } else if (address == usdc_token.address) {
+      } else if (address == usdc_token.address().toString()) {
         user.wallet.usdc -= amount;
         user.stellar_pool_liabilities.usdc -= amount;
-      } else if (address == weth_token.address) {
+      } else if (address == weth_token.address().toString()) {
         user.wallet.weth -= amount;
         user.bridge_pool_liabilities.weth -= amount;
       } else {
@@ -360,10 +388,10 @@ async function randomize_user_action(
       if (amount < BigInt(10)) {
         continue;
       }
-      if (address == usdc_token.address) {
+      if (address == usdc_token.address().toString()) {
         user.wallet.usdc += amount;
         user.stellar_pool_liabilities.usdc += amount;
-      } else if (address == weth_token.address) {
+      } else if (address == weth_token.address().toString()) {
         if (user.bridge_pool_liabilities.wbtc > BigInt(0)) {
           continue;
         }
@@ -385,17 +413,17 @@ async function randomize_user_action(
       address: address,
     });
   }
-  const signWithUser = (txXdr: string) =>
-    signWithKeypair(txXdr, rpc_network.passphrase, user.keypair);
 
   try {
-    await logInvocation(
-      pool_client.submit(user.keypair.publicKey(), signWithUser, rpc_network, tx_options, {
+    await invokeSorobanOperation(
+      pool_client.submit({
         from: user.keypair.publicKey(),
         spender: user.keypair.publicKey(),
         to: user.keypair.publicKey(),
         requests: requests,
-      })
+      }),
+      PoolContract.parsers.submit,
+      user_tx_options
     );
   } catch (error) {
     console.error(error);
@@ -407,77 +435,134 @@ async function simulate(addressBook: AddressBook) {
   let last_prices = [BigInt(1e9), BigInt(0.05e9), BigInt(2000e9), BigInt(36000e9)];
   let users: User[] = [];
   const liquidator = config.getUser('LIQUIDATOR');
+  const signWithAdmin = (txXdr: string) =>
+    signWithKeypair(txXdr, rpc_network.passphrase, config.admin);
   const signWithLiquidator = (txXdr: string) =>
     signWithKeypair(txXdr, rpc_network.passphrase, liquidator);
   await airdropAccount(liquidator);
-
-  const bridgePool = new PoolClient(addressBook.getContractId('Bridge'));
-  const stellarPool = new PoolClient(addressBook.getContractId('Stellar'));
-  console.log('minting tokens to whale');
-  await usdc_token.classic_mint(liquidator, usdc_asset, '100000000', config.admin);
-  await weth_token.classic_mint(liquidator, weth_asset, '1000000', config.admin);
-  await wbtc_token.classic_mint(liquidator, wbtc_asset, '100000', config.admin);
-  console.log('Whale Supply tokens to Stellar pool');
-
-  const stellarRequests: Request[] = [
-    {
-      amount: BigInt(100000000e7),
-      request_type: RequestType.SupplyCollateral,
-      address: addressBook.getContractId('USDC'),
+  const liquidator_tx_options: TxParams = {
+    account: await config.rpc.getAccount(liquidator.publicKey()),
+    signerFunction: signWithLiquidator,
+    txBuilderOptions: {
+      fee: '10000',
+      timebounds: {
+        minTime: 0,
+        maxTime: 0,
+      },
+      networkPassphrase: config.passphrase,
     },
-  ];
-  await logInvocation(
-    stellarPool.submit(liquidator.publicKey(), signWithLiquidator, rpc_network, tx_options, {
-      from: liquidator.publicKey(),
-      spender: liquidator.publicKey(),
-      to: liquidator.publicKey(),
-      requests: stellarRequests,
-    })
-  );
-
-  console.log('Whale Supply tokens to Bridge pool');
-  const bridgeSupplyRequests: Request[] = [
-    {
-      amount: BigInt('1000000000000000'),
-      request_type: RequestType.SupplyCollateral,
-      address: addressBook.getContractId('wETH'),
+  };
+  const admin_tx_options: TxParams = {
+    account: await config.rpc.getAccount(config.admin.publicKey()),
+    signerFunction: signWithAdmin,
+    txBuilderOptions: {
+      fee: '10000',
+      timebounds: {
+        minTime: 0,
+        maxTime: 0,
+      },
+      networkPassphrase: config.passphrase,
     },
-    {
-      amount: BigInt(100000000000000),
-      request_type: RequestType.SupplyCollateral,
-      address: addressBook.getContractId('wBTC'),
-    },
-  ];
-  await logInvocation(
-    bridgePool.submit(liquidator.publicKey(), signWithLiquidator, rpc_network, tx_options, {
-      from: liquidator.publicKey(),
-      spender: liquidator.publicKey(),
-      to: liquidator.publicKey(),
-      requests: bridgeSupplyRequests,
-    })
-  );
-  const comet = new CometClient(addressBook.getContractId('comet'));
-  const blnd_token = new TokenClient(addressBook.getContractId('BLND'));
-  const blnd_asset = new Asset('BLND', config.admin.publicKey());
-  await blnd_token.classic_trustline(liquidator, blnd_asset, liquidator);
-  await blnd_token.classic_mint(liquidator, blnd_asset, '10000000', config.admin);
-  await usdc_token.classic_trustline(liquidator, usdc_asset, liquidator);
-  await usdc_token.classic_mint(liquidator, usdc_asset, '100000', config.admin);
+  };
+  const bridgePool = new PoolContract(addressBook.getContractId('Bridge'));
+  const stellarPool = new PoolContract(addressBook.getContractId('Stellar'));
+  // console.log('minting tokens to liquidator');
+  // await invokeClassicOp(
+  //   usdc_token.classic_trustline(liquidator.publicKey()),
+  //   liquidator_tx_options
+  // );
+  // await invokeClassicOp(
+  //   usdc_token.classic_mint(liquidator.publicKey(), '100000000'),
+  //   admin_tx_options
+  // );
+  // await invokeClassicOp(
+  //   weth_token.classic_trustline(liquidator.publicKey()),
+  //   liquidator_tx_options
+  // );
+  // await invokeClassicOp(
+  //   weth_token.classic_mint(liquidator.publicKey(), '1000000'),
+  //   admin_tx_options
+  // );
+  // await invokeClassicOp(
+  //   wbtc_token.classic_trustline(liquidator.publicKey()),
+  //   liquidator_tx_options
+  // );
+  // await invokeClassicOp(
+  //   wbtc_token.classic_mint(liquidator.publicKey(), '100000'),
+  //   admin_tx_options
+  // );
+  // console.log('Whale Supply tokens to Stellar pool');
 
-  // mint 200k tokens to whale
-  await comet.joinPool(
-    BigInt(200_000e7),
-    [BigInt(2_001_000e7), BigInt(50_001e7)],
-    liquidator.publicKey(),
-    liquidator
-  );
+  // const stellarRequests: Request[] = [
+  //   {
+  //     amount: BigInt(100000000e7),
+  //     request_type: RequestType.SupplyCollateral,
+  //     address: addressBook.getContractId('USDC'),
+  //   },
+  // ];
+
+  // await invokeSorobanOperation(
+  //   stellarPool.submit({
+  //     from: liquidator.publicKey(),
+  //     spender: liquidator.publicKey(),
+  //     to: liquidator.publicKey(),
+  //     requests: stellarRequests,
+  //   }),
+  //   PoolContract.parsers.submit,
+  //   liquidator_tx_options
+  // );
+
+  // console.log('Whale Supply tokens to Bridge pool');
+  // const bridgeSupplyRequests: Request[] = [
+  //   {
+  //     amount: BigInt(100000e7),
+  //     request_type: RequestType.SupplyCollateral,
+  //     address: addressBook.getContractId('wETH'),
+  //   },
+  //   {
+  //     amount: BigInt(100000000000),
+  //     request_type: RequestType.SupplyCollateral,
+  //     address: addressBook.getContractId('wBTC'),
+  //   },
+  // ];
+  // await invokeSorobanOperation(
+  //   bridgePool.submit({
+  //     from: liquidator.publicKey(),
+  //     spender: liquidator.publicKey(),
+  //     to: liquidator.publicKey(),
+  //     requests: bridgeSupplyRequests,
+  //   }),
+  //   PoolContract.parsers.submit,
+  //   liquidator_tx_options
+  // );
+  const comet = new CometContract(addressBook.getContractId('comet'));
+
+  // await invokeClassicOp(
+  //   usdc_token.classic_mint(liquidator.publicKey(), '100000'),
+  //   admin_tx_options
+  // );
+  // console.log('minting lp tokens');
+  // // mint lp tokens to whale
+  // await invokeSorobanOperation(
+  //   comet.deposit_single_max_out(
+  //     usdc_token.address().toString(),
+  //     BigInt(1000e7),
+  //     BigInt(1e7),
+  //     liquidator.publicKey()
+  //   ),
+  //   () => undefined,
+  //   liquidator_tx_options
+  // );
+  console.log('update backstop token lp value');
+  const backstop = new BackstopContract(addressBook.getContractId('backstop'));
+  await invokeSorobanOperation(backstop.updateTokenValue(), () => undefined, liquidator_tx_options);
   console.log('starting simulations');
   for (let i = 0; i < 10000; i++) {
     console.log('iteration: ', i);
     if (i % 5 == 0) {
-      last_prices = await randomize_prices(addressBook, last_prices, BigInt(20));
+      last_prices = await randomize_prices(addressBook, last_prices, BigInt(20), admin_tx_options);
     }
-    users = await randomize_user_action(addressBook, last_prices, users);
+    users = await randomize_user_action(addressBook, last_prices, users, admin_tx_options);
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 }
