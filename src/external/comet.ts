@@ -1,14 +1,11 @@
 import { Address, Contract, Keypair, nativeToScVal, xdr } from 'stellar-sdk';
-import { invokeAndUnwrap } from '../utils/tx.js';
 
-export class CometClient {
-  comet: Contract;
-
+export class CometContract extends Contract {
   constructor(address: string) {
-    this.comet = new Contract(address);
+    super(address);
   }
 
-  public async init(admin: string, source: Keypair) {
+  public init(admin: string) {
     const invokeArgs = {
       method: 'init',
       args: [
@@ -18,11 +15,10 @@ export class CometClient {
         ((i) => Address.fromString(i).toScVal())(admin),
       ],
     };
-    const operation = this.comet.call(invokeArgs.method, ...invokeArgs.args);
-    await invokeAndUnwrap(operation, source, () => undefined);
+    return this.call(invokeArgs.method, ...invokeArgs.args).toXDR('base64');
   }
 
-  public async setSwapFee(fee: bigint, source: Keypair) {
+  public setSwapFee(fee: bigint, source: Keypair) {
     const invokeArgs = {
       method: 'set_swap_fee',
       args: [
@@ -30,11 +26,10 @@ export class CometClient {
         ((i) => Address.fromString(i).toScVal())(source.publicKey()),
       ],
     };
-    const operation = this.comet.call(invokeArgs.method, ...invokeArgs.args);
-    await invokeAndUnwrap(operation, source, () => undefined);
+    return this.call(invokeArgs.method, ...invokeArgs.args).toXDR('base64');
   }
 
-  public async setPublicSwap(value: boolean, source: Keypair) {
+  public setPublicSwap(value: boolean, source: Keypair) {
     const invokeArgs = {
       method: 'set_public_swap',
       args: [
@@ -42,25 +37,18 @@ export class CometClient {
         ((i) => xdr.ScVal.scvBool(i))(value),
       ],
     };
-    const operation = this.comet.call(invokeArgs.method, ...invokeArgs.args);
-    await invokeAndUnwrap(operation, source, () => undefined);
+    return this.call(invokeArgs.method, ...invokeArgs.args).toXDR('base64');
   }
 
-  public async finalize(source: Keypair) {
+  public finalize() {
     const invokeArgs = {
       method: 'finalize',
       args: [],
     };
-    const operation = this.comet.call(invokeArgs.method, ...invokeArgs.args);
-    await invokeAndUnwrap(operation, source, () => undefined);
+    return this.call(invokeArgs.method, ...invokeArgs.args).toXDR('base64');
   }
 
-  public async bundleBind(
-    token: Array<string>,
-    balance: Array<bigint>,
-    denorm: Array<bigint>,
-    source: Keypair
-  ) {
+  public bundleBind(token: Array<string>, balance: Array<bigint>, denorm: Array<bigint>) {
     const invokeArgs = {
       method: 'bundle_bind',
       args: [
@@ -69,11 +57,10 @@ export class CometClient {
         ((i) => xdr.ScVal.scvVec(i.map((i) => nativeToScVal(i, { type: 'i128' }))))(denorm),
       ],
     };
-    const operation = this.comet.call(invokeArgs.method, ...invokeArgs.args);
-    await invokeAndUnwrap(operation, source, () => undefined);
+    return this.call(invokeArgs.method, ...invokeArgs.args).toXDR('base64');
   }
 
-  public async bind(token: string, balance: bigint, denorm: bigint, source: Keypair) {
+  public bind(token: string, balance: bigint, denorm: bigint, source: Keypair) {
     const invokeArgs = {
       method: 'bind',
       args: [
@@ -83,16 +70,10 @@ export class CometClient {
         ((i) => Address.fromString(i.publicKey()).toScVal())(source),
       ],
     };
-    const operation = this.comet.call(invokeArgs.method, ...invokeArgs.args);
-    await invokeAndUnwrap(operation, source, () => undefined);
+    return this.call(invokeArgs.method, ...invokeArgs.args).toXDR('base64');
   }
 
-  public async joinPool(
-    pool_amount_out: bigint,
-    max_amounts_in: Array<bigint>,
-    user: string,
-    source: Keypair
-  ) {
+  public joinPool(pool_amount_out: bigint, max_amounts_in: Array<bigint>, user: string) {
     const invokeArgs = {
       method: 'join_pool',
       args: [
@@ -101,16 +82,14 @@ export class CometClient {
         ((i) => Address.fromString(i).toScVal())(user),
       ],
     };
-    const operation = this.comet.call(invokeArgs.method, ...invokeArgs.args);
-    await invokeAndUnwrap(operation, source, () => undefined);
+    return this.call(invokeArgs.method, ...invokeArgs.args).toXDR('base64');
   }
 
-  public async deposit_single_max_in(
+  public deposit_single_max_in(
     token_in: string,
     pool_amount_out: bigint,
     max_amount_in: bigint,
-    user: string,
-    source: Keypair
+    user: string
   ) {
     const invokeArgs = {
       method: 'dep_lp_tokn_amt_out_get_tokn_in',
@@ -121,7 +100,6 @@ export class CometClient {
         ((i) => Address.fromString(i).toScVal())(user),
       ],
     };
-    const operation = this.comet.call(invokeArgs.method, ...invokeArgs.args);
-    await invokeAndUnwrap(operation, source, () => undefined);
+    return this.call(invokeArgs.method, ...invokeArgs.args).toXDR('base64');
   }
 }
