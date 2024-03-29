@@ -1,8 +1,9 @@
 import {
   BackstopContract,
-  ContractResponse,
+  PoolContract,
   ReserveConfig,
   ReserveEmissionMetadata,
+  parseError,
 } from '@blend-capital/blend-sdk';
 import { randomBytes } from 'crypto';
 import { Operation, SorobanRpc, Transaction, TransactionBuilder, xdr } from 'stellar-sdk';
@@ -136,7 +137,7 @@ async function deploy() {
   // Update token value
   await invokeSorobanOperation(
     backstop.updateTokenValue(),
-    backstop.parsers.updateTknVal,
+    BackstopContract.parsers.updateTknVal,
     txParams
   );
 
@@ -174,7 +175,7 @@ async function deploy() {
 
   await invokeSorobanOperation(
     newPool.setEmissionsConfig(poolEmissionMetadata),
-    newPool.parsers.setEmissionsConfig,
+    PoolContract.parsers.setEmissionsConfig,
     txParams
   );
   if (mint_amount > 0) {
@@ -185,7 +186,7 @@ async function deploy() {
         pool_address: newPool.contractId(),
         amount: mint_amount,
       }),
-      backstop.parsers.deposit,
+      BackstopContract.parsers.deposit,
       txParams
     );
   }
@@ -193,7 +194,7 @@ async function deploy() {
   console.log('Setting Starting Status\n');
   await invokeSorobanOperation(
     newPool.setStatus(startingStatus),
-    newPool.parsers.setStatus,
+    PoolContract.parsers.setStatus,
     txParams
   );
 
@@ -203,7 +204,7 @@ async function deploy() {
         to_add: newPool.contractId(),
         to_remove: addressBook.getContractId(poolToRemove),
       }),
-      backstop.parsers.addReward,
+      BackstopContract.parsers.addReward,
       txParams
     );
   }
@@ -226,14 +227,9 @@ async function deploy() {
       config.passphrase
     );
     let simResponse = await config.rpc.simulateTransaction(newAdminSignedTx);
-    let response = ContractResponse.fromSimulationResponse(
-      simResponse,
-      newAdminSignedTx,
-      config.passphrase,
-      () => undefined
-    );
-    if (response.result.isErr()) {
-      throw response.result.unwrapErr();
+    if (SorobanRpc.Api.isSimulationError(simResponse)) {
+      const error = parseError(simResponse);
+      throw error;
     }
     let assembledTx = SorobanRpc.assembleTransaction(newAdminSignedTx, simResponse).build();
     let signedTx = new Transaction(

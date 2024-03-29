@@ -58,7 +58,7 @@ async function submit(addressBook: AddressBook) {
       to: whale.publicKey(),
       requests: stellarRequests,
     }),
-    stellarPool.parsers.submit,
+    PoolContract.parsers.submit,
     txParams
   );
 }
