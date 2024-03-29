@@ -1,4 +1,4 @@
-import { Asset, Contract, Keypair, Operation, nativeToScVal, xdr } from 'stellar-sdk';
+import { Asset, Contract, Operation, nativeToScVal } from '@stellar/stellar-sdk';
 
 export class TokenContract extends Contract {
   private stellarAsset?: Asset;

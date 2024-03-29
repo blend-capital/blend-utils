@@ -6,19 +6,19 @@ import {
   ReserveConfig,
   ReserveEmissionMetadata,
 } from '@blend-capital/blend-sdk';
+import { Asset, TransactionBuilder } from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
-import { Asset, TransactionBuilder } from 'stellar-sdk';
+import { deployBlend } from '../deploy/blend.js';
+import { deployComet } from '../deploy/comet.js';
+import { tryDeployStellarAsset } from '../deploy/stellar-asset.js';
+import { setupPool } from '../pool/pool-setup.js';
+import { setupReserve } from '../pool/reserve-setup.js';
 import { airdropAccount } from '../utils/contract.js';
 import { config } from '../utils/env_config.js';
 import { TxParams, invokeClassicOp, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
-import { setupPool } from '../pool/pool-setup.js';
-import { deployBlend } from '../deploy/blend.js';
-import { tryDeployStellarAsset } from '../deploy/stellar-asset.js';
-import { setupMockOracle } from './oracle-setup.js';
-import { setupReserve } from '../pool/reserve-setup.js';
-import { deployComet } from '../deploy/comet.js';
-import { setupComet } from './comet-setup.js';
 import { setupPoolBackstop } from './backstop-pool-setup.js';
+import { setupComet } from './comet-setup.js';
+import { setupMockOracle } from './oracle-setup.js';
 
 const txBuilderOptions: TransactionBuilder.TransactionBuilderOptions = {
   fee: '10000',
@@ -34,14 +34,14 @@ async function mock() {
   const whale = config.getUser('WHALE');
   await airdropAccount(whale);
   await airdropAccount(config.admin);
-  let adminTxParams: TxParams = {
+  const adminTxParams: TxParams = {
     account: await config.rpc.getAccount(config.admin.publicKey()),
     txBuilderOptions,
     signerFunction: async (txXDR: string) => {
       return signWithKeypair(txXDR, config.passphrase, config.admin);
     },
   };
-  let whaleTxParams: TxParams = {
+  const whaleTxParams: TxParams = {
     account: await config.rpc.getAccount(whale.publicKey()),
     txBuilderOptions,
     signerFunction: async (txXDR: string) => {
@@ -67,7 +67,7 @@ async function mock() {
     adminTxParams
   );
   const cometContract = await deployComet(adminTxParams);
-  let mockOracle = await setupMockOracle(adminTxParams);
+  const mockOracle = await setupMockOracle(adminTxParams);
   const [backstopContract, emitterContract, poolFactoryContract] = await deployBlend(
     BLND.contractId(),
     cometContract.contractId(),
@@ -80,7 +80,7 @@ async function mock() {
 
   // ********** Stellar Pool (XLM, USDC) **********//
 
-  let stellarPool = await setupPool(
+  const stellarPool = await setupPool(
     {
       admin: config.admin.publicKey(),
       name: 'Stellar',
@@ -164,7 +164,7 @@ async function mock() {
 
   //********** Bridge Pool (XLM, USDC) **********//
 
-  let bridgePool = await setupPool(
+  const bridgePool = await setupPool(
     {
       admin: config.admin.publicKey(),
       name: 'Bridge',

@@ -1,4 +1,4 @@
-import { Address, Contract, Keypair, nativeToScVal, xdr } from 'stellar-sdk';
+import { Address, Contract, Keypair, nativeToScVal, xdr } from '@stellar/stellar-sdk';
 
 export class CometContract extends Contract {
   constructor(address: string) {

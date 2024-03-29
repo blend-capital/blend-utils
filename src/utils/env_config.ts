@@ -1,4 +1,4 @@
-import { Keypair, SorobanRpc } from 'stellar-sdk';
+import { Keypair, SorobanRpc } from '@stellar/stellar-sdk';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';

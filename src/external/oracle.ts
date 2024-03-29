@@ -1,5 +1,5 @@
-import { Address, ContractSpec, Contract } from 'stellar-sdk';
 import { i128, u64 } from '@blend-capital/blend-sdk';
+import { Address, Contract, ContractSpec } from '@stellar/stellar-sdk';
 
 /**
  * PriceData type
