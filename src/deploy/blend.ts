@@ -57,7 +57,6 @@ export async function deployBlend(
     backstop: backstopAddress,
     blnd_id: blndTokenAddress,
     pool_hash: poolHash,
-    usdc_id: usdcTokenAddress,
   };
   await invokeSorobanOperation(
     poolFactory.initialize(factoryInitArgs),
