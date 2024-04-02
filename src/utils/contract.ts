@@ -16,6 +16,8 @@ const CONTRACT_REL_PATH: object = {
   poolFactory: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/pool_factory.wasm',
   backstop: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/backstop.wasm',
   lendingPool: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/pool.wasm',
+  bootstrapper:
+    '../../../backstop-bootstrapper/target/wasm32-unknown-unknown/optimized/backstop_bootstrapper.wasm',
 };
 
 const __filename = fileURLToPath(import.meta.url);
