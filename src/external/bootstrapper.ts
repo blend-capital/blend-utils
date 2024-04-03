@@ -21,12 +21,13 @@ export class BootstrapContract extends Contract {
     super(address);
   }
 
-  public initialize(backstop: Address, backstop_token: Address) {
+  public initialize(backstop: Address, backstop_token: Address, pool_factory: Address) {
     const invokeArgs = {
       method: 'initialize',
       args: [
         nativeToScVal(backstop, { type: 'address' }),
         nativeToScVal(backstop_token, { type: 'address' }),
+        nativeToScVal(pool_factory, { type: 'address' }),
       ],
     };
     const operation = this.call('initialize', ...invokeArgs.args);

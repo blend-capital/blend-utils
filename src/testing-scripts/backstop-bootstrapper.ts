@@ -6,6 +6,7 @@ import { addressBook } from '../utils/address-book.js';
 import { BootstrapContract } from '../external/bootstrapper.js';
 import { TokenContract } from '../external/token.js';
 import {
+  airdropAccount,
   bumpContractCode,
   bumpContractInstance,
   deployContract,
@@ -29,17 +30,10 @@ export async function setupBackstopBootstrapper(): Promise<void> {
   };
   await installContract('bootstrapper', adminTxParams);
   await bumpContractCode('bootstrapper', adminTxParams);
-  const backstopBootstrapper = await deployContract('bootstrapper', 'bootstrapper', adminTxParams);
+  await deployContract('bootstrapper', 'bootstrapper', adminTxParams);
   await bumpContractInstance('bootstrapper', adminTxParams);
 
-  const whaleTxParams: TxParams = {
-    account: await config.rpc.getAccount(config.getUser('WHALE').publicKey()),
-    txBuilderOptions,
-    signerFunction: async (txXDR: string) => {
-      return signWithKeypair(txXDR, config.passphrase, config.getUser('WHALE'));
-    },
-  };
-  //   await airdropAccount(config.getUser('FRODO'));
+  await airdropAccount(config.getUser('FRODO'));
   const frodoTxParams: TxParams = {
     account: await config.rpc.getAccount(config.getUser('FRODO').publicKey()),
     txBuilderOptions,
@@ -48,13 +42,14 @@ export async function setupBackstopBootstrapper(): Promise<void> {
     },
   };
   console.log('frodo pk', frodoTxParams.account.accountId());
-
-  const bootstrapper = new BootstrapContract(backstopBootstrapper);
+  console.log('admin pk', adminTxParams.account.accountId());
+  const bootstrapper = new BootstrapContract(addressBook.getContractId('bootstrapper'));
 
   await invokeSorobanOperation(
     bootstrapper.initialize(
       Address.fromString(addressBook.getContractId('backstop')),
-      Address.fromString(addressBook.getContractId('comet'))
+      Address.fromString(addressBook.getContractId('comet')),
+      Address.fromString(addressBook.getContractId('poolFactory'))
     ),
     () => undefined,
     adminTxParams
@@ -65,34 +60,34 @@ export async function setupBackstopBootstrapper(): Promise<void> {
   const admin = config.admin;
   const BLND = new TokenContract(blndAddress, new Asset('BLND', admin.publicKey()));
   const USDC = new TokenContract(usdcAddress, new Asset('USDC', admin.publicKey()));
-  await invokeClassicOp(BLND.classic_trustline(whaleTxParams.account.accountId()), whaleTxParams);
-  await invokeClassicOp(
-    BLND.classic_mint(whaleTxParams.account.accountId(), '250000'),
-    adminTxParams
-  );
-  await invokeClassicOp(USDC.classic_trustline(frodoTxParams.account.accountId()), frodoTxParams);
-  await invokeClassicOp(
-    USDC.classic_mint(frodoTxParams.account.accountId(), '13000'),
-    adminTxParams
-  );
+  // await invokeClassicOp(BLND.classic_trustline(whaleTxParams.account.accountId()), whaleTxParams);
+  // await invokeClassicOp(
+  //   BLND.classic_mint(whaleTxParams.account.accountId(), '250000'),
+  //   adminTxParams
+  // );
+  // await invokeClassicOp(USDC.classic_trustline(frodoTxParams.account.accountId()), frodoTxParams);
+  // await invokeClassicOp(
+  //   USDC.classic_mint(frodoTxParams.account.accountId(), '13000'),
+  //   adminTxParams
+  // );
   await invokeSorobanOperation(
     bootstrapper.add_bootstrap(
-      Address.fromString(whaleTxParams.account.accountId()),
+      Address.fromString(adminTxParams.account.accountId()),
       0,
-      BigInt(250000e7),
+      BigInt(200e7),
       BigInt(1),
-      0,
-      Address.fromString(addressBook.getContractId('Stellar'))
+      5,
+      Address.fromString(addressBook.getContractId('Bridge'))
     ),
     () => undefined,
-    whaleTxParams
+    adminTxParams
   );
   console.log('Successfully added a bootstrap to the bootstrap contract.\n');
   await invokeSorobanOperation(
     bootstrapper.join(
       Address.fromString(frodoTxParams.account.accountId()),
-      BigInt(13000e7),
-      Address.fromString(whaleTxParams.account.accountId()),
+      BigInt(13e7),
+      Address.fromString(adminTxParams.account.accountId()),
       0
     ),
     () => undefined,
@@ -102,20 +97,19 @@ export async function setupBackstopBootstrapper(): Promise<void> {
   await invokeSorobanOperation(
     bootstrapper.exit(
       Address.fromString(frodoTxParams.account.accountId()),
-      BigInt(4000e7),
-      Address.fromString(whaleTxParams.account.accountId()),
+      BigInt(4e7),
+      Address.fromString(adminTxParams.account.accountId()),
       0
     ),
     () => undefined,
     frodoTxParams
   );
   console.log('Successfully exited the bootstrap contract.\n');
-  await new Promise((resolve) => setTimeout(resolve, 10000));
-  console.log(whaleTxParams.account.accountId());
+  await new Promise((resolve) => setTimeout(resolve, 100000));
   await invokeSorobanOperation(
     bootstrapper.close_bootstrap(
       Address.fromString(frodoTxParams.account.accountId()),
-      Address.fromString(whaleTxParams.account.accountId()),
+      Address.fromString(adminTxParams.account.accountId()),
       0
     ),
     () => undefined,
@@ -124,17 +118,17 @@ export async function setupBackstopBootstrapper(): Promise<void> {
   console.log('Successfully closed the bootstrap contract.\n');
   await invokeSorobanOperation(
     bootstrapper.claim(
-      Address.fromString(whaleTxParams.account.accountId()),
-      Address.fromString(whaleTxParams.account.accountId()),
+      Address.fromString(adminTxParams.account.accountId()),
+      Address.fromString(adminTxParams.account.accountId()),
       0
     ),
     () => undefined,
-    whaleTxParams
+    adminTxParams
   );
   await invokeSorobanOperation(
     bootstrapper.claim(
       Address.fromString(frodoTxParams.account.accountId()),
-      Address.fromString(whaleTxParams.account.accountId()),
+      Address.fromString(adminTxParams.account.accountId()),
       0
     ),
     () => undefined,

@@ -30,11 +30,11 @@ export async function simulationOperation(
   operation: string,
   txParams: TxParams
 ): Promise<SorobanRpc.Api.SimulateTransactionResponse> {
-  let txBuilder = new TransactionBuilder(txParams.account, txParams.txBuilderOptions)
+  const txBuilder = new TransactionBuilder(txParams.account, txParams.txBuilderOptions)
     .addOperation(xdr.Operation.fromXDR(operation, 'base64'))
     .setTimeout(TimeoutInfinite);
-  let transaction = txBuilder.build();
-  let simulation = await config.rpc.simulateTransaction(transaction);
+  const transaction = txBuilder.build();
+  const simulation = await config.rpc.simulateTransaction(transaction);
   return simulation;
 }
 
@@ -43,7 +43,7 @@ export async function sendTransaction<T>(
   parser: (result: string) => T
 ): Promise<T | undefined> {
   let send_tx_response = await config.rpc.sendTransaction(transaction);
-  let curr_time = Date.now();
+  const curr_time = Date.now();
   while (send_tx_response.status !== 'PENDING' && Date.now() - curr_time < 20000) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     send_tx_response = await config.rpc.sendTransaction(transaction);
@@ -61,11 +61,11 @@ export async function sendTransaction<T>(
   }
 
   if (get_tx_response.status !== 'SUCCESS') {
-    let error = parseError(get_tx_response);
+    const error = parseError(get_tx_response);
     throw error;
   }
 
-  let result = parseResult(get_tx_response, parser);
+  const result = parseResult(get_tx_response, parser);
   return result;
 }
 
@@ -75,38 +75,39 @@ export async function invokeSorobanOperation<T>(
   txParams: TxParams,
   sorobanData?: xdr.SorobanTransactionData
 ): Promise<T | undefined> {
-  let account = await config.rpc.getAccount(txParams.account.accountId());
-  let txBuilder = new TransactionBuilder(account, txParams.txBuilderOptions)
+  const account = await config.rpc.getAccount(txParams.account.accountId());
+  const txBuilder = new TransactionBuilder(account, txParams.txBuilderOptions)
     .addOperation(xdr.Operation.fromXDR(operation, 'base64'))
     .setTimeout(TimeoutInfinite);
   if (sorobanData) {
     txBuilder.setSorobanData(sorobanData);
   }
-  let transaction = txBuilder.build();
+  const transaction = txBuilder.build();
   console.log('Transaction Hash:', transaction.hash().toString('hex'));
-  let simulation = await config.rpc.simulateTransaction(transaction);
+  const simulation = await config.rpc.simulateTransaction(transaction);
   if (SorobanRpc.Api.isSimulationError(simulation)) {
+    console.log('Simulation Error:', simulation);
     const error = parseError(simulation);
     console.error(error);
     throw error;
   }
 
-  let assembledTx = SorobanRpc.assembleTransaction(transaction, simulation).build();
-  let signedTx = new Transaction(
+  const assembledTx = SorobanRpc.assembleTransaction(transaction, simulation).build();
+  const signedTx = new Transaction(
     await txParams.signerFunction(assembledTx.toXDR()),
     config.passphrase
   );
-  let response = await sendTransaction(signedTx, parser);
+  const response = await sendTransaction(signedTx, parser);
   return response;
 }
 
 export async function invokeClassicOp(operation: string, txParams: TxParams) {
-  let account = await config.rpc.getAccount(txParams.account.accountId());
-  let txBuilder = new TransactionBuilder(account, txParams.txBuilderOptions)
+  const account = await config.rpc.getAccount(txParams.account.accountId());
+  const txBuilder = new TransactionBuilder(account, txParams.txBuilderOptions)
     .addOperation(xdr.Operation.fromXDR(operation, 'base64'))
     .setTimeout(TimeoutInfinite);
-  let transaction = txBuilder.build();
-  let signedTx = new Transaction(
+  const transaction = txBuilder.build();
+  const signedTx = new Transaction(
     await txParams.signerFunction(transaction.toXDR()),
     config.passphrase
   );
