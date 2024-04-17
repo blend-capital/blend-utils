@@ -1,20 +1,14 @@
-import {
-  PoolContract,
-  PoolInitializeArgs,
-  DeployArgs,
-  PoolFactoryContract,
-} from '@blend-capital/blend-sdk';
-import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
-import { xdr } from 'stellar-sdk';
+import { DeployArgs, PoolContract, PoolFactoryContract } from '@blend-capital/blend-sdk';
 import { addressBook } from '../utils/address-book.js';
 import { bumpContractInstance } from '../utils/contract.js';
+import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
 
 export async function setupPool(
   deployPoolArgs: DeployArgs,
   txParams: TxParams
 ): Promise<PoolContract> {
-  let poolFactory = new PoolFactoryContract(addressBook.getContractId('poolFactory'));
-  let poolAddress = await invokeSorobanOperation(
+  const poolFactory = new PoolFactoryContract(addressBook.getContractId('poolFactory'));
+  const poolAddress = await invokeSorobanOperation(
     poolFactory.deploy(deployPoolArgs),
     PoolFactoryContract.parsers.deploy,
     txParams

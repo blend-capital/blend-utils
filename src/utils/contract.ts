@@ -1,7 +1,7 @@
+import { Address, Keypair, Operation, StrKey, hash, xdr } from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
 import { readFileSync } from 'fs';
 import path from 'path';
-import { Address, Keypair, Operation, StrKey, hash, xdr } from 'stellar-sdk';
 import { fileURLToPath } from 'url';
 import { addressBook } from './address-book.js';
 import { config } from './env_config.js';
@@ -10,12 +10,13 @@ import { TxParams, invokeSorobanOperation } from './tx.js';
 // Relative paths from __dirname
 const CONTRACT_REL_PATH: object = {
   token: '../../src/external/token.wasm',
-  comet: '../../../blend-contracts/comet.wasm',
+  comet: '../../' + config.comet_wasm_rel_path + 'comet.wasm',
+  cometFactory: '../../' + config.comet_wasm_rel_path + 'comet_factory.wasm',
   oraclemock: '../../src/external/oracle.wasm',
-  emitter: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/emitter.wasm',
-  poolFactory: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/pool_factory.wasm',
-  backstop: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/backstop.wasm',
-  lendingPool: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/pool.wasm',
+  emitter: '../../' + config.blend_wasm_rel_path + 'emitter.wasm',
+  poolFactory: '../../' + config.blend_wasm_rel_path + 'pool_factory.wasm',
+  backstop: '../../' + config.blend_wasm_rel_path + 'backstop.wasm',
+  lendingPool: '../../' + config.blend_wasm_rel_path + 'pool.wasm',
 };
 
 const __filename = fileURLToPath(import.meta.url);

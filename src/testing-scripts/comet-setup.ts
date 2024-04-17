@@ -1,6 +1,6 @@
-import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
 import { CometContract } from '../external/comet.js';
 import { config } from '../utils/env_config.js';
+import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
 
 export async function setupComet(
   cometAddress: string,
@@ -8,7 +8,7 @@ export async function setupComet(
   usdcAddress: string,
   txParams: TxParams
 ) {
-  let cometContract = new CometContract(cometAddress);
+  const cometContract = new CometContract(cometAddress);
   // setup BLND-USDC Pool
   await invokeSorobanOperation(
     cometContract.bundleBind(

@@ -5,28 +5,28 @@ import {
   ReserveEmissionMetadata,
   parseError,
 } from '@blend-capital/blend-sdk';
+import { Operation, SorobanRpc, Transaction, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
-import { Operation, SorobanRpc, Transaction, TransactionBuilder, xdr } from 'stellar-sdk';
 import { CometContract } from '../external/comet.js';
-import { addressBook } from '../utils/address-book.js';
-import { config } from '../utils/env_config.js';
-import {
-  invokeClassicOp,
-  signWithKeypair,
-  invokeSorobanOperation,
-  TxParams,
-  sendTransaction,
-} from '../utils/tx.js';
-import { airdropAccount } from '../utils/contract.js';
 import { setupPool } from '../pool/pool-setup.js';
 import { setupReserve } from '../pool/reserve-setup.js';
+import { addressBook } from '../utils/address-book.js';
+import { airdropAccount } from '../utils/contract.js';
+import { config } from '../utils/env_config.js';
+import {
+  TxParams,
+  invokeClassicOp,
+  invokeSorobanOperation,
+  sendTransaction,
+  signWithKeypair,
+} from '../utils/tx.js';
 
 /**
  * Deploy a pool with the following parameters (Parmeters can be changed as needed)
  * example: node ./lib/user-scripts/deploy-pool.js testnet
  */
 
-let txParams: TxParams = {
+const txParams: TxParams = {
   account: await config.rpc.getAccount(config.admin.publicKey()),
   txBuilderOptions: {
     fee: '10000',
@@ -211,28 +211,28 @@ async function deploy() {
 
   if (revokeAdmin) {
     console.log('Revoking Admin\n');
-    let newAdmin = config.getUser('PROPOSER');
+    const newAdmin = config.getUser('PROPOSER');
     if (network != 'mainnet') {
       await airdropAccount(newAdmin);
     }
     //switch ownership to new admin
-    let newAdminOp = newPool.setAdmin(newAdmin.publicKey());
+    const newAdminOp = newPool.setAdmin(newAdmin.publicKey());
 
-    let txBuilder = new TransactionBuilder(txParams.account, txParams.txBuilderOptions)
+    const txBuilder = new TransactionBuilder(txParams.account, txParams.txBuilderOptions)
       .setTimeout(0)
       .addOperation(xdr.Operation.fromXDR(newAdminOp, 'base64'));
-    let transaction = txBuilder.build();
-    let newAdminSignedTx = new Transaction(
+    const transaction = txBuilder.build();
+    const newAdminSignedTx = new Transaction(
       await signWithKeypair(transaction.toXDR(), config.passphrase, newAdmin),
       config.passphrase
     );
-    let simResponse = await config.rpc.simulateTransaction(newAdminSignedTx);
+    const simResponse = await config.rpc.simulateTransaction(newAdminSignedTx);
     if (SorobanRpc.Api.isSimulationError(simResponse)) {
       const error = parseError(simResponse);
       throw error;
     }
-    let assembledTx = SorobanRpc.assembleTransaction(newAdminSignedTx, simResponse).build();
-    let signedTx = new Transaction(
+    const assembledTx = SorobanRpc.assembleTransaction(newAdminSignedTx, simResponse).build();
+    const signedTx = new Transaction(
       await txParams.signerFunction(assembledTx.toXDR()),
       config.passphrase
     );

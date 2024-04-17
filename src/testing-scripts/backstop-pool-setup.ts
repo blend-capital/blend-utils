@@ -1,8 +1,8 @@
 import { BackstopContract, PoolContract } from '@blend-capital/blend-sdk';
-import { TxParams, invokeClassicOp, invokeSorobanOperation } from '../utils/tx.js';
-import { TokenContract } from '../external/token.js';
+import { Asset } from '@stellar/stellar-sdk';
 import { CometContract } from '../external/comet.js';
-import { Asset } from 'stellar-sdk';
+import { TokenContract } from '../external/token.js';
+import { TxParams, invokeClassicOp, invokeSorobanOperation } from '../utils/tx.js';
 
 export async function setupPoolBackstop(
   backstopAddress: string,
@@ -13,11 +13,11 @@ export async function setupPoolBackstop(
   adminTxParams: TxParams,
   whaleTxParams: TxParams
 ) {
-  let pool = new PoolContract(poolAddress);
-  let backstop = new BackstopContract(backstopAddress);
-  let BLND = new TokenContract(blndAddress, new Asset('BLND', adminTxParams.account.accountId()));
-  let USDC = new TokenContract(usdcAddress, new Asset('USDC', adminTxParams.account.accountId()));
-  let comet = new CometContract(cometAddress);
+  const pool = new PoolContract(poolAddress);
+  const backstop = new BackstopContract(backstopAddress);
+  const BLND = new TokenContract(blndAddress, new Asset('BLND', adminTxParams.account.accountId()));
+  const USDC = new TokenContract(usdcAddress, new Asset('USDC', adminTxParams.account.accountId()));
+  const comet = new CometContract(cometAddress);
   await invokeClassicOp(BLND.classic_trustline(whaleTxParams.account.accountId()), whaleTxParams);
   await invokeClassicOp(
     BLND.classic_mint(whaleTxParams.account.accountId(), '500100'),
