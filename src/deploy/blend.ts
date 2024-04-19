@@ -1,19 +1,19 @@
 import {
+  BackstopContract,
+  BackstopInitializeArgs,
+  EmitterContract,
+  EmitterInitializeArgs,
+  PoolFactoryContract,
+  PoolInitMeta,
+} from '@blend-capital/blend-sdk';
+import { Address } from '@stellar/stellar-sdk';
+import {
   bumpContractCode,
   bumpContractInstance,
   deployContract,
   installContract,
 } from '../utils/contract.js';
 import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
-import {
-  BackstopContract,
-  EmitterContract,
-  PoolFactoryContract,
-  EmitterInitializeArgs,
-  PoolInitMeta,
-  BackstopInitializeArgs,
-} from '@blend-capital/blend-sdk';
-import { Address } from 'stellar-sdk';
 
 export async function deployBlend(
   blndTokenAddress: string,
@@ -38,11 +38,11 @@ export async function deployBlend(
   const backstopAddress = await deployContract('backstop', 'backstop', txParams);
   await bumpContractInstance('backstop', txParams);
 
-  let emitter = new EmitterContract(emitterAddress);
-  let poolFactory = new PoolFactoryContract(factoryAddress);
-  let backstop = new BackstopContract(backstopAddress);
+  const emitter = new EmitterContract(emitterAddress);
+  const poolFactory = new PoolFactoryContract(factoryAddress);
+  const backstop = new BackstopContract(backstopAddress);
 
-  let emitterInitArgs: EmitterInitializeArgs = {
+  const emitterInitArgs: EmitterInitializeArgs = {
     blnd_token: blndTokenAddress,
     backstop: backstopAddress,
     backstop_token: backstopTokenAddress,
@@ -53,11 +53,10 @@ export async function deployBlend(
     txParams
   );
 
-  let factoryInitArgs: PoolInitMeta = {
+  const factoryInitArgs: PoolInitMeta = {
     backstop: backstopAddress,
     blnd_id: blndTokenAddress,
     pool_hash: poolHash,
-    usdc_id: usdcTokenAddress,
   };
   await invokeSorobanOperation(
     poolFactory.initialize(factoryInitArgs),
@@ -65,7 +64,7 @@ export async function deployBlend(
     txParams
   );
 
-  let backstopInitArgs: BackstopInitializeArgs = {
+  const backstopInitArgs: BackstopInitializeArgs = {
     backstop_token: backstopTokenAddress,
     emitter: emitterAddress,
     usdc_token: usdcTokenAddress,

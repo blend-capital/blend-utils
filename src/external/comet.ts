@@ -1,4 +1,25 @@
-import { Address, Contract, Keypair, nativeToScVal, xdr } from 'stellar-sdk';
+import { Address, Contract, Keypair, nativeToScVal, xdr } from '@stellar/stellar-sdk';
+
+export class CometFactoryContract extends Contract {
+  public init(admin: string, comet_hash: Buffer): string {
+    const invokeArgs = {
+      method: 'init',
+      args: [
+        ((i) => Address.fromString(i).toScVal())(admin),
+        ((i) => xdr.ScVal.scvBytes(i))(comet_hash),
+      ],
+    };
+    return this.call(invokeArgs.method, ...invokeArgs.args).toXDR('base64');
+  }
+
+  public newCometPool(salt: Buffer, user: string): string {
+    const invokeArgs = {
+      method: 'new_c_pool',
+      args: [((i) => xdr.ScVal.scvBytes(i))(salt), ((i) => Address.fromString(i).toScVal())(user)],
+    };
+    return this.call(invokeArgs.method, ...invokeArgs.args).toXDR('base64');
+  }
+}
 
 export class CometContract extends Contract {
   constructor(address: string) {

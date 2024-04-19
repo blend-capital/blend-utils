@@ -1,13 +1,13 @@
 import { PoolContract, Request, RequestType } from '@blend-capital/blend-sdk';
+import { Asset } from '@stellar/stellar-sdk';
+import { TokenContract } from '../external/token.js';
 import { AddressBook, addressBook } from '../utils/address-book.js';
+import { airdropAccount } from '../utils/contract.js';
 import { config } from '../utils/env_config.js';
 import { TxParams, invokeClassicOp, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
-import { airdropAccount } from '../utils/contract.js';
-import { TokenContract } from '../external/token.js';
-import { Asset } from 'stellar-sdk';
 
 async function submit(addressBook: AddressBook) {
-  let txParams: TxParams = {
+  const txParams: TxParams = {
     account: await config.rpc.getAccount(config.admin.publicKey()),
     txBuilderOptions: {
       fee: '10000',

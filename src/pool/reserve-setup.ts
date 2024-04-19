@@ -1,12 +1,5 @@
-import {
-  PoolContract,
-  SetReserveArgs,
-  DeployArgs,
-  PoolFactoryContract,
-} from '@blend-capital/blend-sdk';
+import { PoolContract, SetReserveArgs } from '@blend-capital/blend-sdk';
 import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
-import { xdr } from 'stellar-sdk';
-import { addressBook } from '../utils/address-book.js';
 
 export async function setupReserve(
   poolAddress: string,

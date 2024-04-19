@@ -6,19 +6,19 @@ import {
   ReserveConfig,
   ReserveEmissionMetadata,
 } from '@blend-capital/blend-sdk';
+import { Asset, TransactionBuilder } from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
-import { Asset, TransactionBuilder } from 'stellar-sdk';
+import { deployBlend } from '../deploy/blend.js';
+import { deployComet } from '../deploy/comet.js';
+import { tryDeployStellarAsset } from '../deploy/stellar-asset.js';
+import { setupPool } from '../pool/pool-setup.js';
+import { setupReserve } from '../pool/reserve-setup.js';
 import { airdropAccount } from '../utils/contract.js';
 import { config } from '../utils/env_config.js';
 import { TxParams, invokeClassicOp, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
-import { setupPool } from '../pool/pool-setup.js';
-import { deployBlend } from '../deploy/blend.js';
-import { tryDeployStellarAsset } from '../deploy/stellar-asset.js';
-import { setupMockOracle } from './oracle-setup.js';
-import { setupReserve } from '../pool/reserve-setup.js';
-import { deployComet } from '../deploy/comet.js';
-import { setupComet } from './comet-setup.js';
 import { setupPoolBackstop } from './backstop-pool-setup.js';
+import { setupComet } from './comet-setup.js';
+import { setupMockOracle } from './oracle-setup.js';
 
 const txBuilderOptions: TransactionBuilder.TransactionBuilderOptions = {
   fee: '10000',
@@ -34,14 +34,14 @@ async function mock() {
   const whale = config.getUser('WHALE');
   await airdropAccount(whale);
   await airdropAccount(config.admin);
-  let adminTxParams: TxParams = {
+  const adminTxParams: TxParams = {
     account: await config.rpc.getAccount(config.admin.publicKey()),
     txBuilderOptions,
     signerFunction: async (txXDR: string) => {
       return signWithKeypair(txXDR, config.passphrase, config.admin);
     },
   };
-  let whaleTxParams: TxParams = {
+  const whaleTxParams: TxParams = {
     account: await config.rpc.getAccount(whale.publicKey()),
     txBuilderOptions,
     signerFunction: async (txXDR: string) => {
@@ -67,8 +67,8 @@ async function mock() {
     adminTxParams
   );
   const cometContract = await deployComet(adminTxParams);
-  let mockOracle = await setupMockOracle(adminTxParams);
-  const [backstopContract, emitterContract, poolFactoryContract] = await deployBlend(
+  const mockOracle = await setupMockOracle(adminTxParams);
+  const [backstopContract, emitterContract] = await deployBlend(
     BLND.contractId(),
     cometContract.contractId(),
     USDC.contractId(),
@@ -80,13 +80,13 @@ async function mock() {
 
   // ********** Stellar Pool (XLM, USDC) **********//
 
-  let stellarPool = await setupPool(
+  const stellarPool = await setupPool(
     {
       admin: config.admin.publicKey(),
       name: 'Stellar',
       salt: randomBytes(32),
       oracle: mockOracle.contractId(),
-      backstop_take_rate: 0.1e7,
+      backstop_take_rate: 0.05e7,
       max_positions: 4,
     },
     adminTxParams
@@ -164,14 +164,14 @@ async function mock() {
 
   //********** Bridge Pool (XLM, USDC) **********//
 
-  let bridgePool = await setupPool(
+  const bridgePool = await setupPool(
     {
       admin: config.admin.publicKey(),
       name: 'Bridge',
       salt: randomBytes(32),
       oracle: mockOracle.contractId(),
       backstop_take_rate: 0.1e7,
-      max_positions: 6,
+      max_positions: 8,
     },
     adminTxParams
   );
@@ -242,16 +242,43 @@ async function mock() {
     adminTxParams
   );
 
+  const bridgePoolUsdcReserveMetaData: ReserveConfig = {
+    index: 3,
+    decimals: 7,
+    c_factor: 950_0000,
+    l_factor: 950_0000,
+    util: 750_0000,
+    max_util: 950_0000,
+    r_base: 5000,
+    r_one: 30_0000,
+    r_two: 100_0000,
+    r_three: 1_000_0000,
+    reactivity: 500,
+  };
+  await setupReserve(
+    bridgePool.contractId(),
+    {
+      asset: USDC.contractId(),
+      metadata: bridgePoolUsdcReserveMetaData,
+    },
+    adminTxParams
+  );
+
   const bridgeEmissionMetadata: ReserveEmissionMetadata[] = [
     {
       res_index: 1, // WETH
       res_type: 0, // d_token
-      share: BigInt(0.5e7), // 50%
+      share: BigInt(0.4e7), // 40%
     },
     {
       res_index: 2, // WBTC
       res_type: 1, // b_token
-      share: BigInt(0.5e7), // 50%
+      share: BigInt(0.2e7), // 20%
+    },
+    {
+      res_index: 3, // USDC
+      res_type: 0, // d_token
+      share: BigInt(0.4e7), // 40%
     },
   ];
   await invokeSorobanOperation(
@@ -336,6 +363,11 @@ async function mock() {
       request_type: RequestType.SupplyCollateral,
       address: wBTC.contractId(),
     },
+    {
+      amount: BigInt(10000e7),
+      request_type: RequestType.SupplyCollateral,
+      address: USDC.contractId(),
+    },
   ];
   await invokeSorobanOperation(
     bridgePool.submit({
@@ -365,6 +397,11 @@ async function mock() {
       request_type: RequestType.Borrow,
       address: wBTC.contractId(),
     },
+    {
+      amount: BigInt(5000e7),
+      request_type: RequestType.Borrow,
+      address: USDC.contractId(),
+    },
   ];
   await invokeSorobanOperation(
     bridgePool.submit({
@@ -380,7 +417,7 @@ async function mock() {
   await invokeSorobanOperation(
     backstopContract.queueWithdrawal({
       from: whale.publicKey(),
-      pool_address: stellarPool.contractId(),
+      pool_address: bridgePool.contractId(),
       amount: BigInt(1000e7),
     }),
     BackstopContract.parsers.queueWithdrawal,
