@@ -45,6 +45,10 @@ export async function setupMockOracle(txParams: TxParams): Promise<OracleContrac
           tag: 'Stellar',
           values: [Address.fromString(addressBook.getContractId('BLND'))],
         },
+        {
+          tag: 'Stellar',
+          values: [Address.fromString(addressBook.getContractId('comet'))],
+        },
       ],
       7,
       300
@@ -54,11 +58,12 @@ export async function setupMockOracle(txParams: TxParams): Promise<OracleContrac
   );
   await invokeSorobanOperation(
     oracle.setPriceStable([
-      BigInt(1e7),
-      BigInt(0.15e7),
-      BigInt(2000e7),
-      BigInt(36000e7),
-      BigInt(100_0000),
+      BigInt(1e9),
+      BigInt(0.15e9),
+      BigInt(2000e9),
+      BigInt(36000e9),
+      BigInt(50_000_000),
+      BigInt(240_000_000),
     ]),
     () => undefined,
     txParams

@@ -1,5 +1,5 @@
 import { config } from '../utils/env_config.js';
-import { Account, Address, Asset } from 'stellar-sdk';
+import { Account, Address, Asset } from '@stellar/stellar-sdk';
 import {
   BackstopContract,
   Network,
@@ -10,7 +10,7 @@ import {
   ReserveEmissionMetadata,
   u128,
 } from '@blend-capital/blend-sdk';
-import { Keypair } from 'stellar-sdk';
+import { Keypair } from '@stellar/stellar-sdk';
 import { airdropAccount } from '../utils/contract.js';
 import { TxParams, invokeClassicOp, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
 import { TokenContract } from '../external/token.js';
@@ -30,11 +30,13 @@ interface User {
     xlm: u128;
     weth: u128;
     wbtc: u128;
+    usdc: u128;
   };
   bridge_pool_liabilities: {
     xlm: u128;
     weth: u128;
     wbtc: u128;
+    usdc: u128;
   };
   stellar_pool_collateral: {
     xlm: u128;
@@ -58,11 +60,13 @@ const user: User = {
     xlm: BigInt(0),
     weth: BigInt(0),
     wbtc: BigInt(0),
+    usdc: BigInt(0),
   },
   bridge_pool_liabilities: {
     xlm: BigInt(0),
     weth: BigInt(0),
     wbtc: BigInt(0),
+    usdc: BigInt(0),
   },
   stellar_pool_collateral: {
     xlm: BigInt(0),
@@ -170,11 +174,13 @@ async function randomize_user_action(
         xlm: BigInt(0),
         weth: BigInt(0),
         wbtc: BigInt(0),
+        usdc: BigInt(0),
       },
       bridge_pool_liabilities: {
         xlm: BigInt(0),
         weth: BigInt(0),
         wbtc: BigInt(0),
+        usdc: BigInt(0),
       },
       stellar_pool_collateral: {
         xlm: BigInt(0),
@@ -201,29 +207,23 @@ async function randomize_user_action(
       },
     };
   }
-  let pool;
-  let pool_client;
-  if (Math.floor(Math.random() * 10) % 2 == 0) {
-    console.log('using bridge pool');
-    pool = 'bridge';
-    pool_client = new PoolContract(addressBook.getContractId('Bridge'));
-  } else {
-    console.log('using stellar pool');
-    pool = 'stellar';
-    pool_client = new PoolContract(addressBook.getContractId('Stellar'));
-  }
+  let pool = 'bridge';
+  let pool_client = new PoolContract(addressBook.getContractId('Bridge'));
+
   const num_requests = Math.floor(Math.random() * 10) % 3;
   const requests: Request[] = [];
   let borrowing_power = BigInt(0);
   if (pool == 'bridge') {
     borrowing_power +=
       (user.bridge_pool_collateral.xlm * last_prices[1] * BigInt(9)) / BigInt(10) +
-      (user.bridge_pool_collateral.weth * last_prices[2] * BigInt(80)) / BigInt(100) +
-      (user.bridge_pool_collateral.wbtc * last_prices[3] * BigInt(9)) / BigInt(10);
+      (user.bridge_pool_collateral.weth * last_prices[2] * BigInt(85)) / BigInt(100) +
+      (user.bridge_pool_collateral.wbtc * last_prices[3] * BigInt(9)) / BigInt(10) +
+      (user.bridge_pool_collateral.usdc * last_prices[0] * BigInt(95)) / BigInt(100);
     borrowing_power -=
       (user.bridge_pool_liabilities.xlm * last_prices[1] * BigInt(9)) / BigInt(10) +
       (user.bridge_pool_liabilities.weth * last_prices[2] * BigInt(8)) / BigInt(10) +
-      (user.bridge_pool_liabilities.wbtc * last_prices[3] * BigInt(9)) / BigInt(10);
+      (user.bridge_pool_liabilities.wbtc * last_prices[3] * BigInt(9)) / BigInt(10) +
+      (user.bridge_pool_collateral.usdc * last_prices[0] * BigInt(95)) / BigInt(100);
   } else {
     borrowing_power +=
       (user.stellar_pool_collateral.xlm * last_prices[1] * BigInt(10)) / BigInt(9) +
@@ -245,7 +245,7 @@ async function randomize_user_action(
 
     const asset_seed = Math.random();
     if (pool == 'bridge') {
-      if (Math.floor(asset_seed * 10) % 3 == 0) {
+      if (Math.floor(asset_seed * 10) % 4 == 0) {
         address = weth_token.address().toString();
         wallet_balance = user.wallet.weth;
         pool_collateral = user.bridge_pool_collateral.weth;
@@ -261,7 +261,7 @@ async function randomize_user_action(
         cFactor = BigInt(90);
         dFactor = BigInt(90);
         price = last_prices[3];
-      } else {
+      } else if (Math.floor(asset_seed * 10) % 3 == 2) {
         address = addressBook.getContractId('XLM');
         wallet_balance = user.wallet.xlm;
         pool_collateral = user.bridge_pool_collateral.xlm;
@@ -269,6 +269,14 @@ async function randomize_user_action(
         cFactor = BigInt(90);
         dFactor = BigInt(90);
         price = last_prices[1];
+      } else {
+        address = usdc_token.address().toString();
+        wallet_balance = user.wallet.usdc;
+        pool_collateral = user.bridge_pool_collateral.usdc;
+        pool_liability = user.bridge_pool_liabilities.usdc;
+        cFactor = BigInt(95);
+        dFactor = BigInt(95);
+        price = last_prices[0];
       }
     } else {
       if (Math.floor(asset_seed * 10) % 2 == 0) {
@@ -307,8 +315,13 @@ async function randomize_user_action(
         if (user.stellar_pool_collateral.xlm > BigInt(0)) {
           continue;
         }
-        user.wallet.usdc -= amount;
-        user.stellar_pool_collateral.usdc += amount;
+        if (pool == 'stellar') {
+          user.wallet.usdc -= amount;
+          user.stellar_pool_collateral.usdc += amount;
+        } else {
+          user.wallet.usdc -= amount;
+          user.bridge_pool_collateral.usdc += amount;
+        }
       } else if (address == weth_token.address().toString()) {
         if (user.bridge_pool_collateral.wbtc > BigInt(0)) {
           continue;
@@ -390,7 +403,7 @@ async function randomize_user_action(
       }
       if (address == usdc_token.address().toString()) {
         user.wallet.usdc += amount;
-        user.stellar_pool_liabilities.usdc += amount;
+        user.bridge_pool_liabilities.usdc += amount;
       } else if (address == weth_token.address().toString()) {
         if (user.bridge_pool_liabilities.wbtc > BigInt(0)) {
           continue;
@@ -432,7 +445,14 @@ async function randomize_user_action(
   return users;
 }
 async function simulate(addressBook: AddressBook) {
-  let last_prices = [BigInt(1e9), BigInt(0.05e9), BigInt(2000e9), BigInt(36000e9)];
+  let last_prices = [
+    BigInt(1e9),
+    BigInt(0.12e9),
+    BigInt(2000e9),
+    BigInt(36000e9),
+    BigInt(0.05e9),
+    BigInt(0.24e9),
+  ];
   let users: User[] = [];
   const liquidator = config.getUser('LIQUIDATOR');
   const signWithAdmin = (txXdr: string) =>
@@ -491,26 +511,26 @@ async function simulate(addressBook: AddressBook) {
   //   wbtc_token.classic_mint(liquidator.publicKey(), '100000'),
   //   admin_tx_options
   // );
-  // console.log('Whale Supply tokens to Stellar pool');
+  // // console.log('Whale Supply tokens to Stellar pool');
 
-  // const stellarRequests: Request[] = [
-  //   {
-  //     amount: BigInt(100000000e7),
-  //     request_type: RequestType.SupplyCollateral,
-  //     address: addressBook.getContractId('USDC'),
-  //   },
-  // ];
+  // // const stellarRequests: Request[] = [
+  // //   {
+  // //     amount: BigInt(100000000e7),
+  // //     request_type: RequestType.SupplyCollateral,
+  // //     address: addressBook.getContractId('USDC'),
+  // //   },
+  // // ];
 
-  // await invokeSorobanOperation(
-  //   stellarPool.submit({
-  //     from: liquidator.publicKey(),
-  //     spender: liquidator.publicKey(),
-  //     to: liquidator.publicKey(),
-  //     requests: stellarRequests,
-  //   }),
-  //   PoolContract.parsers.submit,
-  //   liquidator_tx_options
-  // );
+  // // await invokeSorobanOperation(
+  // //   bridgePool.submit({
+  // //     from: liquidator.publicKey(),
+  // //     spender: liquidator.publicKey(),
+  // //     to: liquidator.publicKey(),
+  // //     requests: stellarRequests,
+  // //   }),
+  // //   PoolContract.parsers.submit,
+  // //   liquidator_tx_options
+  // // );
 
   // console.log('Whale Supply tokens to Bridge pool');
   // const bridgeSupplyRequests: Request[] = [
@@ -524,6 +544,11 @@ async function simulate(addressBook: AddressBook) {
   //     request_type: RequestType.SupplyCollateral,
   //     address: addressBook.getContractId('wBTC'),
   //   },
+  //   {
+  //     amount: BigInt(100000000e7),
+  //     request_type: RequestType.SupplyCollateral,
+  //     address: addressBook.getContractId('USDC'),
+  //   },
   // ];
   // await invokeSorobanOperation(
   //   bridgePool.submit({
@@ -535,7 +560,7 @@ async function simulate(addressBook: AddressBook) {
   //   PoolContract.parsers.submit,
   //   liquidator_tx_options
   // );
-  const comet = new CometContract(addressBook.getContractId('comet'));
+  // const comet = new CometContract(addressBook.getContractId('comet'));
 
   // await invokeClassicOp(
   //   usdc_token.classic_mint(liquidator.publicKey(), '100000'),
@@ -553,9 +578,9 @@ async function simulate(addressBook: AddressBook) {
   //   () => undefined,
   //   liquidator_tx_options
   // );
-  console.log('update backstop token lp value');
-  const backstop = new BackstopContract(addressBook.getContractId('backstop'));
-  await invokeSorobanOperation(backstop.updateTokenValue(), () => undefined, liquidator_tx_options);
+  // console.log('update backstop token lp value');
+  // const backstop = new BackstopContract(addressBook.getContractId('backstop'));
+  // await invokeSorobanOperation(backstop.updateTokenValue(), () => undefined, liquidator_tx_options);
   console.log('starting simulations');
   for (let i = 0; i < 10000; i++) {
     console.log('iteration: ', i);
