@@ -66,4 +66,12 @@ export class CometContract extends Contract {
     };
     return this.call(invokeArgs.method, ...invokeArgs.args).toXDR('base64');
   }
+
+  public setController(manager: string) {
+    const invokeArgs = {
+      method: 'set_controller',
+      args: [((i) => Address.fromString(i).toScVal())(manager)],
+    };
+    return this.call(invokeArgs.method, ...invokeArgs.args).toXDR('base64');
+  }
 }
