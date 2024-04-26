@@ -9,7 +9,7 @@ import {
 import { Asset, TransactionBuilder } from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
 import { deployBlend } from '../deploy/blend.js';
-import { deployComet } from '../deploy/comet.js';
+import { deployCometFactory } from '../deploy/comet-factory.js';
 import { tryDeployStellarAsset } from '../deploy/stellar-asset.js';
 import { setupPool } from '../pool/pool-setup.js';
 import { setupReserve } from '../pool/reserve-setup.js';
@@ -18,6 +18,7 @@ import { config } from '../utils/env_config.js';
 import { TxParams, invokeClassicOp, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
 import { setupPoolBackstop } from './backstop-pool-setup.js';
 import { setupMockOracle } from './oracle-setup.js';
+import { deployComet } from '../deploy/comet.js';
 
 const txBuilderOptions: TransactionBuilder.TransactionBuilderOptions = {
   fee: '10000',
@@ -65,12 +66,16 @@ async function mock() {
     new Asset('wBTC', config.admin.publicKey()),
     adminTxParams
   );
+  const cometFactory = await deployCometFactory(adminTxParams);
+  const null_address = 'GCVJMEUXNIN7BYI4ERWW66ZJNTXRU2AWM65ZDYOODH5ZEZUM7UZXDEAD';
   const cometContract = await deployComet(
+    cometFactory,
     adminTxParams,
     [BLND.contractId(), USDC.contractId()],
     [BigInt(0.8e7), BigInt(0.2e7)],
     [BigInt(1e7), BigInt(0.2e7)],
-    BigInt(0.003e7)
+    BigInt(0.003e7),
+    null_address
   );
   const mockOracle = await setupMockOracle(adminTxParams);
   const [backstopContract, emitterContract] = await deployBlend(
