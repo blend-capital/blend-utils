@@ -11,7 +11,13 @@ import {
 import { config } from '../utils/env_config.js';
 import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
 
-export async function deployComet(txParams: TxParams): Promise<CometContract> {
+export async function deployComet(
+  txParams: TxParams,
+  tokens: string[],
+  weights: bigint[],
+  balances: bigint[],
+  swap_fee: bigint
+): Promise<CometContract> {
   await installContract('comet', txParams);
   await bumpContractCode('comet', txParams);
   await installContract('cometFactory', txParams);
@@ -22,14 +28,17 @@ export async function deployComet(txParams: TxParams): Promise<CometContract> {
   const cometFactoryAddress = await deployContract('cometFactory', 'cometFactory', txParams);
   await bumpContractInstance('cometFactory', txParams);
   const cometFactory = new CometFactoryContract(cometFactoryAddress);
-  await invokeSorobanOperation(
-    cometFactory.init(txParams.account.accountId(), comet_wasm),
-    () => undefined,
-    txParams
-  );
+  await invokeSorobanOperation(cometFactory.init(comet_wasm), () => undefined, txParams);
 
   const comet = await invokeSorobanOperation<Address>(
-    cometFactory.newCometPool(randomBytes(32), config.admin.publicKey()),
+    cometFactory.newCometPool(
+      randomBytes(32),
+      config.admin.publicKey(),
+      tokens,
+      weights,
+      balances,
+      swap_fee
+    ),
     (result: string) => scValToNative(xdr.ScVal.fromXDR(result, 'base64')) as Address,
     txParams
   );

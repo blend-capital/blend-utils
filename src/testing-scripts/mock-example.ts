@@ -17,7 +17,6 @@ import { airdropAccount } from '../utils/contract.js';
 import { config } from '../utils/env_config.js';
 import { TxParams, invokeClassicOp, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
 import { setupPoolBackstop } from './backstop-pool-setup.js';
-import { setupComet } from './comet-setup.js';
 import { setupMockOracle } from './oracle-setup.js';
 
 const txBuilderOptions: TransactionBuilder.TransactionBuilderOptions = {
@@ -66,7 +65,13 @@ async function mock() {
     new Asset('wBTC', config.admin.publicKey()),
     adminTxParams
   );
-  const cometContract = await deployComet(adminTxParams);
+  const cometContract = await deployComet(
+    adminTxParams,
+    [BLND.contractId(), USDC.contractId()],
+    [BigInt(0.8e7), BigInt(0.2e7)],
+    [BigInt(1e7), BigInt(0.2e7)],
+    BigInt(0.003e7)
+  );
   const mockOracle = await setupMockOracle(adminTxParams);
   const [backstopContract, emitterContract] = await deployBlend(
     BLND.contractId(),
@@ -75,8 +80,6 @@ async function mock() {
     new Map(),
     adminTxParams
   );
-
-  await setupComet(cometContract.contractId(), BLND.contractId(), USDC.contractId(), adminTxParams);
 
   // ********** Stellar Pool (XLM, USDC) **********//
 
