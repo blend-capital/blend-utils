@@ -44,8 +44,8 @@ export async function sendTransaction<T>(
 ): Promise<T | undefined> {
   let send_tx_response = await config.rpc.sendTransaction(transaction);
   const curr_time = Date.now();
-  while (send_tx_response.status !== 'PENDING' && Date.now() - curr_time < 20000) {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+  while (send_tx_response.status === 'TRY_AGAIN_LATER' && Date.now() - curr_time < 20000) {
+    await new Promise((resolve) => setTimeout(resolve, 4000));
     send_tx_response = await config.rpc.sendTransaction(transaction);
   }
   if (send_tx_response.status !== 'PENDING') {
@@ -101,6 +101,7 @@ export async function invokeSorobanOperation<T>(
     await txParams.signerFunction(assembledTx.toXDR()),
     config.passphrase
   );
+
   const response = await sendTransaction(signedTx, parser);
   return response;
 }
