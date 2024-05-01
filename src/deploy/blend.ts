@@ -6,7 +6,6 @@ import {
   PoolFactoryContract,
   PoolInitMeta,
 } from '@blend-capital/blend-sdk';
-import { Address } from '@stellar/stellar-sdk';
 import {
   bumpContractCode,
   bumpContractInstance,
@@ -19,7 +18,7 @@ export async function deployBlend(
   blndTokenAddress: string,
   backstopTokenAddress: string,
   usdcTokenAddress: string,
-  dropList: Map<string | Address, bigint>,
+  dropList: Array<readonly [string, bigint]>,
   txParams: TxParams
 ): Promise<[BackstopContract, EmitterContract, PoolFactoryContract]> {
   await installContract('emitter', txParams);
@@ -90,11 +89,7 @@ export async function installBlend(txParams: TxParams): Promise<void> {
   await installContract('emitter', txParams);
   await installContract('poolFactory', txParams);
   await installContract('backstop', txParams);
-  await bumpContractCode('emitter', txParams);
-  await bumpContractCode('poolFactory', txParams);
-  await bumpContractCode('backstop', txParams);
   await installContract('lendingPool', txParams);
-  await bumpContractCode('lendingPool', txParams);
   console.log('Successfully installed Blend contracts\n');
 }
 
@@ -102,11 +97,8 @@ export async function onlyDeployBlend(
   txParams: TxParams
 ): Promise<[BackstopContract, EmitterContract, PoolFactoryContract]> {
   const emitterAddress = await deployContract('emitter', 'emitter', txParams);
-  await bumpContractInstance('emitter', txParams);
   const factoryAddress = await deployContract('poolFactory', 'poolFactory', txParams);
-  await bumpContractInstance('poolFactory', txParams);
   const backstopAddress = await deployContract('backstop', 'backstop', txParams);
-  await bumpContractInstance('backstop', txParams);
   console.log('Successfully deployed Blend contracts\n');
 
   return [
@@ -124,7 +116,7 @@ export async function initBlend(
   blndTokenAddress: string,
   backstopTokenAddress: string,
   usdcTokenAddress: string,
-  dropList: Map<string | Address, bigint>,
+  dropList: Array<readonly [string, bigint]>,
   txParams: TxParams
 ): Promise<[BackstopContract, EmitterContract, PoolFactoryContract]> {
   const emitter = new EmitterContract(emitterAddress);

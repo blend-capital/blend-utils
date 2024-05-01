@@ -61,10 +61,12 @@ export async function sendTransaction<T>(
   }
 
   if (get_tx_response.status !== 'SUCCESS') {
+    console.log('Tx Failed: ', get_tx_response.status);
     const error = parseError(get_tx_response);
     throw error;
   }
 
+  console.log('Tx Submitted!');
   const result = parseResult(get_tx_response, parser);
   return result;
 }
@@ -83,15 +85,18 @@ export async function invokeSorobanOperation<T>(
     txBuilder.setSorobanData(sorobanData);
   }
   const transaction = txBuilder.build();
-  console.log('Transaction Hash:', transaction.hash().toString('hex'));
   const simulation = await config.rpc.simulateTransaction(transaction);
   if (SorobanRpc.Api.isSimulationError(simulation)) {
+    console.log('is simulation error');
+    console.log('xdr: ', transaction.toXDR());
+    console.log('simulation: ', simulation);
     const error = parseError(simulation);
     console.error(error);
     throw error;
   }
 
   const assembledTx = SorobanRpc.assembleTransaction(transaction, simulation).build();
+  console.log('Transaction Hash:', assembledTx.hash().toString('hex'));
   const signedTx = new Transaction(
     await txParams.signerFunction(assembledTx.toXDR()),
     config.passphrase
@@ -110,6 +115,7 @@ export async function invokeClassicOp(operation: string, txParams: TxParams) {
     await txParams.signerFunction(transaction.toXDR()),
     config.passphrase
   );
+  console.log('Transaction Hash:', signedTx.hash().toString('hex'));
   try {
     await sendTransaction(signedTx, () => undefined);
   } catch (e) {
