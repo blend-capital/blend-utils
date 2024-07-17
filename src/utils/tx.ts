@@ -2,6 +2,7 @@ import { parseError, parseResult } from '@blend-capital/blend-sdk';
 import {
   Account,
   Keypair,
+  Operation,
   SorobanRpc,
   TimeoutInfinite,
   Transaction,
@@ -30,9 +31,10 @@ export async function simulationOperation(
   operation: string,
   txParams: TxParams
 ): Promise<SorobanRpc.Api.SimulateTransactionResponse> {
-  const txBuilder = new TransactionBuilder(txParams.account, txParams.txBuilderOptions)
-    .addOperation(xdr.Operation.fromXDR(operation, 'base64'))
-    .setTimeout(TimeoutInfinite);
+  const txBuilder = new TransactionBuilder(
+    txParams.account,
+    txParams.txBuilderOptions
+  ).addOperation(xdr.Operation.fromXDR(operation, 'base64'));
   const transaction = txBuilder.build();
   const simulation = await config.rpc.simulateTransaction(transaction);
   return simulation;
@@ -78,14 +80,38 @@ export async function invokeSorobanOperation<T>(
   sorobanData?: xdr.SorobanTransactionData
 ): Promise<T | undefined> {
   const account = await config.rpc.getAccount(txParams.account.accountId());
-  const txBuilder = new TransactionBuilder(account, txParams.txBuilderOptions)
-    .addOperation(xdr.Operation.fromXDR(operation, 'base64'))
-    .setTimeout(TimeoutInfinite);
+  const txBuilder = new TransactionBuilder(account, txParams.txBuilderOptions).addOperation(
+    xdr.Operation.fromXDR(operation, 'base64')
+  );
   if (sorobanData) {
     txBuilder.setSorobanData(sorobanData);
   }
-  const transaction = txBuilder.build();
-  const simulation = await config.rpc.simulateTransaction(transaction);
+  let transaction = txBuilder.build();
+  let simulation = await config.rpc.simulateTransaction(transaction);
+  if (SorobanRpc.Api.isSimulationRestore(simulation)) {
+    console.log('Restoring...');
+    const fee = Number(simulation.restorePreamble.minResourceFee) + 1000;
+    const restore_tx = new TransactionBuilder(account, { fee: fee.toString() })
+      .setNetworkPassphrase(config.passphrase)
+      .setTimeout(0)
+      .setSorobanData(simulation.restorePreamble.transactionData.build())
+      .addOperation(Operation.restoreFootprint({}))
+      .build();
+    const restoreSignedTx = new Transaction(
+      await txParams.signerFunction(restore_tx.toXDR()),
+      config.passphrase
+    );
+    console.log('Restore Hash:', restoreSignedTx.hash().toString('hex'));
+    await sendTransaction(restoreSignedTx, () => undefined);
+    console.log('Restored!');
+    // increment sequence number since restore consumed one
+    account.incrementSequenceNumber();
+    transaction = new TransactionBuilder(account, txParams.txBuilderOptions)
+      .addOperation(xdr.Operation.fromXDR(operation, 'base64'))
+      .build();
+    simulation = await config.rpc.simulateTransaction(transaction);
+  }
+
   if (SorobanRpc.Api.isSimulationError(simulation)) {
     console.log('is simulation error');
     console.log('xdr: ', transaction.toXDR());

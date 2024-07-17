@@ -1,5 +1,5 @@
 import { i128, u64 } from '@blend-capital/blend-sdk';
-import { Address, Contract, ContractSpec } from '@stellar/stellar-sdk';
+import { Address, Contract, contract } from '@stellar/stellar-sdk';
 
 /**
  * PriceData type
@@ -17,11 +17,11 @@ export type Asset =
   | { tag: 'Other'; values: readonly [string] };
 
 export class OracleContract extends Contract {
-  spec: ContractSpec;
+  spec: contract.Spec;
 
   constructor(address: string) {
     super(address);
-    this.spec = new ContractSpec([
+    this.spec = new contract.Spec([
       'AAAABAAAACFUaGUgZXJyb3IgY29kZXMgZm9yIHRoZSBjb250cmFjdC4AAAAAAAAAAAAAEFByaWNlT3JhY2xlRXJyb3IAAAABAAAAUVRoZSBjb25maWcgYXNzZXRzIGRvbid0IGNvbnRhaW4gcGVyc2lzdGVudCBhc3NldC4gRGVsZXRlIGFzc2V0cyBpcyBub3Qgc3VwcG9ydGVkLgAAAAAAAAxBc3NldE1pc3NpbmcAAAAC',
       'AAAAAAAAAAAAAAAIc2V0X2RhdGEAAAAFAAAAAAAAAAVhZG1pbgAAAAAAABMAAAAAAAAABGJhc2UAAAfQAAAABUFzc2V0AAAAAAAAAAAAAAZhc3NldHMAAAAAA+oAAAfQAAAABUFzc2V0AAAAAAAAAAAAAAhkZWNpbWFscwAAAAQAAAAAAAAACnJlc29sdXRpb24AAAAAAAQAAAAA',
       'AAAAAAAAAAAAAAAJc2V0X3ByaWNlAAAAAAAAAgAAAAAAAAAGcHJpY2VzAAAAAAPqAAAACwAAAAAAAAAJdGltZXN0YW1wAAAAAAAABgAAAAA=',

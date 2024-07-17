@@ -4,6 +4,7 @@ lib
 .DS_Store
 
 temp.ts
+*/local
 
 # configuration files
 .env

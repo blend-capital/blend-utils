@@ -1,7 +1,7 @@
 import { BackstopContract, EmitterContract, PoolContract } from '@blend-capital/blend-sdk';
-import { invokeSorobanOperation, signWithKeypair, TxParams } from '../utils/tx.js';
-import { config } from '../utils/env_config.js';
 import { addressBook } from '../utils/address-book.js';
+import { config } from '../utils/env_config.js';
+import { TxParams, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
 
 /**
  * Distribute emissions to pools and backstop
