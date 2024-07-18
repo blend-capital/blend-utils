@@ -25,8 +25,11 @@ await setupEnv();
 
 // setup a new network with the Blend Protocol, an admin user, and the relevant tokens for auction testing
 async function setupEnv() {
+  console.log('Setting up environment\n');
   const whale = config.getUser('WHALE');
+  console.log('whale: ', whale.publicKey());
   await airdropAccount(whale);
+  console.log('admin: ', config.admin.publicKey());
   await airdropAccount(config.admin);
   const adminTxParams: TxParams = {
     account: await config.rpc.getAccount(config.admin.publicKey()),
@@ -43,17 +46,17 @@ async function setupEnv() {
     },
   };
 
-  const XLM = await tryDeployStellarAsset(Asset.native(), adminTxParams);
+  await tryDeployStellarAsset(Asset.native(), adminTxParams);
   const asset_BLND = new Asset('BLND', config.admin.publicKey());
   const BLND = await tryDeployStellarAsset(asset_BLND, adminTxParams);
   const asset_USDC = new Asset('USDC', config.admin.publicKey());
   const USDC = await tryDeployStellarAsset(asset_USDC, adminTxParams);
   const asset_VOL = new Asset('VOL', config.admin.publicKey());
   const VOL = await tryDeployStellarAsset(asset_VOL, adminTxParams);
-  const asset_HIGH_INT = new Asset('HIGH_INT', config.admin.publicKey());
-  const HIGH_INT = await tryDeployStellarAsset(asset_HIGH_INT, adminTxParams);
-  const asset_NO_COL = new Asset('NO_COL', config.admin.publicKey());
-  const NO_COL = await tryDeployStellarAsset(asset_NO_COL, adminTxParams);
+  const asset_IR = new Asset('IR', config.admin.publicKey());
+  const IR = await tryDeployStellarAsset(asset_IR, adminTxParams);
+  const asset_NOCOL = new Asset('NOCOL', config.admin.publicKey());
+  const NOCOL = await tryDeployStellarAsset(asset_NOCOL, adminTxParams);
 
   const cometFactory = await deployCometFactory(adminTxParams);
   const null_address = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF';
@@ -120,8 +123,8 @@ async function setupEnv() {
     max_util: 900_0000,
     r_base: 5000,
     r_one: 50_0000,
+    r_two: 500_0000,
     r_three: 1_500_0000,
-    r_two: 1_500_0000,
     reactivity: 500,
   };
 
@@ -140,14 +143,14 @@ async function setupEnv() {
     max_util: 900_0000,
     r_base: 100_0000,
     r_one: 200_0000,
-    r_three: 1_500_0000,
-    r_two: 5_000_0000,
+    r_two: 1_500_0000,
+    r_three: 5_000_0000,
     reactivity: 0,
   };
 
   await setupReserve(
     auctionPool.contractId(),
-    { asset: HIGH_INT.contractId(), metadata: highIntReserveMeta },
+    { asset: IR.contractId(), metadata: highIntReserveMeta },
     adminTxParams
   );
 
@@ -160,14 +163,14 @@ async function setupEnv() {
     max_util: 900_0000,
     r_base: 1_0000,
     r_one: 5_0000,
-    r_three: 500_0000,
-    r_two: 2_000_0000,
+    r_two: 500_0000,
+    r_three: 2_000_0000,
     reactivity: 500,
   };
 
   await setupReserve(
     auctionPool.contractId(),
-    { asset: NO_COL.contractId(), metadata: noColReserveMeta },
+    { asset: NOCOL.contractId(), metadata: noColReserveMeta },
     adminTxParams
   );
 

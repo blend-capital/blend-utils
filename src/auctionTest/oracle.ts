@@ -1,43 +1,21 @@
 import { Address } from '@stellar/stellar-sdk';
 import { OracleContract } from '../external/oracle.js';
 import { addressBook } from '../utils/address-book.js';
-import { bumpContractCode, bumpContractInstance, installContract } from '../utils/contract.js';
+import {
+  bumpContractCode,
+  bumpContractInstance,
+  deployContract,
+  installContract,
+} from '../utils/contract.js';
 import { config } from '../utils/env_config.js';
-import { TxParams, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
+import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
 
 const AUCTION_ORACLE_KEY = 'auctionOracle';
 
-const adminTxParams: TxParams = {
-  account: await config.rpc.getAccount(config.admin.publicKey()),
-  txBuilderOptions: {
-    fee: '10000',
-    timebounds: {
-      minTime: 0,
-      maxTime: 0,
-    },
-    networkPassphrase: config.passphrase,
-  },
-  signerFunction: async (txXDR: string) => {
-    return signWithKeypair(txXDR, config.passphrase, config.admin);
-  },
-};
-
-if (process.argv.length < 5) {
-  throw new Error('Arguments required (in decimal): `network` `VOL` `HIGH_INT` `NO_COL`');
-}
-
-const vol_price = Number(process.argv[3]);
-const high_int_price = Number(process.argv[4]);
-const no_col_price = Number(process.argv[5]);
-if (isNaN(vol_price) || isNaN(high_int_price) || isNaN(no_col_price)) {
-  throw new Error('Invalid price arguments');
-}
-
-await setPrice(adminTxParams, vol_price, high_int_price, no_col_price);
-
 export async function setupAuctionOracle(txParams: TxParams): Promise<OracleContract> {
-  await installContract(AUCTION_ORACLE_KEY, txParams);
-  await bumpContractCode(AUCTION_ORACLE_KEY, txParams);
+  await installContract('oraclemock', txParams);
+  await bumpContractCode('oraclemock', txParams);
+  await deployContract(AUCTION_ORACLE_KEY, 'oraclemock', txParams);
   await bumpContractInstance(AUCTION_ORACLE_KEY, txParams);
 
   const oracleAddress = addressBook.getContractId(AUCTION_ORACLE_KEY);
@@ -64,11 +42,11 @@ export async function setupAuctionOracle(txParams: TxParams): Promise<OracleCont
         },
         {
           tag: 'Stellar',
-          values: [Address.fromString(addressBook.getContractId('HIGH_INT'))],
+          values: [Address.fromString(addressBook.getContractId('IR'))],
         },
         {
           tag: 'Stellar',
-          values: [Address.fromString(addressBook.getContractId('NO_COL'))],
+          values: [Address.fromString(addressBook.getContractId('NOCOL'))],
         },
       ],
       7,
