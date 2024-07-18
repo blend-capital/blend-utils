@@ -11,17 +11,21 @@ export async function setupPoolBackstop(
   blndAddress: string,
   usdcAddress: string,
   adminTxParams: TxParams,
-  whaleTxParams: TxParams
+  whaleTxParams: TxParams,
+  issuerTxParams: TxParams
 ) {
   const pool = new PoolContract(poolAddress);
   const backstop = new BackstopContract(backstopAddress);
-  const BLND = new TokenContract(blndAddress, new Asset('BLND', adminTxParams.account.accountId()));
+  const BLND = new TokenContract(
+    blndAddress,
+    new Asset('BLND', issuerTxParams.account.accountId())
+  );
   const USDC = new TokenContract(usdcAddress, new Asset('USDC', adminTxParams.account.accountId()));
   const comet = new CometContract(cometAddress);
   await invokeClassicOp(BLND.classic_trustline(whaleTxParams.account.accountId()), whaleTxParams);
   await invokeClassicOp(
     BLND.classic_mint(whaleTxParams.account.accountId(), '500100'),
-    adminTxParams
+    issuerTxParams
   );
   await invokeClassicOp(USDC.classic_trustline(whaleTxParams.account.accountId()), whaleTxParams);
   await invokeClassicOp(

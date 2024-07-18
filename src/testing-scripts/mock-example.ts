@@ -167,7 +167,8 @@ async function mock() {
     BLND.contractId(),
     USDC.contractId(),
     adminTxParams,
-    whaleTxParams
+    whaleTxParams,
+    adminTxParams
   );
 
   //********** Bridge Pool (XLM, USDC) **********//
@@ -302,7 +303,8 @@ async function mock() {
     BLND.contractId(),
     USDC.contractId(),
     adminTxParams,
-    whaleTxParams
+    whaleTxParams,
+    adminTxParams
   );
 
   console.log('Transfer blnd admin to emitter\n');

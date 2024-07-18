@@ -1,21 +1,32 @@
 import { Address } from '@stellar/stellar-sdk';
 import { OracleContract } from '../external/oracle.js';
 import { addressBook } from '../utils/address-book.js';
-import {
-  bumpContractCode,
-  bumpContractInstance,
-  deployContract,
-  installContract,
-} from '../utils/contract.js';
+import { bumpContractCode, bumpContractInstance, installContract } from '../utils/contract.js';
 import { config } from '../utils/env_config.js';
-import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
+import { TxParams, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
+
+const adminTxParams: TxParams = {
+  account: await config.rpc.getAccount(config.admin.publicKey()),
+  txBuilderOptions: {
+    fee: '10000',
+    timebounds: {
+      minTime: 0,
+      maxTime: 0,
+    },
+    networkPassphrase: config.passphrase,
+  },
+  signerFunction: async (txXDR: string) => {
+    return signWithKeypair(txXDR, config.passphrase, config.admin);
+  },
+};
+await setupMockOracle(adminTxParams);
 
 export async function setupMockOracle(txParams: TxParams): Promise<OracleContract> {
   await installContract('oraclemock', txParams);
   await bumpContractCode('oraclemock', txParams);
-  const oracleAddress = await deployContract('oraclemock', 'oraclemock', txParams);
   await bumpContractInstance('oraclemock', txParams);
 
+  const oracleAddress = addressBook.getContractId('oraclemock');
   const oracle = new OracleContract(oracleAddress);
   await invokeSorobanOperation(
     oracle.setData(
@@ -41,10 +52,6 @@ export async function setupMockOracle(txParams: TxParams): Promise<OracleContrac
           tag: 'Stellar',
           values: [Address.fromString(addressBook.getContractId('wBTC'))],
         },
-        {
-          tag: 'Stellar',
-          values: [Address.fromString(addressBook.getContractId('BLND'))],
-        },
       ],
       7,
       300
@@ -53,13 +60,7 @@ export async function setupMockOracle(txParams: TxParams): Promise<OracleContrac
     txParams
   );
   await invokeSorobanOperation(
-    oracle.setPriceStable([
-      BigInt(1e7),
-      BigInt(0.15e7),
-      BigInt(2000e7),
-      BigInt(36000e7),
-      BigInt(100_0000),
-    ]),
+    oracle.setPriceStable([BigInt(1e7), BigInt(0.1e7), BigInt(3000e7), BigInt(60000e7)]),
     () => undefined,
     txParams
   );
