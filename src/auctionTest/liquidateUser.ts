@@ -1,4 +1,4 @@
-import { Address, Keypair } from '@stellar/stellar-sdk';
+import { Address } from '@stellar/stellar-sdk';
 import { addressBook } from '../utils/address-book.js';
 import { createUserLiquidation } from './auctions.js';
 import { config } from '../utils/env_config.js';
@@ -6,32 +6,20 @@ import { signWithKeypair } from '../utils/tx.js';
 
 if (process.argv.length < 7) {
   throw new Error(
-    'Arguments required (in decimal): `network` `private key` `pool name` `user `liquidation percent (optional)`'
+    'Arguments required (in decimal): `network` `account name` `pool name` `user `liquidation percent (optional)`'
   );
 }
-const privateKey = process.argv[3];
+const keypair = config.getUser(process.argv[3]);
 const pool = addressBook.getContractId(process.argv[4]);
-const user = process.argv[5];
+const user = config.getUser(process.argv[5]);
 const liquidationPercent = Number(process.argv[6]);
 
-try {
-  const keypair = Keypair.fromSecret(privateKey);
-  Address.fromString(keypair.publicKey());
-} catch (e) {
-  throw new Error('Invalid private key');
-}
 try {
   Address.fromString(pool);
 } catch (e) {
   throw new Error('Invalid pool id');
 }
-try {
-  Address.fromString(user);
-} catch (e) {
-  throw new Error('Invalid asset id');
-}
 
-const keypair = Keypair.fromSecret(privateKey);
 const txParams = {
   account: await config.rpc.getAccount(keypair.publicKey()),
   txBuilderOptions: {
@@ -49,6 +37,6 @@ const txParams = {
 await createUserLiquidation(
   txParams,
   pool,
-  user,
+  user.publicKey(),
   !isNaN(liquidationPercent) && liquidationPercent > 0 ? BigInt(liquidationPercent) : undefined
 );

@@ -3,7 +3,7 @@ import { airdropAccount } from '../utils/contract.js';
 import { TokenContract } from '../external/token.js';
 import { addressBook } from '../utils/address-book.js';
 import { config } from '../utils/env_config.js';
-import { invokeClassicOp, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
+import { invokeClassicOp, invokeSorobanOperation, signWithKeypair, TxParams } from '../utils/tx.js';
 import { PoolContract, Request, RequestType } from '@blend-capital/blend-sdk';
 
 async function createUser(): Promise<Keypair> {
@@ -92,27 +92,12 @@ async function createUser(): Promise<Keypair> {
 }
 
 async function submit(
-  privateKey: string,
+  txParams: TxParams,
   poolId: string,
   asset: string,
   action: RequestType,
   amount: bigint
 ): Promise<void> {
-  const keypair = Keypair.fromSecret(privateKey);
-  const txParams = {
-    account: await config.rpc.getAccount(keypair.publicKey()),
-    txBuilderOptions: {
-      fee: '10000',
-      timebounds: {
-        minTime: 0,
-        maxTime: 0,
-      },
-      networkPassphrase: config.passphrase,
-    },
-    signerFunction: async (txXDR: string) => {
-      return signWithKeypair(txXDR, config.passphrase, keypair);
-    },
-  };
   const pool = new PoolContract(poolId);
   const request: Request = {
     amount: amount,
@@ -121,9 +106,9 @@ async function submit(
   };
   await invokeSorobanOperation(
     pool.submit({
-      from: keypair.publicKey(),
-      to: keypair.publicKey(),
-      spender: keypair.publicKey(),
+      from: txParams.account.accountId(),
+      to: txParams.account.accountId(),
+      spender: txParams.account.accountId(),
       requests: [request],
     }),
     PoolContract.parsers.submit,
