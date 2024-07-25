@@ -9,11 +9,11 @@ if (process.argv.length < 6) {
 }
 const privateKey = process.argv[3];
 const pool = addressBook.getContractId(process.argv[4]);
-let assets: string[] = JSON.parse(process.argv[5]);
+const assets: string[] = JSON.parse(process.argv[5]);
 assets.forEach((asset, index) => (assets[index] = addressBook.getContractId(asset)));
 
 try {
-  let keypair = Keypair.fromSecret(privateKey);
+  const keypair = Keypair.fromSecret(privateKey);
   Address.fromString(keypair.publicKey());
 } catch (e) {
   throw new Error('Invalid private key');
@@ -24,8 +24,8 @@ try {
   throw new Error('Invalid pool id');
 }
 
-let keypair = Keypair.fromSecret(privateKey);
-let txParams = {
+const keypair = Keypair.fromSecret(privateKey);
+const txParams = {
   account: await config.rpc.getAccount(keypair.publicKey()),
   txBuilderOptions: {
     fee: '10000',

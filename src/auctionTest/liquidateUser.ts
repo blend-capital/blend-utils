@@ -15,7 +15,7 @@ const user = process.argv[5];
 const liquidationPercent = Number(process.argv[6]);
 
 try {
-  let keypair = Keypair.fromSecret(privateKey);
+  const keypair = Keypair.fromSecret(privateKey);
   Address.fromString(keypair.publicKey());
 } catch (e) {
   throw new Error('Invalid private key');
@@ -31,8 +31,8 @@ try {
   throw new Error('Invalid asset id');
 }
 
-let keypair = Keypair.fromSecret(privateKey);
-let txParams = {
+const keypair = Keypair.fromSecret(privateKey);
+const txParams = {
   account: await config.rpc.getAccount(keypair.publicKey()),
   txBuilderOptions: {
     fee: '10000',

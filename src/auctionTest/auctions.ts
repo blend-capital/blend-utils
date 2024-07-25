@@ -9,28 +9,28 @@ export async function createUserLiquidation(
   liquidation_percent: bigint | undefined
 ) {
   const pool = new PoolContract(poolId);
-  let network = {
+  const network = {
     rpc: config.rpc.serverURL.toString(),
     passphrase: config.passphrase,
     opts: { allowHttp: true },
   };
-  let currTimestamp = await config.rpc
+  const currTimestamp = await config.rpc
     .getTransaction('0000000000000000000000000000000000000000000000000000000000000000')
     .then((tx) => tx.latestLedgerCloseTime);
-  let poolData = await Pool.load(network, poolId, currTimestamp);
-  let userData = await poolData.loadUser(network, user);
+  const poolData = await Pool.load(network, poolId, currTimestamp);
+  const userData = await poolData.loadUser(network, user);
   if (liquidation_percent === undefined) {
-    let avgInverseLF =
+    const avgInverseLF =
       userData.positionEstimates.totalEffectiveLiabilities /
       userData.positionEstimates.totalBorrowed;
-    let avgCF =
+    const avgCF =
       userData.positionEstimates.totalEffectiveCollateral /
       userData.positionEstimates.totalSupplied;
-    let estIncentive = 1 + (1 - avgCF / avgInverseLF) / 2;
-    let numberator =
+    const estIncentive = 1 + (1 - avgCF / avgInverseLF) / 2;
+    const numberator =
       userData.positionEstimates.totalEffectiveLiabilities * 1.1 -
       userData.positionEstimates.totalEffectiveCollateral;
-    let denominator = avgInverseLF * 1.1 - avgCF * estIncentive;
+    const denominator = avgInverseLF * 1.1 - avgCF * estIncentive;
     liquidation_percent = BigInt(
       Math.round((numberator / denominator / userData.positionEstimates.totalBorrowed) * 100)
     );

@@ -5,12 +5,11 @@ import { addressBook } from '../utils/address-book.js';
 import { config } from '../utils/env_config.js';
 import { invokeClassicOp, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
 import { PoolContract, Request, RequestType } from '@blend-capital/blend-sdk';
-import { Key } from 'readline';
 
 async function createUser(): Promise<Keypair> {
-  let keypair = Keypair.random();
+  const keypair = Keypair.random();
   await airdropAccount(keypair);
-  let txParams = {
+  const txParams = {
     account: await config.rpc.getAccount(keypair.publicKey()),
     txBuilderOptions: {
       fee: '10000',
@@ -38,19 +37,19 @@ async function createUser(): Promise<Keypair> {
       return signWithKeypair(txXDR, config.passphrase, config.admin);
     },
   };
-  let highVolToken = new TokenContract(
+  const highVolToken = new TokenContract(
     addressBook.getContractId('VOL'),
     new Asset('VOL', config.admin.publicKey())
   );
-  let USDC = new TokenContract(
+  const USDC = new TokenContract(
     addressBook.getContractId('USDC'),
     new Asset('USDC', config.admin.publicKey())
   );
-  let highIRToken = new TokenContract(
+  const highIRToken = new TokenContract(
     addressBook.getContractId('IR'),
     new Asset('IR', config.admin.publicKey())
   );
-  let noCollateralToken = new TokenContract(
+  const noCollateralToken = new TokenContract(
     addressBook.getContractId('NOCOL'),
     new Asset('NOCOL', config.admin.publicKey())
   );
@@ -99,8 +98,8 @@ async function submit(
   action: RequestType,
   amount: bigint
 ): Promise<void> {
-  let keypair = Keypair.fromSecret(privateKey);
-  let txParams = {
+  const keypair = Keypair.fromSecret(privateKey);
+  const txParams = {
     account: await config.rpc.getAccount(keypair.publicKey()),
     txBuilderOptions: {
       fee: '10000',
@@ -114,8 +113,8 @@ async function submit(
       return signWithKeypair(txXDR, config.passphrase, keypair);
     },
   };
-  let pool = new PoolContract(poolId);
-  let request: Request = {
+  const pool = new PoolContract(poolId);
+  const request: Request = {
     amount: amount,
     request_type: action,
     address: asset,

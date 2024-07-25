@@ -11,10 +11,10 @@ const privateKey = process.argv[3];
 const pool = addressBook.getContractId(process.argv[4]);
 const asset = addressBook.getContractId(process.argv[5]);
 const action = Number(process.argv[6]);
-let amount = Number(process.argv[7]);
+const amount = Number(process.argv[7]);
 
 try {
-  let keypair = Keypair.fromSecret(privateKey);
+  const keypair = Keypair.fromSecret(privateKey);
   Address.fromString(keypair.publicKey());
 } catch (e) {
   throw new Error('Invalid private key');
@@ -36,5 +36,5 @@ if (isNaN(amount) || amount <= 0) {
   throw new Error('Invalid amount');
 }
 
-let bigintAmount = BigInt(amount);
+const bigintAmount = BigInt(amount);
 await submit(privateKey, pool, asset, action, bigintAmount);
