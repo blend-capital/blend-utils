@@ -1,12 +1,18 @@
 import { Address } from '@stellar/stellar-sdk';
 import { OracleContract } from '../external/oracle.js';
 import { addressBook } from '../utils/address-book.js';
-import { bumpContractCode, bumpContractInstance, installContract } from '../utils/contract.js';
+import {
+  bumpContractCode,
+  bumpContractInstance,
+  deployContract,
+  installContract,
+} from '../utils/contract.js';
 import { config } from '../utils/env_config.js';
 import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
 
 export async function setupMockOracle(txParams: TxParams): Promise<OracleContract> {
   await installContract('oraclemock', txParams);
+  await deployContract('oraclemock', 'oraclemock', txParams);
   await bumpContractCode('oraclemock', txParams);
   await bumpContractInstance('oraclemock', txParams);
 
