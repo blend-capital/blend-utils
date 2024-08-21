@@ -42,7 +42,7 @@ export async function tryDeployStellarAsset(
   try {
     return await deployStellarAsset(asset, txParams);
   } catch (e) {
-    // console.log('Asset already deployed', e);
+    console.log('Asset already deployed');
     txParams.account = new Account(
       txParams.account.accountId(),
       (parseInt(txParams.account.sequenceNumber()) - 1).toString()

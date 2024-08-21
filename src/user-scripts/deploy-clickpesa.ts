@@ -4,16 +4,16 @@ import {
     ReserveConfig,
     ReserveEmissionMetadata,
 } from '@blend-capital/blend-sdk';
-import { TransactionBuilder } from '@stellar/stellar-sdk';
+import { Asset, TransactionBuilder } from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
 import { CometContract } from '../external/comet.js';
 import { addressBook } from '../utils/address-book.js';
+import { tryDeployStellarAsset } from '../deploy/stellar-asset.js';
 import { setupPool } from '../pool/pool-setup.js';
 import { setupReserve } from '../pool/reserve-setup.js';
 import { config } from '../utils/env_config.js';
 import { TxParams, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
-import { setupMockOracle } from './oracle-setup.js';
-import { airdropAccount } from '../utils/contract.js';
+import { setupMockOracle } from '../testing-scripts/oracle-setup.js';
 
 const txBuilderOptions: TransactionBuilder.TransactionBuilderOptions = {
     fee: '10000',
@@ -27,7 +27,7 @@ await deployClickPesaPool();
 
 async function deployClickPesaPool() {
 
-    await airdropAccount(config.admin);
+    // await airdropAccount(config.admin); /* Not on Mainnet */
     const adminTxParams: TxParams = {
         account: await config.rpc.getAccount(config.admin.publicKey()),
         txBuilderOptions,
@@ -37,7 +37,10 @@ async function deployClickPesaPool() {
     };
 
     const usdc_contractId = addressBook.getContractId('USDC');
-    const cpyt_contractId = addressBook.getContractId('CPYT');
+    const CPYT = await tryDeployStellarAsset(
+        new Asset('CPYT', 'GA2MSSZKJOU6RNL3EJKH3S5TB5CDYTFQFWRYFGUJVIN5I6AOIRTLUHTO'),
+        adminTxParams
+    );
     const mockOracle = await setupMockOracle(adminTxParams);
 
     // ********** Stellar Pool (XLM, USDC) **********//
@@ -70,7 +73,7 @@ async function deployClickPesaPool() {
     await setupReserve(
         stellarPool.contractId(),
         {
-            asset: cpyt_contractId,
+            asset: CPYT.contractId(),
             metadata: stellarPoolCpytReserveMetaData,
         },
         adminTxParams
@@ -100,12 +103,12 @@ async function deployClickPesaPool() {
         {
             res_index: 0, // CPYT
             res_type: 0, // d_token
-            share: BigInt(0.7e7), // 50%
+            share: BigInt(0.5e7), // 50%
         },
         {
             res_index: 1, // USDC
             res_type: 1, // b_token
-            share: BigInt(0.3e7), // 50%
+            share: BigInt(0.5e7), // 50%
         },
     ];
     await invokeSorobanOperation(
@@ -117,9 +120,9 @@ async function deployClickPesaPool() {
     const comet = new CometContract(addressBook.getContractId('comet'));
     await invokeSorobanOperation(
         comet.joinPool(
-        BigInt(50000e7),
-        [BigInt(500100e7), BigInt(25000e7)],
-        adminTxParams.account.accountId()
+            BigInt(50000e7),
+            [BigInt(500100e7), BigInt(25000e7)],
+            adminTxParams.account.accountId()
         ),
         () => undefined,
         adminTxParams
@@ -128,9 +131,9 @@ async function deployClickPesaPool() {
     const backstop = new BackstopContract(addressBook.getContractId('backstop'));
     await invokeSorobanOperation(
         backstop.deposit({
-        from: adminTxParams.account.accountId(),
-        pool_address: stellarPool.contractId(),
-        amount: BigInt(50_000e7),
+            from: adminTxParams.account.accountId(),
+            pool_address: stellarPool.contractId(),
+            amount: BigInt(50_000e7),
         }),
 
         BackstopContract.parsers.deposit,
@@ -146,8 +149,8 @@ async function deployClickPesaPool() {
     await invokeSorobanOperation(stellarPool.setStatus(0), PoolContract.parsers.setStatus, adminTxParams);
     await invokeSorobanOperation(
         backstop.addReward({
-        to_add: stellarPool.contractId(),
-        to_remove: stellarPool.contractId(),
+            to_add: stellarPool.contractId(),
+            to_remove: stellarPool.contractId(),
         }),
         BackstopContract.parsers.addReward,
         adminTxParams
