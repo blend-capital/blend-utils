@@ -48,7 +48,7 @@ async function deployClickPesaPool() {
     const stellarPool = await setupPool(
         {
             admin: config.admin.publicKey(),
-            name: 'ClickPesa',
+            name: 'ClickPesa Debt Fund',
             salt: randomBytes(32),
             oracle: mockOracle.contractId(),
             backstop_take_rate: 0.15e7,
