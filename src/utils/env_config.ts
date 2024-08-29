@@ -12,6 +12,7 @@ class EnvConfig {
   passphrase: string;
   friendbot: string;
   blend_wasm_rel_path: string;
+  oracle_aggregator_wasm_rel_path: string;
   comet_wasm_rel_path: string;
   token_lockup_wasm_rel_path: string;
   blend_lockup_wasm_rel_path: string;
@@ -22,6 +23,7 @@ class EnvConfig {
     passphrase: string,
     friendbot: string,
     blend_wasm_rel_path: string,
+    oracle_aggregator_wasm_rel_path: string,
     comet_wasm_rel_path: string,
     token_lockup_rel_path: string,
     blend_lockup_rel_path: string,
@@ -31,6 +33,7 @@ class EnvConfig {
     this.passphrase = passphrase;
     this.friendbot = friendbot;
     this.blend_wasm_rel_path = blend_wasm_rel_path;
+    this.oracle_aggregator_wasm_rel_path = oracle_aggregator_wasm_rel_path;
     this.comet_wasm_rel_path = comet_wasm_rel_path;
     this.token_lockup_wasm_rel_path = token_lockup_rel_path;
     this.blend_lockup_wasm_rel_path = blend_lockup_rel_path;
@@ -46,6 +49,7 @@ class EnvConfig {
     const friendbot_url = process.env.FRIENDBOT_URL;
     const passphrase = process.env.NETWORK_PASSPHRASE;
     const blend_wasm_rel_path = process.env.BLEND_WASM_REL_PATH;
+    const oracle_aggregator_wasm_rel_path = process.env.ORACLE_AGGREGATOR_WASM_REL_PATH;
     const comet_wasm_rel_path = process.env.COMET_WASM_REL_PATH;
     const token_lockup_wasm_rel_path = process.env.TOKEN_LOCKUP_WASM_REL_PATH;
     const blend_lockup_wasm_rel_path = process.env.BLEND_LOCKUP_WASM_REL_PATH;
@@ -56,6 +60,7 @@ class EnvConfig {
       friendbot_url == undefined ||
       passphrase == undefined ||
       blend_wasm_rel_path == undefined ||
+      oracle_aggregator_wasm_rel_path == undefined ||
       comet_wasm_rel_path == undefined ||
       token_lockup_wasm_rel_path == undefined ||
       blend_lockup_wasm_rel_path == undefined ||
@@ -69,6 +74,7 @@ class EnvConfig {
       passphrase,
       friendbot_url,
       blend_wasm_rel_path,
+      oracle_aggregator_wasm_rel_path,
       comet_wasm_rel_path,
       token_lockup_wasm_rel_path,
       blend_lockup_wasm_rel_path,

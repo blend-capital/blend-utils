@@ -13,6 +13,7 @@ const CONTRACT_REL_PATH: object = {
   comet: '../../' + config.comet_wasm_rel_path + 'comet.wasm',
   cometFactory: '../../' + config.comet_wasm_rel_path + 'comet_factory.wasm',
   oraclemock: '../../src/external/oracle.wasm',
+  oracleAggregator: '../../' + config.oracle_aggregator_wasm_rel_path + 'oracle_aggregator.wasm',
   emitter: '../../' + config.blend_wasm_rel_path + 'emitter.wasm',
   poolFactory: '../../' + config.blend_wasm_rel_path + 'pool_factory.wasm',
   backstop: '../../' + config.blend_wasm_rel_path + 'backstop.wasm',
