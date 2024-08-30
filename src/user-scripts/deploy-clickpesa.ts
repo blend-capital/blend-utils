@@ -13,7 +13,6 @@ import { setupPool } from '../pool/pool-setup.js';
 import { setupReserve } from '../pool/reserve-setup.js';
 import { config } from '../utils/env_config.js';
 import { TxParams, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
-import { setupMockOracle } from '../testing-scripts/oracle-setup.js';
 
 const txBuilderOptions: TransactionBuilder.TransactionBuilderOptions = {
     fee: '10000',
@@ -41,7 +40,7 @@ async function deployClickPesaPool() {
         new Asset('CPYT', 'GA2MSSZKJOU6RNL3EJKH3S5TB5CDYTFQFWRYFGUJVIN5I6AOIRTLUHTO'),
         adminTxParams
     );
-    const mockOracle = await setupMockOracle(adminTxParams);
+    const oracle_aggregator = addressBook.getContractId('oracleAggregator');
 
     // ********** Stellar Pool (XLM, USDC) **********//
 
@@ -50,7 +49,7 @@ async function deployClickPesaPool() {
             admin: config.admin.publicKey(),
             name: 'ClickPesa Debt Fund',
             salt: randomBytes(32),
-            oracle: mockOracle.contractId(),
+            oracle: oracle_aggregator,
             backstop_take_rate: 0.15e7,
             max_positions: 4,
         },
