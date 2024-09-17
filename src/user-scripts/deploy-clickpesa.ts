@@ -36,10 +36,11 @@ async function deployClickPesaPool() {
     };
 
     const usdc_contractId = addressBook.getContractId('USDC');
-    const CPYT = await tryDeployStellarAsset(
-        new Asset('CPYT', 'GA2MSSZKJOU6RNL3EJKH3S5TB5CDYTFQFWRYFGUJVIN5I6AOIRTLUHTO'),
-        adminTxParams
-    );
+    const CPYT = addressBook.getContractId('CPYT');
+    // const CPYT = await tryDeployStellarAsset(
+    //     new Asset('CPYT', 'GA2MSSZKJOU6RNL3EJKH3S5TB5CDYTFQFWRYFGUJVIN5I6AOIRTLUHTO'),
+    //     adminTxParams
+    // );
     const oracle_aggregator = addressBook.getContractId('oracleAggregator');
 
     // ********** Stellar Pool (XLM, USDC) **********//
@@ -72,7 +73,7 @@ async function deployClickPesaPool() {
     await setupReserve(
         stellarPool.contractId(),
         {
-            asset: CPYT.contractId(),
+            asset: CPYT,
             metadata: stellarPoolCpytReserveMetaData,
         },
         adminTxParams
