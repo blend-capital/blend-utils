@@ -1,6 +1,6 @@
-import { Pool, PoolContract } from '@blend-capital/blend-sdk';
-import { invokeSorobanOperation, TxParams } from '../utils/tx.js';
+import { Pool, PoolContract, PositionsEstimate } from '@blend-capital/blend-sdk';
 import { config } from '../utils/env_config.js';
+import { invokeSorobanOperation, TxParams } from '../utils/tx.js';
 
 export async function createUserLiquidation(
   txParams: TxParams,
@@ -14,25 +14,18 @@ export async function createUserLiquidation(
     passphrase: config.passphrase,
     opts: { allowHttp: true },
   };
-  const currTimestamp = await config.rpc
-    .getTransaction('0000000000000000000000000000000000000000000000000000000000000000')
-    .then((tx) => tx.latestLedgerCloseTime);
-  const poolData = await Pool.load(network, poolId, currTimestamp);
-  const userData = await poolData.loadUser(network, user);
+  const poolData = await Pool.load(network, poolId);
+  const poolOracle = await poolData.loadOracle();
+  const userData = await poolData.loadUser(user);
+  const userEst = PositionsEstimate.build(poolData, poolOracle, userData.positions);
   if (liquidation_percent === undefined) {
-    const avgInverseLF =
-      userData.positionEstimates.totalEffectiveLiabilities /
-      userData.positionEstimates.totalBorrowed;
-    const avgCF =
-      userData.positionEstimates.totalEffectiveCollateral /
-      userData.positionEstimates.totalSupplied;
+    const avgInverseLF = userEst.totalEffectiveLiabilities / userEst.totalBorrowed;
+    const avgCF = userEst.totalEffectiveCollateral / userEst.totalSupplied;
     const estIncentive = 1 + (1 - avgCF / avgInverseLF) / 2;
-    const numberator =
-      userData.positionEstimates.totalEffectiveLiabilities * 1.1 -
-      userData.positionEstimates.totalEffectiveCollateral;
+    const numberator = userEst.totalEffectiveLiabilities * 1.1 - userEst.totalEffectiveCollateral;
     const denominator = avgInverseLF * 1.1 - avgCF * estIncentive;
     liquidation_percent = BigInt(
-      Math.round((numberator / denominator / userData.positionEstimates.totalBorrowed) * 100)
+      Math.round((numberator / denominator / userEst.totalBorrowed) * 100)
     );
     if (liquidation_percent > 100) {
       liquidation_percent = BigInt(100);
