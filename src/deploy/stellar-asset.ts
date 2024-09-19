@@ -16,6 +16,8 @@ export async function deployStellarAsset(asset: Asset, txParams: TxParams): Prom
     })
   );
   const contractId = StrKey.encodeContract(hash(preimage.toXDR()));
+  addressBook.setContractId(asset.code, contractId);
+  addressBook.writeToFile();
 
   const deployFunction = xdr.HostFunction.hostFunctionTypeCreateContract(
     new xdr.CreateContractArgs({
@@ -28,8 +30,6 @@ export async function deployStellarAsset(asset: Asset, txParams: TxParams): Prom
     auth: [],
   });
   await invokeSorobanOperation(deployOp.toXDR('base64'), () => undefined, txParams);
-  addressBook.setContractId(asset.code, contractId);
-  addressBook.writeToFile();
   await bumpContractInstance(asset.code, txParams);
   console.log(`Successfully deployed Stellar asset contract: ${asset}\n`);
   return new TokenContract(contractId, asset);

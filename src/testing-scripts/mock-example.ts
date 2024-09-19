@@ -86,97 +86,12 @@ async function mock() {
     adminTxParams
   );
 
-  // ********** Stellar Pool (XLM, USDC) **********//
+  //********** Testnet Pool (XLM, USDC, wBTC, wETH) **********//
 
-  const stellarPool = await setupPool(
+  const testnetPool = await setupPool(
     {
       admin: config.admin.publicKey(),
-      name: 'Stellar',
-      salt: randomBytes(32),
-      oracle: mockOracle.contractId(),
-      backstop_take_rate: 0.05e7,
-      max_positions: 4,
-    },
-    adminTxParams
-  );
-
-  const stellarPoolXlmReserveMetaData: ReserveConfig = {
-    index: 0,
-    decimals: 7,
-    c_factor: 900_0000,
-    l_factor: 850_0000,
-    util: 500_0000,
-    max_util: 950_0000,
-    r_base: 5000,
-    r_one: 30_0000,
-    r_two: 200_0000,
-    r_three: 1_000_0000,
-    reactivity: 500,
-  };
-  await setupReserve(
-    stellarPool.contractId(),
-    {
-      asset: Asset.native().contractId(config.passphrase),
-      metadata: stellarPoolXlmReserveMetaData,
-    },
-    adminTxParams
-  );
-
-  const stellarPoolUsdcReserveMetaData: ReserveConfig = {
-    index: 1,
-    decimals: 7,
-    c_factor: 950_0000,
-    l_factor: 900_0000,
-    util: 800_0000,
-    max_util: 950_0000,
-    r_base: 3000,
-    r_one: 50_0000,
-    r_three: 1_500_0000,
-    r_two: 500_0000,
-    reactivity: 1000,
-  };
-
-  await setupReserve(
-    stellarPool.contractId(),
-    { asset: USDC.contractId(), metadata: stellarPoolUsdcReserveMetaData },
-    adminTxParams
-  );
-
-  const stellarPoolEmissionMetadata: ReserveEmissionMetadata[] = [
-    {
-      res_index: 0, // XLM
-      res_type: 0, // d_token
-      share: BigInt(0.7e7), // 50%
-    },
-    {
-      res_index: 1, // USDC
-      res_type: 1, // b_token
-      share: BigInt(0.3e7), // 50%
-    },
-  ];
-  await invokeSorobanOperation(
-    stellarPool.setEmissionsConfig(stellarPoolEmissionMetadata),
-    PoolContract.parsers.setEmissionsConfig,
-    adminTxParams
-  );
-
-  await setupPoolBackstop(
-    backstopContract.contractId(),
-    stellarPool.contractId(),
-    cometContract.contractId(),
-    BLND.contractId(),
-    USDC.contractId(),
-    adminTxParams,
-    whaleTxParams,
-    adminTxParams
-  );
-
-  //********** Bridge Pool (XLM, USDC) **********//
-
-  const bridgePool = await setupPool(
-    {
-      admin: config.admin.publicKey(),
-      name: 'Bridge',
+      name: 'Testnet',
       salt: randomBytes(32),
       oracle: mockOracle.contractId(),
       backstop_take_rate: 0.1e7,
@@ -185,7 +100,7 @@ async function mock() {
     adminTxParams
   );
 
-  const bridgePoolXlmReserveMetaData: ReserveConfig = {
+  const testnetPoolXlmReserveMetaData: ReserveConfig = {
     index: 0,
     decimals: 7,
     c_factor: 900_0000,
@@ -199,10 +114,10 @@ async function mock() {
     reactivity: 500,
   };
   await setupReserve(
-    bridgePool.contractId(),
+    testnetPool.contractId(),
     {
       asset: Asset.native().contractId(config.passphrase),
-      metadata: bridgePoolXlmReserveMetaData,
+      metadata: testnetPoolXlmReserveMetaData,
     },
     adminTxParams
   );
@@ -221,7 +136,7 @@ async function mock() {
     reactivity: 1000,
   };
   await setupReserve(
-    bridgePool.contractId(),
+    testnetPool.contractId(),
     {
       asset: wETH.contractId(),
       metadata: wethReserveMetaData,
@@ -243,7 +158,7 @@ async function mock() {
     reactivity: 1000,
   };
   await setupReserve(
-    bridgePool.contractId(),
+    testnetPool.contractId(),
     {
       asset: wBTC.contractId(),
       metadata: wbtcReserveMetaData,
@@ -251,7 +166,7 @@ async function mock() {
     adminTxParams
   );
 
-  const bridgePoolUsdcReserveMetaData: ReserveConfig = {
+  const testnetPoolUsdcReserveMetaData: ReserveConfig = {
     index: 3,
     decimals: 7,
     c_factor: 950_0000,
@@ -265,10 +180,10 @@ async function mock() {
     reactivity: 500,
   };
   await setupReserve(
-    bridgePool.contractId(),
+    testnetPool.contractId(),
     {
       asset: USDC.contractId(),
-      metadata: bridgePoolUsdcReserveMetaData,
+      metadata: testnetPoolUsdcReserveMetaData,
     },
     adminTxParams
   );
@@ -291,14 +206,14 @@ async function mock() {
     },
   ];
   await invokeSorobanOperation(
-    bridgePool.setEmissionsConfig(bridgeEmissionMetadata),
+    testnetPool.setEmissionsConfig(bridgeEmissionMetadata),
     PoolContract.parsers.setEmissionsConfig,
     adminTxParams
   );
 
   await setupPoolBackstop(
     backstopContract.contractId(),
-    bridgePool.contractId(),
+    testnetPool.contractId(),
     cometContract.contractId(),
     BLND.contractId(),
     USDC.contractId(),
@@ -307,7 +222,8 @@ async function mock() {
     adminTxParams
   );
 
-  console.log('Transfer blnd admin to emitter\n');
+  console.log('');
+  console.log('Transfer blnd admin to emitter');
 
   await invokeSorobanOperation(
     BLND.set_admin(emitterContract.contractId()),
@@ -315,48 +231,16 @@ async function mock() {
     adminTxParams
   );
 
-  console.log('Minting tokens to whale\n');
+  console.log('');
+  console.log('Minting tokens to whale');
   await invokeClassicOp(wETH.classic_trustline(whale.publicKey()), whaleTxParams);
   await invokeClassicOp(wBTC.classic_trustline(whale.publicKey()), whaleTxParams);
   await invokeClassicOp(wETH.classic_mint(whale.publicKey(), '100'), adminTxParams);
   await invokeClassicOp(wBTC.classic_mint(whale.publicKey(), '10'), adminTxParams);
   await invokeClassicOp(USDC.classic_mint(whale.publicKey(), '200000'), adminTxParams);
 
-  console.log('Whale Supply tokens and borrowing from Stellar pool\n');
-  const stellarRequests: Request[] = [
-    {
-      amount: BigInt(20000e7),
-      request_type: RequestType.SupplyCollateral,
-      address: USDC.contractId(),
-    },
-    {
-      amount: BigInt(5000e7),
-      request_type: RequestType.SupplyCollateral,
-      address: XLM.contractId(),
-    },
-    {
-      amount: BigInt(15000e7),
-      request_type: RequestType.Borrow,
-      address: USDC.contractId(),
-    },
-    {
-      amount: BigInt(2000e7),
-      request_type: RequestType.Borrow,
-      address: XLM.contractId(),
-    },
-  ];
-  await invokeSorobanOperation(
-    stellarPool.submit({
-      from: whale.publicKey(),
-      spender: whale.publicKey(),
-      to: whale.publicKey(),
-      requests: stellarRequests,
-    }),
-    PoolContract.parsers.submit,
-    whaleTxParams
-  );
-
-  console.log('Whale Supply tokens to Bridge pool\n');
+  console.log('');
+  console.log('Whale Supply tokens to Testnet pool');
   const bridgeSupplyRequests: Request[] = [
     {
       amount: BigInt(5000e7),
@@ -380,7 +264,7 @@ async function mock() {
     },
   ];
   await invokeSorobanOperation(
-    bridgePool.submit({
+    testnetPool.submit({
       from: whale.publicKey(),
       spender: whale.publicKey(),
       to: whale.publicKey(),
@@ -390,7 +274,8 @@ async function mock() {
     whaleTxParams
   );
 
-  console.log('Whale Borrow tokens from Bridge pool\n');
+  console.log('');
+  console.log('Whale Borrow tokens from Testnet pool');
   const bridgeBorrowRequests: Request[] = [
     {
       amount: BigInt(2500e7),
@@ -414,7 +299,7 @@ async function mock() {
     },
   ];
   await invokeSorobanOperation(
-    bridgePool.submit({
+    testnetPool.submit({
       from: whale.publicKey(),
       spender: whale.publicKey(),
       to: whale.publicKey(),
@@ -427,7 +312,7 @@ async function mock() {
   await invokeSorobanOperation(
     backstopContract.queueWithdrawal({
       from: whale.publicKey(),
-      pool_address: bridgePool.contractId(),
+      pool_address: testnetPool.contractId(),
       amount: BigInt(1000e7),
     }),
     BackstopContract.parsers.queueWithdrawal,
