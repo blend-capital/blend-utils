@@ -36,11 +36,11 @@ async function deployClickPesaPool() {
     };
 
     const usdc_contractId = addressBook.getContractId('USDC');
-    const CPYT = addressBook.getContractId('CPYT');
-    // const CPYT = await tryDeployStellarAsset(
-    //     new Asset('CPYT', 'GA2MSSZKJOU6RNL3EJKH3S5TB5CDYTFQFWRYFGUJVIN5I6AOIRTLUHTO'),
-    //     adminTxParams
-    // );
+    // const CPYT = addressBook.getContractId('CPYT');
+    const CPYT = await tryDeployStellarAsset(
+        new Asset('CPYT', 'GAH572DYUPXZDOKBI76H54WRKMIHDXZFLOFVFBDPKL3WIUTPGGHCQ5K7'),
+        adminTxParams
+    );
     const oracle_aggregator = addressBook.getContractId('oracleAggregator');
 
     // ********** Stellar Pool (XLM, USDC) **********//
@@ -73,7 +73,7 @@ async function deployClickPesaPool() {
     await setupReserve(
         stellarPool.contractId(),
         {
-            asset: CPYT,
+            asset: CPYT.contractId(),
             metadata: stellarPoolCpytReserveMetaData,
         },
         adminTxParams
@@ -146,7 +146,7 @@ async function deployClickPesaPool() {
     //     adminTxParams
     // );
 
-    await invokeSorobanOperation(stellarPool.setStatus(0), PoolContract.parsers.setStatus, adminTxParams);
+    // await invokeSorobanOperation(stellarPool.setStatus(0), PoolContract.parsers.setStatus, adminTxParams);
     // await invokeSorobanOperation(
     //     backstop.addReward({
     //         to_add: stellarPool.contractId(),
