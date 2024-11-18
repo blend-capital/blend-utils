@@ -60,7 +60,7 @@ export async function setupAuctionOracle(txParams: TxParams): Promise<OracleCont
       BigInt(1e7),
       BigInt(0.1e7),
       BigInt(100e7),
-      BigInt(10000e7),
+      BigInt(1000e7),
       BigInt(0.01e7),
     ]),
     () => undefined,

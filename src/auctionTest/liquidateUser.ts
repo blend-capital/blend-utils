@@ -1,10 +1,10 @@
 import { Address } from '@stellar/stellar-sdk';
 import { addressBook } from '../utils/address-book.js';
-import { createUserLiquidation } from './auctions.js';
 import { config } from '../utils/env_config.js';
 import { signWithKeypair } from '../utils/tx.js';
+import { createUserLiquidation } from './auctions.js';
 
-if (process.argv.length < 7) {
+if (process.argv.length < 5) {
   throw new Error(
     'Arguments required (in decimal): `network` `account name` `pool name` `user `liquidation percent (optional)`'
   );

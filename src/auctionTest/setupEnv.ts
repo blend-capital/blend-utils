@@ -1,4 +1,4 @@
-import { ReserveConfig } from '@blend-capital/blend-sdk';
+import { PoolContract, Request, RequestType, ReserveConfig } from '@blend-capital/blend-sdk';
 import { Asset, TransactionBuilder } from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
 import { deployBlend } from '../deploy/blend.js';
@@ -12,6 +12,7 @@ import { airdropAccount } from '../utils/contract.js';
 import { config } from '../utils/env_config.js';
 import { TxParams, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
 import { setupAuctionOracle } from './oracle.js';
+import { createUser } from './user.js';
 
 const txBuilderOptions: TransactionBuilder.TransactionBuilderOptions = {
   fee: '10000',
@@ -26,6 +27,7 @@ await setupEnv();
 // setup a new network with the Blend Protocol, an admin user, and the relevant tokens for auction testing
 async function setupEnv() {
   console.log('Setting up environment\n');
+  console.log(config);
   const whale = config.getUser('WHALE');
   console.log('whale: ', whale.publicKey());
   await airdropAccount(whale);
@@ -45,6 +47,8 @@ async function setupEnv() {
       return signWithKeypair(txXDR, config.passphrase, whale);
     },
   };
+
+  console.log('Deploying assets\n');
 
   await tryDeployStellarAsset(Asset.native(), adminTxParams);
   const asset_BLND = new Asset('BLND', config.admin.publicKey());
@@ -194,4 +198,94 @@ async function setupEnv() {
   );
 
   console.log('Successfully setup pool auction pool: ', auctionPool.contractId());
+
+  console.log('Creating users');
+  const frodo = config.getUser('FRODO');
+  await airdropAccount(frodo);
+  const frodoTxParams: TxParams = {
+    account: await config.rpc.getAccount(frodo.publicKey()),
+    txBuilderOptions,
+    signerFunction: async (txXDR: string) => {
+      return signWithKeypair(txXDR, config.passphrase, frodo);
+    },
+  };
+  const samwise = config.getUser('SAMWISE');
+  await airdropAccount(samwise);
+
+  console.log('Funding whale');
+  await createUser(whale);
+  console.log('Funding frodo');
+  await createUser(frodo);
+  console.log('Funding samwise');
+  await createUser(samwise);
+
+  console.log('Seeding USDC and VOL with whale');
+  const whaleRequests: Request[] = [
+    {
+      amount: BigInt(10000e7),
+      request_type: RequestType.SupplyCollateral,
+      address: USDC.contractId(),
+    },
+    {
+      amount: BigInt(5000e7),
+      request_type: RequestType.Borrow,
+      address: USDC.contractId(),
+    },
+    {
+      amount: BigInt(1000e7),
+      request_type: RequestType.SupplyCollateral,
+      address: VOL.contractId(),
+    },
+    {
+      amount: BigInt(300e7),
+      request_type: RequestType.Borrow,
+      address: VOL.contractId(),
+    },
+  ];
+  await invokeSorobanOperation(
+    auctionPool.submit({
+      from: whale.publicKey(),
+      spender: whale.publicKey(),
+      to: whale.publicKey(),
+      requests: whaleRequests,
+    }),
+    PoolContract.parsers.submit,
+    whaleTxParams
+  );
+
+  console.log('Seeding IR and NOCOL with frodo');
+  const frodoRequests: Request[] = [
+    {
+      amount: BigInt(100e7),
+      request_type: RequestType.SupplyCollateral,
+      address: IR.contractId(),
+    },
+    {
+      amount: BigInt(25e7),
+      request_type: RequestType.Borrow,
+      address: IR.contractId(),
+    },
+    {
+      amount: BigInt(5000e7),
+      request_type: RequestType.Supply,
+      address: NOCOL.contractId(),
+    },
+    {
+      amount: BigInt(2000e7),
+      request_type: RequestType.Borrow,
+      address: NOCOL.contractId(),
+    },
+  ];
+  await invokeSorobanOperation(
+    auctionPool.submit({
+      from: frodo.publicKey(),
+      spender: frodo.publicKey(),
+      to: frodo.publicKey(),
+      requests: frodoRequests,
+    }),
+    PoolContract.parsers.submit,
+    frodoTxParams
+  );
+
+  console.log('Env setup complete!');
 }

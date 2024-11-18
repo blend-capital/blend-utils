@@ -90,6 +90,7 @@ export async function invokeSorobanOperation<T>(
   let simulation = await config.rpc.simulateTransaction(transaction);
   if (SorobanRpc.Api.isSimulationRestore(simulation)) {
     console.log('Restoring...');
+    const account = await config.rpc.getAccount(txParams.account.accountId());
     const fee = Number(simulation.restorePreamble.minResourceFee) + 1000;
     const restore_tx = new TransactionBuilder(account, { fee: fee.toString() })
       .setNetworkPassphrase(config.passphrase)

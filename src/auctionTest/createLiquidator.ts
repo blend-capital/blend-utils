@@ -1,12 +1,17 @@
-import { PoolContract, Request, RequestType } from '@blend-capital/blend-sdk';
+import { RequestType } from '@blend-capital/blend-sdk';
 import { Asset, Keypair, scValToNative, xdr } from '@stellar/stellar-sdk';
 import { TokenContract } from '../external/token.js';
 import { addressBook } from '../utils/address-book.js';
 import { airdropAccount } from '../utils/contract.js';
 import { config } from '../utils/env_config.js';
-import { invokeClassicOp, invokeSorobanOperation, signWithKeypair, TxParams } from '../utils/tx.js';
+import { invokeClassicOp, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
+import { submit } from './user.js';
 
-async function createUser(user_keypair: Keypair | undefined): Promise<Keypair> {
+const keypair = config.getUser('AUCT');
+const user = await createLiquidator(keypair);
+console.log(user.secret(), '\n', user.publicKey());
+
+async function createLiquidator(user_keypair: Keypair | undefined): Promise<Keypair> {
   const keypair = user_keypair ?? Keypair.random();
   await airdropAccount(keypair);
   const txParams = {
@@ -61,59 +66,24 @@ async function createUser(user_keypair: Keypair | undefined): Promise<Keypair> {
     },
     adminTxParams
   );
-
   await invokeClassicOp(USDC.classic_trustline(keypair.publicKey()), txParams);
   await invokeSorobanOperation(
-    USDC.mint(keypair.publicKey(), BigInt(10000e7)),
+    USDC.mint(keypair.publicKey(), BigInt(20000e7)),
     (xdrString) => {
       return scValToNative(xdr.ScVal.fromXDR(xdrString, 'base64'));
     },
     adminTxParams
   );
-
   await invokeClassicOp(highIRToken.classic_trustline(keypair.publicKey()), txParams);
-  await invokeSorobanOperation(
-    highIRToken.mint(keypair.publicKey(), BigInt(10000e7)),
-    (xdrString) => {
-      return scValToNative(xdr.ScVal.fromXDR(xdrString, 'base64'));
-    },
-    adminTxParams
-  );
-
   await invokeClassicOp(noCollateralToken.classic_trustline(keypair.publicKey()), txParams);
-  await invokeSorobanOperation(
-    noCollateralToken.mint(keypair.publicKey(), BigInt(10000e7)),
-    (xdrString) => {
-      return scValToNative(xdr.ScVal.fromXDR(xdrString, 'base64'));
-    },
-    adminTxParams
+
+  const poolId = addressBook.getContractId('Auction');
+  await submit(
+    txParams,
+    poolId,
+    addressBook.getContractId('USDC'),
+    RequestType.SupplyCollateral,
+    BigInt(5000e7)
   );
   return keypair;
 }
-
-async function submit(
-  txParams: TxParams,
-  poolId: string,
-  asset: string,
-  action: RequestType,
-  amount: bigint
-): Promise<void> {
-  const pool = new PoolContract(poolId);
-  const request: Request = {
-    amount: amount,
-    request_type: action,
-    address: asset,
-  };
-  await invokeSorobanOperation(
-    pool.submit({
-      from: txParams.account.accountId(),
-      to: txParams.account.accountId(),
-      spender: txParams.account.accountId(),
-      requests: [request],
-    }),
-    PoolContract.parsers.submit,
-    txParams
-  );
-}
-
-export { createUser, submit };
