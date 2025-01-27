@@ -1,16 +1,16 @@
-import { PoolContract, SetReserveArgs } from '@blend-capital/blend-sdk';
-import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
+import { PoolContractV1, SetReserveArgs } from '@blend-capital/blend-sdk';
+import { TxParams, invokeSorobanOperation } from '../../utils/tx.js';
 
 export async function setupReserve(
   poolAddress: string,
   initReserveArgs: SetReserveArgs,
   txParams: TxParams
 ) {
-  const pool = new PoolContract(poolAddress);
+  const pool = new PoolContractV1(poolAddress);
 
   await invokeSorobanOperation(
     pool.queueSetReserve(initReserveArgs),
-    PoolContract.parsers.queueSetReserve,
+    PoolContractV1.parsers.queueSetReserve,
     txParams
   );
 
@@ -18,7 +18,7 @@ export async function setupReserve(
   try {
     await invokeSorobanOperation(
       pool.setReserve(initReserveArgs.asset),
-      PoolContract.parsers.setReserve,
+      PoolContractV1.parsers.setReserve,
       txParams
     );
     console.log(`Successfully set ${initReserveArgs.asset} reserve.\n`);

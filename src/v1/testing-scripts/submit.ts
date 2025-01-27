@@ -1,10 +1,15 @@
-import { PoolContract, Request, RequestType } from '@blend-capital/blend-sdk';
+import { PoolContractV1, Request, RequestType } from '@blend-capital/blend-sdk';
 import { Asset } from '@stellar/stellar-sdk';
-import { TokenContract } from '../external/token.js';
-import { AddressBook, addressBook } from '../utils/address-book.js';
-import { airdropAccount } from '../utils/contract.js';
-import { config } from '../utils/env_config.js';
-import { TxParams, invokeClassicOp, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
+import { TokenContract } from '../../external/token.js';
+import { AddressBook, addressBook } from '../../utils/address-book.js';
+import { airdropAccount } from '../../utils/contract.js';
+import { config } from '../../utils/env_config.js';
+import {
+  TxParams,
+  invokeClassicOp,
+  invokeSorobanOperation,
+  signWithKeypair,
+} from '../../utils/tx.js';
 
 async function submit(addressBook: AddressBook) {
   const txParams: TxParams = {
@@ -34,7 +39,7 @@ async function submit(addressBook: AddressBook) {
 
   const signWithWhale = (txXdr: string) => signWithKeypair(txXdr, config.passphrase, whale);
 
-  const stellarPool = new PoolContract(addressBook.getContractId('Stellar'));
+  const stellarPool = new PoolContractV1(addressBook.getContractId('Stellar'));
 
   const stellarRequests: Request[] = [
     {
@@ -58,7 +63,7 @@ async function submit(addressBook: AddressBook) {
       to: whale.publicKey(),
       requests: stellarRequests,
     }),
-    PoolContract.parsers.submit,
+    PoolContractV1.parsers.submit,
     txParams
   );
 }

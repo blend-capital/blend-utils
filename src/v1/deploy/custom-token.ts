@@ -1,11 +1,11 @@
-import { TokenContract } from '../external/token.js';
+import { TokenContract } from '../../external/token.js';
 import {
   bumpContractCode,
   bumpContractInstance,
   deployContract,
   installContract,
-} from '../utils/contract.js';
-import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
+} from '../../utils/contract.js';
+import { TxParams, invokeSorobanOperation } from '../../utils/tx.js';
 
 async function deployCustomToken(
   admin: string,
@@ -16,9 +16,9 @@ async function deployCustomToken(
 ) {
   await installContract('token', txParams);
   await bumpContractCode('token', txParams);
-  let tokenAddress = await deployContract(symbol, 'token', txParams);
+  const tokenAddress = await deployContract(symbol, 'token', txParams);
   await bumpContractInstance(symbol, txParams);
-  let token = new TokenContract(tokenAddress);
+  const token = new TokenContract(tokenAddress);
   await invokeSorobanOperation(
     token.initialize(admin, decimals, name, symbol),
     () => undefined,

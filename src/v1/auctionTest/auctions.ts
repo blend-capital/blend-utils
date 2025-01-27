@@ -1,6 +1,6 @@
-import { Pool, PoolContract, PositionsEstimate } from '@blend-capital/blend-sdk';
-import { config } from '../utils/env_config.js';
-import { invokeSorobanOperation, TxParams } from '../utils/tx.js';
+import { PoolContractV1, PoolV1, PositionsEstimate } from '@blend-capital/blend-sdk';
+import { config } from '../../utils/env_config.js';
+import { invokeSorobanOperation, TxParams } from '../../utils/tx.js';
 
 export async function createUserLiquidation(
   txParams: TxParams,
@@ -8,13 +8,13 @@ export async function createUserLiquidation(
   user: string,
   liquidation_percent: bigint | undefined
 ) {
-  const pool = new PoolContract(poolId);
+  const pool = new PoolContractV1(poolId);
   const network = {
     rpc: config.rpc.serverURL.toString(),
     passphrase: config.passphrase,
     opts: { allowHttp: true },
   };
-  const poolData = await Pool.load(network, poolId);
+  const poolData = await PoolV1.load(network, poolId);
   const poolOracle = await poolData.loadOracle();
   const userData = await poolData.loadUser(user);
   const userEst = PositionsEstimate.build(poolData, poolOracle, userData.positions);
@@ -40,21 +40,21 @@ export async function createUserLiquidation(
       user,
       percent_liquidated: liquidation_percent,
     }),
-    PoolContract.parsers.newLiquidationAuction,
+    PoolContractV1.parsers.newLiquidationAuction,
     txParams
   );
 }
 
 export async function createBadDebtAuction(txParams: TxParams, poolId: string) {
-  const pool = new PoolContract(poolId);
-  await invokeSorobanOperation(pool.newBadDebtAuction(), PoolContract.parsers.badDebt, txParams);
+  const pool = new PoolContractV1(poolId);
+  await invokeSorobanOperation(pool.newBadDebtAuction(), PoolContractV1.parsers.badDebt, txParams);
 }
 
 export async function createInterestAuction(txParams: TxParams, poolId: string, assets: string[]) {
-  const pool = new PoolContract(poolId);
+  const pool = new PoolContractV1(poolId);
   await invokeSorobanOperation(
     pool.newInterestAuction(assets),
-    PoolContract.parsers.newInterestAuction,
+    PoolContractV1.parsers.newInterestAuction,
     txParams
   );
 }

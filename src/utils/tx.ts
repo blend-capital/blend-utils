@@ -3,7 +3,7 @@ import {
   Account,
   Keypair,
   Operation,
-  SorobanRpc,
+  rpc,
   TimeoutInfinite,
   Transaction,
   TransactionBuilder,
@@ -30,7 +30,7 @@ export async function signWithKeypair(
 export async function simulationOperation(
   operation: string,
   txParams: TxParams
-): Promise<SorobanRpc.Api.SimulateTransactionResponse> {
+): Promise<rpc.Api.SimulateTransactionResponse> {
   const txBuilder = new TransactionBuilder(
     txParams.account,
     txParams.txBuilderOptions
@@ -88,7 +88,7 @@ export async function invokeSorobanOperation<T>(
   }
   let transaction = txBuilder.build();
   let simulation = await config.rpc.simulateTransaction(transaction);
-  if (SorobanRpc.Api.isSimulationRestore(simulation)) {
+  if (rpc.Api.isSimulationRestore(simulation)) {
     console.log('Restoring...');
     const fee = Number(simulation.restorePreamble.minResourceFee) + 1000;
     const restore_tx = new TransactionBuilder(account, { fee: fee.toString() })
@@ -112,7 +112,7 @@ export async function invokeSorobanOperation<T>(
     simulation = await config.rpc.simulateTransaction(transaction);
   }
 
-  if (SorobanRpc.Api.isSimulationError(simulation)) {
+  if (rpc.Api.isSimulationError(simulation)) {
     console.log('is simulation error');
     console.log('xdr: ', transaction.toXDR());
     console.log('simulation: ', simulation);
@@ -121,7 +121,7 @@ export async function invokeSorobanOperation<T>(
     throw error;
   }
 
-  const assembledTx = SorobanRpc.assembleTransaction(transaction, simulation).build();
+  const assembledTx = rpc.assembleTransaction(transaction, simulation).build();
   console.log('Transaction Hash:', assembledTx.hash().toString('hex'));
   const signedTx = new Transaction(
     await txParams.signerFunction(assembledTx.toXDR()),

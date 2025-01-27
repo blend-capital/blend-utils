@@ -1,10 +1,10 @@
 import { Account, Asset, Operation, StrKey, hash, xdr } from '@stellar/stellar-sdk';
-import { addressBook } from '../utils/address-book.js';
-import { config } from '../utils/env_config.js';
-import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
+import { addressBook } from '../../utils/address-book.js';
+import { config } from '../../utils/env_config.js';
+import { TxParams, invokeSorobanOperation } from '../../utils/tx.js';
 
-import { TokenContract } from '../external/token.js';
-import { bumpContractInstance } from '../utils/contract.js';
+import { TokenContract } from '../../external/token.js';
+import { bumpContractInstance } from '../../utils/contract.js';
 
 export async function deployStellarAsset(asset: Asset, txParams: TxParams): Promise<TokenContract> {
   const xdrAsset = asset.toXDRObject();

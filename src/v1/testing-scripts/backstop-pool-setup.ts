@@ -1,8 +1,8 @@
-import { BackstopContract, PoolContract } from '@blend-capital/blend-sdk';
+import { BackstopContractV1, PoolContractV1 } from '@blend-capital/blend-sdk';
 import { Asset } from '@stellar/stellar-sdk';
-import { CometContract } from '../external/comet.js';
-import { TokenContract } from '../external/token.js';
-import { TxParams, invokeClassicOp, invokeSorobanOperation } from '../utils/tx.js';
+import { CometContract } from '../../external/comet.js';
+import { TokenContract } from '../../external/token.js';
+import { TxParams, invokeClassicOp, invokeSorobanOperation } from '../../utils/tx.js';
 
 export async function setupPoolBackstop(
   backstopAddress: string,
@@ -14,8 +14,8 @@ export async function setupPoolBackstop(
   whaleTxParams: TxParams,
   issuerTxParams: TxParams
 ) {
-  const pool = new PoolContract(poolAddress);
-  const backstop = new BackstopContract(backstopAddress);
+  const pool = new PoolContractV1(poolAddress);
+  const backstop = new BackstopContractV1(backstopAddress);
   const BLND = new TokenContract(
     blndAddress,
     new Asset('BLND', issuerTxParams.account.accountId())
@@ -50,23 +50,20 @@ export async function setupPoolBackstop(
       amount: BigInt(50_000e7),
     }),
 
-    BackstopContract.parsers.deposit,
+    BackstopContractV1.parsers.deposit,
     whaleTxParams
   );
 
   await invokeSorobanOperation(
     backstop.updateTokenValue(),
-    BackstopContract.parsers.updateTknVal,
+    BackstopContractV1.parsers.updateTknVal,
     adminTxParams
   );
 
-  await invokeSorobanOperation(pool.setStatus(0), PoolContract.parsers.setStatus, adminTxParams);
+  await invokeSorobanOperation(pool.setStatus(0), PoolContractV1.parsers.setStatus, adminTxParams);
   await invokeSorobanOperation(
-    backstop.addReward({
-      to_add: pool.contractId(),
-      to_remove: pool.contractId(),
-    }),
-    BackstopContract.parsers.addReward,
+    backstop.addReward(pool.contractId(), pool.contractId()),
+    BackstopContractV1.parsers.addReward,
     adminTxParams
   );
   console.log('Successfully setup pool backstop\n');

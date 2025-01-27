@@ -1,25 +1,25 @@
 import {
-  BackstopContract,
-  PoolContract,
+  BackstopContractV1,
+  PoolContractV1,
   ReserveConfig,
   ReserveEmissionMetadata,
   parseError,
 } from '@blend-capital/blend-sdk';
-import { Operation, SorobanRpc, Transaction, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
+import { Operation, rpc, Transaction, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
-import { CometContract } from '../external/comet.js';
+import { CometContract } from '../../external/comet.js';
 import { setupPool } from '../pool/pool-setup.js';
 import { setupReserve } from '../pool/reserve-setup.js';
-import { addressBook } from '../utils/address-book.js';
-import { airdropAccount } from '../utils/contract.js';
-import { config } from '../utils/env_config.js';
+import { addressBook } from '../../utils/address-book.js';
+import { airdropAccount } from '../../utils/contract.js';
+import { config } from '../../utils/env_config.js';
 import {
   TxParams,
   invokeClassicOp,
   invokeSorobanOperation,
   sendTransaction,
   signWithKeypair,
-} from '../utils/tx.js';
+} from '../../utils/tx.js';
 
 /**
  * Deploy a pool with the following parameters (Parmeters can be changed as needed)
@@ -97,7 +97,7 @@ const revokeAdmin = true;
 
 async function deploy() {
   // Initialize Contracts
-  const backstop = new BackstopContract(addressBook.getContractId('backstop'));
+  const backstop = new BackstopContractV1(addressBook.getContractId('backstop'));
   const comet = new CometContract(addressBook.getContractId('comet'));
 
   // mint lp with blnd
@@ -137,7 +137,7 @@ async function deploy() {
   // Update token value
   await invokeSorobanOperation(
     backstop.updateTokenValue(),
-    BackstopContract.parsers.updateTknVal,
+    BackstopContractV1.parsers.updateTknVal,
     txParams
   );
 
@@ -175,7 +175,7 @@ async function deploy() {
 
   await invokeSorobanOperation(
     newPool.setEmissionsConfig(poolEmissionMetadata),
-    PoolContract.parsers.setEmissionsConfig,
+    PoolContractV1.parsers.setEmissionsConfig,
     txParams
   );
   if (mint_amount > 0) {
@@ -186,7 +186,7 @@ async function deploy() {
         pool_address: newPool.contractId(),
         amount: mint_amount,
       }),
-      BackstopContract.parsers.deposit,
+      BackstopContractV1.parsers.deposit,
       txParams
     );
   }
@@ -194,17 +194,14 @@ async function deploy() {
   console.log('Setting Starting Status\n');
   await invokeSorobanOperation(
     newPool.setStatus(startingStatus),
-    PoolContract.parsers.setStatus,
+    PoolContractV1.parsers.setStatus,
     txParams
   );
 
   if (addToRewardZone) {
     await invokeSorobanOperation(
-      backstop.addReward({
-        to_add: newPool.contractId(),
-        to_remove: addressBook.getContractId(poolToRemove),
-      }),
-      BackstopContract.parsers.addReward,
+      backstop.addReward(newPool.contractId(), addressBook.getContractId(poolToRemove)),
+      BackstopContractV1.parsers.addReward,
       txParams
     );
   }
@@ -227,11 +224,11 @@ async function deploy() {
       config.passphrase
     );
     const simResponse = await config.rpc.simulateTransaction(newAdminSignedTx);
-    if (SorobanRpc.Api.isSimulationError(simResponse)) {
+    if (rpc.Api.isSimulationError(simResponse)) {
       const error = parseError(simResponse);
       throw error;
     }
-    const assembledTx = SorobanRpc.assembleTransaction(newAdminSignedTx, simResponse).build();
+    const assembledTx = rpc.assembleTransaction(newAdminSignedTx, simResponse).build();
     const signedTx = new Transaction(
       await txParams.signerFunction(assembledTx.toXDR()),
       config.passphrase

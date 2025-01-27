@@ -1,9 +1,9 @@
 import {
-  BackstopContract,
-  BackstopInitializeArgs,
+  BackstopContractV1,
+  BackstopConstructorArgs,
   EmitterContract,
   EmitterInitializeArgs,
-  PoolFactoryContract,
+  PoolFactoryContractV1,
   PoolInitMeta,
 } from '@blend-capital/blend-sdk';
 import {
@@ -11,8 +11,8 @@ import {
   bumpContractInstance,
   deployContract,
   installContract,
-} from '../utils/contract.js';
-import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
+} from '../../utils/contract.js';
+import { TxParams, invokeSorobanOperation } from '../../utils/tx.js';
 
 export async function deployBlend(
   blndTokenAddress: string,
@@ -20,7 +20,7 @@ export async function deployBlend(
   usdcTokenAddress: string,
   dropList: Array<readonly [string, bigint]>,
   txParams: TxParams
-): Promise<[BackstopContract, EmitterContract, PoolFactoryContract]> {
+): Promise<[BackstopContractV1, EmitterContract, PoolFactoryContractV1]> {
   await installContract('emitter', txParams);
   await installContract('poolFactory', txParams);
   await installContract('backstop', txParams);
@@ -38,8 +38,8 @@ export async function deployBlend(
   await bumpContractInstance('backstop', txParams);
 
   const emitter = new EmitterContract(emitterAddress);
-  const poolFactory = new PoolFactoryContract(factoryAddress);
-  const backstop = new BackstopContract(backstopAddress);
+  const poolFactory = new PoolFactoryContractV1(factoryAddress);
+  const backstop = new BackstopContractV1(backstopAddress);
 
   const emitterInitArgs: EmitterInitializeArgs = {
     blnd_token: blndTokenAddress,
@@ -59,11 +59,11 @@ export async function deployBlend(
   };
   await invokeSorobanOperation(
     poolFactory.initialize(factoryInitArgs),
-    PoolFactoryContract.parsers.initialize,
+    PoolFactoryContractV1.parsers.initialize,
     txParams
   );
 
-  const backstopInitArgs: BackstopInitializeArgs = {
+  const backstopInitArgs: BackstopConstructorArgs = {
     backstop_token: backstopTokenAddress,
     emitter: emitterAddress,
     usdc_token: usdcTokenAddress,
@@ -73,15 +73,15 @@ export async function deployBlend(
   };
   await invokeSorobanOperation(
     backstop.initialize(backstopInitArgs),
-    BackstopContract.parsers.initialize,
+    BackstopContractV1.parsers.initialize,
     txParams
   );
 
   console.log('Sucessfully deployed Blend contracts\n');
   return [
-    new BackstopContract(backstopAddress),
+    new BackstopContractV1(backstopAddress),
     new EmitterContract(emitterAddress),
-    new PoolFactoryContract(factoryAddress),
+    new PoolFactoryContractV1(factoryAddress),
   ] as const;
 }
 
@@ -95,16 +95,16 @@ export async function installBlend(txParams: TxParams): Promise<void> {
 
 export async function onlyDeployBlend(
   txParams: TxParams
-): Promise<[BackstopContract, EmitterContract, PoolFactoryContract]> {
+): Promise<[BackstopContractV1, EmitterContract, PoolFactoryContractV1]> {
   const emitterAddress = await deployContract('emitter', 'emitter', txParams);
   const factoryAddress = await deployContract('poolFactory', 'poolFactory', txParams);
   const backstopAddress = await deployContract('backstop', 'backstop', txParams);
   console.log('Successfully deployed Blend contracts\n');
 
   return [
-    new BackstopContract(backstopAddress),
+    new BackstopContractV1(backstopAddress),
     new EmitterContract(emitterAddress),
-    new PoolFactoryContract(factoryAddress),
+    new PoolFactoryContractV1(factoryAddress),
   ] as const;
 }
 
@@ -118,10 +118,10 @@ export async function initBlend(
   usdcTokenAddress: string,
   dropList: Array<readonly [string, bigint]>,
   txParams: TxParams
-): Promise<[BackstopContract, EmitterContract, PoolFactoryContract]> {
+): Promise<[BackstopContractV1, EmitterContract, PoolFactoryContractV1]> {
   const emitter = new EmitterContract(emitterAddress);
-  const poolFactory = new PoolFactoryContract(factoryAddress);
-  const backstop = new BackstopContract(backstopAddress);
+  const poolFactory = new PoolFactoryContractV1(factoryAddress);
+  const backstop = new BackstopContractV1(backstopAddress);
 
   const emitterInitArgs: EmitterInitializeArgs = {
     blnd_token: blndTokenAddress,
@@ -141,11 +141,11 @@ export async function initBlend(
   };
   await invokeSorobanOperation(
     poolFactory.initialize(factoryInitArgs),
-    PoolFactoryContract.parsers.initialize,
+    PoolFactoryContractV1.parsers.initialize,
     txParams
   );
 
-  const backstopInitArgs: BackstopInitializeArgs = {
+  const backstopInitArgs: BackstopConstructorArgs = {
     backstop_token: backstopTokenAddress,
     emitter: emitterAddress,
     usdc_token: usdcTokenAddress,
@@ -155,14 +155,14 @@ export async function initBlend(
   };
   await invokeSorobanOperation(
     backstop.initialize(backstopInitArgs),
-    BackstopContract.parsers.initialize,
+    BackstopContractV1.parsers.initialize,
     txParams
   );
 
   console.log('Successfully initialized Blend contracts\n');
   return [
-    new BackstopContract(backstopAddress),
+    new BackstopContractV1(backstopAddress),
     new EmitterContract(emitterAddress),
-    new PoolFactoryContract(factoryAddress),
+    new PoolFactoryContractV1(factoryAddress),
   ] as const;
 }

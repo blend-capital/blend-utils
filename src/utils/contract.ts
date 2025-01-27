@@ -76,6 +76,24 @@ export async function deployContract(
   return contractId;
 }
 
+export function generateContractId(accountId: string, salt: Buffer): string {
+  const networkId = hash(Buffer.from(config.passphrase));
+  const contractIdPreimage = xdr.ContractIdPreimage.contractIdPreimageFromAddress(
+    new xdr.ContractIdPreimageFromAddress({
+      address: Address.fromString(accountId).toScAddress(),
+      salt: salt,
+    })
+  );
+
+  const hashIdPreimage = xdr.HashIdPreimage.envelopeTypeContractId(
+    new xdr.HashIdPreimageContractId({
+      networkId: networkId,
+      contractIdPreimage: contractIdPreimage,
+    })
+  );
+  return StrKey.encodeContract(hash(hashIdPreimage.toXDR()));
+}
+
 export async function bumpContractInstance(contractKey: string, txParams: TxParams) {
   const address = Address.fromString(addressBook.getContractId(contractKey));
   const contractInstanceXDR = xdr.LedgerKey.contractData(

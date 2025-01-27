@@ -1,9 +1,9 @@
 import { Address, scValToNative, xdr } from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
-import { CometContract, CometFactoryContract } from '../external/comet.js';
-import { addressBook } from '../utils/address-book.js';
-import { config } from '../utils/env_config.js';
-import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
+import { CometContract, CometFactoryContract } from '../../external/comet.js';
+import { addressBook } from '../../utils/address-book.js';
+import { config } from '../../utils/env_config.js';
+import { TxParams, invokeSorobanOperation } from '../../utils/tx.js';
 
 export async function deployComet(
   cometFactory: CometFactoryContract,

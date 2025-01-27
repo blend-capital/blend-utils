@@ -1,6 +1,6 @@
 import {
-  BackstopContract,
-  PoolContract,
+  BackstopContractV1,
+  PoolContractV1,
   Request,
   RequestType,
   ReserveConfig,
@@ -14,9 +14,14 @@ import { deployComet } from '../deploy/comet.js';
 import { tryDeployStellarAsset } from '../deploy/stellar-asset.js';
 import { setupPool } from '../pool/pool-setup.js';
 import { setupReserve } from '../pool/reserve-setup.js';
-import { airdropAccount } from '../utils/contract.js';
-import { config } from '../utils/env_config.js';
-import { TxParams, invokeClassicOp, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
+import { airdropAccount } from '../../utils/contract.js';
+import { config } from '../../utils/env_config.js';
+import {
+  TxParams,
+  invokeClassicOp,
+  invokeSorobanOperation,
+  signWithKeypair,
+} from '../../utils/tx.js';
 import { setupPoolBackstop } from './backstop-pool-setup.js';
 import { setupMockOracle } from './oracle-setup.js';
 
@@ -207,7 +212,7 @@ async function mock() {
   ];
   await invokeSorobanOperation(
     testnetPool.setEmissionsConfig(bridgeEmissionMetadata),
-    PoolContract.parsers.setEmissionsConfig,
+    PoolContractV1.parsers.setEmissionsConfig,
     adminTxParams
   );
 
@@ -270,7 +275,7 @@ async function mock() {
       to: whale.publicKey(),
       requests: bridgeSupplyRequests,
     }),
-    PoolContract.parsers.submit,
+    PoolContractV1.parsers.submit,
     whaleTxParams
   );
 
@@ -305,7 +310,7 @@ async function mock() {
       to: whale.publicKey(),
       requests: bridgeBorrowRequests,
     }),
-    PoolContract.parsers.submit,
+    PoolContractV1.parsers.submit,
     whaleTxParams
   );
 
@@ -315,7 +320,7 @@ async function mock() {
       pool_address: testnetPool.contractId(),
       amount: BigInt(1000e7),
     }),
-    BackstopContract.parsers.queueWithdrawal,
+    BackstopContractV1.parsers.queueWithdrawal,
     whaleTxParams
   );
 }

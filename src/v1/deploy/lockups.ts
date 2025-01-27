@@ -3,10 +3,10 @@ import {
   bumpContractInstance,
   deployContract,
   installContract,
-} from '../utils/contract.js';
-import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
-import { TokenLockupContract, Unlock } from '../external/tokenLockup.js';
-import { BlendLockupContract } from '../external/blendLockup.js';
+} from '../../utils/contract.js';
+import { TxParams, invokeSorobanOperation } from '../../utils/tx.js';
+import { TokenLockupContract, Unlock } from '../../external/tokenLockup.js';
+import { BlendLockupContract } from '../../external/blendLockup.js';
 
 export async function installLockups(txParams: TxParams): Promise<void> {
   await installContract('blendLockup', txParams);

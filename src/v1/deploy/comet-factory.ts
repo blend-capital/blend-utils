@@ -1,12 +1,12 @@
-import { CometFactoryContract } from '../external/comet.js';
-import { addressBook } from '../utils/address-book.js';
+import { CometFactoryContract } from '../../external/comet.js';
+import { addressBook } from '../../utils/address-book.js';
 import {
   bumpContractCode,
   bumpContractInstance,
   deployContract,
   installContract,
-} from '../utils/contract.js';
-import { TxParams, invokeSorobanOperation } from '../utils/tx.js';
+} from '../../utils/contract.js';
+import { TxParams, invokeSorobanOperation } from '../../utils/tx.js';
 
 export async function deployCometFactory(txParams: TxParams): Promise<CometFactoryContract> {
   await installContract('comet', txParams);

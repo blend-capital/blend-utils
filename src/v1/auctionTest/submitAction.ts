@@ -1,8 +1,8 @@
 import { Address } from '@stellar/stellar-sdk';
-import { addressBook } from '../utils/address-book.js';
+import { addressBook } from '../../utils/address-book.js';
 import { submit } from './user.js';
-import { config } from '../utils/env_config.js';
-import { signWithKeypair } from '../utils/tx.js';
+import { config } from '../../utils/env_config.js';
+import { signWithKeypair } from '../../utils/tx.js';
 
 if (process.argv.length < 8) {
   throw new Error(

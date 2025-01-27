@@ -8,9 +8,9 @@ import { tryDeployStellarAsset } from '../deploy/stellar-asset.js';
 import { setupPool } from '../pool/pool-setup.js';
 import { setupReserve } from '../pool/reserve-setup.js';
 import { setupPoolBackstop } from '../testing-scripts/backstop-pool-setup.js';
-import { airdropAccount } from '../utils/contract.js';
-import { config } from '../utils/env_config.js';
-import { TxParams, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
+import { airdropAccount } from '../../utils/contract.js';
+import { config } from '../../utils/env_config.js';
+import { TxParams, invokeSorobanOperation, signWithKeypair } from '../../utils/tx.js';
 import { setupAuctionOracle } from './oracle.js';
 
 const txBuilderOptions: TransactionBuilder.TransactionBuilderOptions = {

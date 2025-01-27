@@ -1,10 +1,15 @@
 import { Asset, Keypair, scValToNative, xdr } from '@stellar/stellar-sdk';
-import { airdropAccount } from '../utils/contract.js';
-import { TokenContract } from '../external/token.js';
-import { addressBook } from '../utils/address-book.js';
-import { config } from '../utils/env_config.js';
-import { invokeClassicOp, invokeSorobanOperation, signWithKeypair, TxParams } from '../utils/tx.js';
-import { PoolContract, Request, RequestType } from '@blend-capital/blend-sdk';
+import { airdropAccount } from '../../utils/contract.js';
+import { TokenContract } from '../../external/token.js';
+import { addressBook } from '../../utils/address-book.js';
+import { config } from '../../utils/env_config.js';
+import {
+  invokeClassicOp,
+  invokeSorobanOperation,
+  signWithKeypair,
+  TxParams,
+} from '../../utils/tx.js';
+import { PoolContractV1, Request, RequestType } from '@blend-capital/blend-sdk';
 
 async function createUser(): Promise<Keypair> {
   const keypair = Keypair.random();
@@ -98,7 +103,7 @@ async function submit(
   action: RequestType,
   amount: bigint
 ): Promise<void> {
-  const pool = new PoolContract(poolId);
+  const pool = new PoolContractV1(poolId);
   const request: Request = {
     amount: amount,
     request_type: action,
@@ -111,7 +116,7 @@ async function submit(
       spender: txParams.account.accountId(),
       requests: [request],
     }),
-    PoolContract.parsers.submit,
+    PoolContractV1.parsers.submit,
     txParams
   );
 }

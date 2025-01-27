@@ -1,7 +1,7 @@
-import { BackstopContract, EmitterContract, PoolContract } from '@blend-capital/blend-sdk';
-import { addressBook } from '../utils/address-book.js';
-import { config } from '../utils/env_config.js';
-import { TxParams, invokeSorobanOperation, signWithKeypair } from '../utils/tx.js';
+import { BackstopContractV1, EmitterContract, PoolContractV1 } from '@blend-capital/blend-sdk';
+import { addressBook } from '../../utils/address-book.js';
+import { config } from '../../utils/env_config.js';
+import { TxParams, invokeSorobanOperation, signWithKeypair } from '../../utils/tx.js';
 
 /**
  * Distribute emissions to pools and backstop
@@ -47,20 +47,20 @@ export async function distribute(pools: string[], includeBackstop: boolean, txPa
   console.log('Emitter distributed');
 
   if (includeBackstop) {
-    const backstop = new BackstopContract(addressBook.getContractId('backstop'));
+    const backstop = new BackstopContractV1(addressBook.getContractId('backstop'));
     await invokeSorobanOperation(
       backstop.gulpEmissions(),
-      BackstopContract.parsers.gulpEmissions,
+      BackstopContractV1.parsers.gulpEmissions,
       txParams
     );
     console.log('Backstop gulped');
   }
 
   for (const poolId of pools) {
-    const pool = new PoolContract(poolId);
+    const pool = new PoolContractV1(poolId);
     await invokeSorobanOperation(
       pool.gulpEmissions(),
-      PoolContract.parsers.gulpEmissions,
+      PoolContractV1.parsers.gulpEmissions,
       txParams
     );
     console.log(`Gulped Pool with ID: ${poolId}`);

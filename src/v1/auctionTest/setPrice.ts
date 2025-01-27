@@ -1,5 +1,5 @@
-import { config } from '../utils/env_config.js';
-import { signWithKeypair, TxParams } from '../utils/tx.js';
+import { config } from '../../utils/env_config.js';
+import { signWithKeypair, TxParams } from '../../utils/tx.js';
 import { setPrice } from './oracle.js';
 
 const adminTxParams: TxParams = {
