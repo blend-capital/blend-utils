@@ -17,6 +17,9 @@ const CONTRACT_REL_PATH: object = {
   poolFactory: '../../' + config.blend_wasm_rel_path + 'pool_factory.wasm',
   backstop: '../../' + config.blend_wasm_rel_path + 'backstop.wasm',
   lendingPool: '../../' + config.blend_wasm_rel_path + 'pool.wasm',
+  poolFactoryV2: '../../' + config.blend_v2_wasm_rel_path + 'pool_factory.wasm',
+  backstopV2: '../../' + config.blend_v2_wasm_rel_path + 'backstop.wasm',
+  lendingPoolV2: '../../' + config.blend_v2_wasm_rel_path + 'pool.wasm',
 };
 
 const __filename = fileURLToPath(import.meta.url);
