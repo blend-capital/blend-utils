@@ -1,5 +1,6 @@
 import {
   BackstopContractV2,
+  EmitterContract,
   I128MAX,
   PoolContractV2,
   Request,
@@ -80,6 +81,7 @@ export async function mock() {
     cometContract.contractId(),
     USDC.contractId(),
     [],
+    true,
     adminTxParams
   );
 
@@ -229,6 +231,12 @@ export async function mock() {
 
   console.log('');
   console.log('Transfer blnd admin to emitter');
+  const emitterContract = new EmitterContract(addressBook.getContractId('emitter'));
+  await invokeSorobanOperation(
+    BLND.set_admin(emitterContract.contractId()),
+    () => undefined,
+    adminTxParams
+  );
 
   console.log('');
   console.log('Minting tokens to whale');

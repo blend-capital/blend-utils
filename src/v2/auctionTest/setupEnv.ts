@@ -75,6 +75,7 @@ async function setupEnv() {
     cometContract.contractId(),
     USDC.contractId(),
     [],
+    true,
     adminTxParams
   );
 
