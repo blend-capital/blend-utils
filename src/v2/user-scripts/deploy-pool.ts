@@ -139,13 +139,6 @@ async function deploy() {
     }
   }
 
-  // Update token value
-  await invokeSorobanOperation(
-    backstop.updateTokenValue(),
-    BackstopContractV2.parsers.updateTknVal,
-    txParams
-  );
-
   //********** Stellar Pool (XLM, USDC) **********//
 
   console.log('Deploy Pool\n');

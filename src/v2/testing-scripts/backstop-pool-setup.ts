@@ -53,11 +53,6 @@ export async function setupPoolBackstop(
     BackstopContractV2.parsers.deposit,
     whaleTxParams
   );
-  await invokeSorobanOperation(
-    backstop.updateTokenValue(),
-    BackstopContractV2.parsers.updateTknVal,
-    adminTxParams
-  );
 
   await invokeSorobanOperation(pool.setStatus(0), PoolContractV2.parsers.setStatus, adminTxParams);
   await invokeSorobanOperation(
