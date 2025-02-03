@@ -23,9 +23,10 @@ import {
   signWithKeypair,
 } from '../../utils/tx.js';
 import { setupPoolBackstop } from './backstop-pool-setup.js';
-import { CometContract } from '../../external/comet.js';
 import { addressBook } from '../../utils/address-book.js';
-import { OracleContract } from '../../external/oracle.js';
+import { setupMockOracle } from './oracle-setup.js';
+import { deployCometFactory } from '../../v1/deploy/comet-factory.js';
+import { deployComet } from '../../v1/deploy/comet.js';
 
 const txBuilderOptions: TransactionBuilder.TransactionBuilderOptions = {
   fee: '10000',
@@ -74,8 +75,18 @@ export async function mock() {
     adminTxParams
   );
 
-  const cometContract = new CometContract(addressBook.getContractId('comet'));
-  const mockOracle = new OracleContract(addressBook.getContractId('oraclemock'));
+  const cometFactory = await deployCometFactory(adminTxParams);
+  const null_address = 'GCVJMEUXNIN7BYI4ERWW66ZJNTXRU2AWM65ZDYOODH5ZEZUM7UZXDEAD';
+  const cometContract = await deployComet(
+    cometFactory,
+    adminTxParams,
+    [BLND.contractId(), USDC.contractId()],
+    [BigInt(0.8e7), BigInt(0.2e7)],
+    [BigInt(1000e7), BigInt(25e7)],
+    BigInt(0.003e7),
+    null_address
+  );
+  const mockOracle = await setupMockOracle(adminTxParams);
   const [backstopContract] = await deployBlend(
     BLND.contractId(),
     cometContract.contractId(),
