@@ -1,4 +1,4 @@
-import { PoolContractV2, PoolV2, PositionsEstimate } from '@blend-capital/blend-sdk';
+import { PoolContractV2, PoolV2, PositionsEstimate, AuctionType } from '@blend-capital/blend-sdk';
 import { config } from '../../utils/env_config.js';
 import { invokeSorobanOperation, TxParams } from '../../utils/tx.js';
 import { addressBook } from '../../utils/address-book.js';
@@ -36,7 +36,7 @@ export async function createUserLiquidation(
   }
   await invokeSorobanOperation(
     pool.newAuction({
-      auction_type: 0,
+      auction_type: AuctionType.Liquidation,
       user: user,
       bid,
       lot,
@@ -56,7 +56,7 @@ export async function createBadDebtAuction(
   const pool = new PoolContractV2(poolId);
   await invokeSorobanOperation(
     pool.newAuction({
-      auction_type: 1,
+      auction_type: AuctionType.BadDebt,
       user: addressBook.getContractId('backstopV2'),
       bid,
       lot: [addressBook.getContractId('comet')],
@@ -76,7 +76,7 @@ export async function createInterestAuction(
   const pool = new PoolContractV2(poolId);
   await invokeSorobanOperation(
     pool.newAuction({
-      auction_type: 0,
+      auction_type: AuctionType.Interest,
       user: addressBook.getContractId('backstopV2'),
       bid: [addressBook.getContractId('comet')],
       lot,
