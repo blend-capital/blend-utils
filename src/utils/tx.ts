@@ -77,7 +77,8 @@ export async function invokeSorobanOperation<T>(
   operation: string,
   parser: (result: string) => T,
   txParams: TxParams,
-  sorobanData?: xdr.SorobanTransactionData
+  sorobanData?: xdr.SorobanTransactionData,
+  extraFootprint?: xdr.LedgerKey[]
 ): Promise<T | undefined> {
   const account = await config.rpc.getAccount(txParams.account.accountId());
   const txBuilder = new TransactionBuilder(account, txParams.txBuilderOptions).addOperation(
@@ -119,6 +120,14 @@ export async function invokeSorobanOperation<T>(
     const error = parseError(simulation);
     console.error(error);
     throw error;
+  }
+
+  if (extraFootprint) {
+    const tempReadWriteEntries = simulation.transactionData.getReadWrite();
+    for (const entry of extraFootprint) {
+      tempReadWriteEntries.push(entry);
+    }
+    simulation.transactionData.setReadWrite(tempReadWriteEntries);
   }
 
   const assembledTx = rpc.assembleTransaction(transaction, simulation).build();

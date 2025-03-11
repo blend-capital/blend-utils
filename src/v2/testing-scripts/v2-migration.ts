@@ -1,4 +1,4 @@
-import { Asset, TransactionBuilder } from '@stellar/stellar-sdk';
+import { Address, Asset, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
 import { config } from '../../utils/env_config.js';
 import {
   invokeClassicOp,
@@ -329,8 +329,6 @@ async function migrateV1ToV2() {
     adminTxParams
   );
 
-  await new Promise((res) => setTimeout(res, 1000 * 60 * 2));
-
   await invokeSorobanOperation(
     emitter.distribute(),
     EmitterContract.parsers.distribute,
@@ -348,15 +346,22 @@ async function migrateV1ToV2() {
   }
 
   await invokeSorobanOperation(
-    emitter.swapBackstop(),
-    EmitterContract.parsers.swapBackstop,
-    adminTxParams
-  );
-
-  await invokeSorobanOperation(
     backstopContract.distribute(),
     BackstopContractV2.parsers.distribute,
-    adminTxParams
+    adminTxParams,
+    undefined,
+    [
+      xdr.LedgerKey.contractData(
+        new xdr.LedgerKeyContractData({
+          contract: Address.fromString(addressBook.getContractId('emitter')).toScAddress(),
+          key: xdr.ScVal.scvVec([
+            xdr.ScVal.scvSymbol('LastDist'),
+            Address.fromString(addressBook.getContractId('backstopV2')).toScVal(),
+          ]),
+          durability: xdr.ContractDataDurability.persistent(),
+        })
+      ),
+    ]
   );
 }
 
