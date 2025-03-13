@@ -1,5 +1,4 @@
 import {
-  BackstopContractV2,
   I128MAX,
   PoolContractV2,
   ReserveConfigV2,
@@ -8,7 +7,6 @@ import {
 } from '@blend-capital/blend-sdk';
 import { Operation, rpc, Transaction, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
-import { CometContract } from '../../external/comet.js';
 import { setupPool } from '../pool/pool-setup.js';
 import { setupReserve } from '../pool/reserve-setup.js';
 import { addressBook } from '../../utils/address-book.js';
@@ -23,9 +21,13 @@ import {
 } from '../../utils/tx.js';
 
 /**
- * Deploy a pool with the following parameters (Parmeters can be changed as needed)
- * example: node ./lib/user-scripts/deploy-pool.js testnet
+ * Deploy a pool with the following parameters (Parameters can be changed as needed)
+ * example: node ./lib/user-scripts/deploy-pool.js testnet true
  */
+
+if (process.argv.length < 4) {
+  throw new Error('Arguments required: `network` `revoke_admin`');
+}
 
 const txParams: TxParams = {
   account: await config.rpc.getAccount(config.admin.publicKey()),
@@ -43,10 +45,6 @@ const txParams: TxParams = {
 };
 
 /// Deployment Constants
-const deposit_asset = BigInt(2); // 0=BLND, 1=USDC, 2=Both
-const blnd_max = BigInt(9_000_000e7);
-const usdc_max = BigInt(100_000e7);
-const mint_amount = BigInt(60_000e7);
 const pool_name = 'PairTrade';
 const backstop_take_rate = 0.5e7;
 const max_positions = 2;
@@ -95,52 +93,9 @@ const poolEmissionMetadata: ReserveEmissionMetadata[] = [
     share: BigInt(0.5e7), // Share of total emissions
   },
 ];
-const startingStatus = 0; // 0 for active, 2 for admin on ice, 3 for on ice, 4 for admin frozen
-const addToRewardZone = true;
-const poolToRemove = 'Stellar';
 const revokeAdmin = true;
 
 async function deploy() {
-  // Initialize Contracts
-  const backstop = new BackstopContractV2(addressBook.getContractId('backstop'));
-  const comet = new CometContract(addressBook.getContractId('comet'));
-
-  // mint lp with blnd
-  if (mint_amount > 0) {
-    if (deposit_asset == BigInt(0)) {
-      await invokeSorobanOperation(
-        comet.deposit_single_max_in(
-          addressBook.getContractId('BLND'),
-          blnd_max,
-          mint_amount,
-          config.admin.publicKey()
-        ),
-        () => undefined,
-        txParams
-      );
-      // mint lp with usdc
-    } else if (deposit_asset == BigInt(1)) {
-      invokeSorobanOperation(
-        comet.deposit_single_max_in(
-          addressBook.getContractId('USDC'),
-          usdc_max,
-          mint_amount,
-          config.admin.publicKey()
-        ),
-        () => undefined,
-        txParams
-      );
-    } else {
-      await invokeSorobanOperation(
-        comet.joinPool(mint_amount, [blnd_max, usdc_max], config.admin.publicKey()),
-        () => undefined,
-        txParams
-      );
-    }
-  }
-
-  //********** Stellar Pool (XLM, USDC) **********//
-
   console.log('Deploy Pool\n');
   const poolSalt = randomBytes(32);
 
@@ -176,33 +131,6 @@ async function deploy() {
     PoolContractV2.parsers.setEmissionsConfig,
     txParams
   );
-  if (mint_amount > 0) {
-    console.log('Setup backstop for Stellar pool\n');
-    await invokeSorobanOperation(
-      backstop.deposit({
-        from: config.admin.publicKey(),
-        pool_address: newPool.contractId(),
-        amount: mint_amount,
-      }),
-      BackstopContractV2.parsers.deposit,
-      txParams
-    );
-  }
-
-  console.log('Setting Starting Status\n');
-  await invokeSorobanOperation(
-    newPool.setStatus(startingStatus),
-    PoolContractV2.parsers.setStatus,
-    txParams
-  );
-
-  if (addToRewardZone) {
-    await invokeSorobanOperation(
-      backstop.addReward(newPool.contractId(), addressBook.getContractId(poolToRemove)),
-      BackstopContractV2.parsers.addReward,
-      txParams
-    );
-  }
 
   if (revokeAdmin) {
     console.log('Revoking Admin\n');

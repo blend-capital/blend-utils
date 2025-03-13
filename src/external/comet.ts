@@ -74,4 +74,12 @@ export class CometContract extends Contract {
     };
     return this.call(invokeArgs.method, ...invokeArgs.args).toXDR('base64');
   }
+
+  public getTotalSupply() {
+    const invokeArgs = {
+      method: 'get_total_supply',
+      args: [],
+    };
+    return this.call(invokeArgs.method, ...invokeArgs.args).toXDR('base64');
+  }
 }
