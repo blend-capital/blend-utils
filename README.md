@@ -86,12 +86,11 @@ The following constants must also be defined in the `deploy-pool` script:
 Once the constants are set, the user can run the `deploy-pool` script to deploy the pool. The script takes two arguments:
 
 - `NETWORK-NAME` - The name of the network to deploy the pool on. Valid options are `mainnet`, `testnet`, or `local`.
-- `REVOKE-ADMIN` - A boolean value that determines whether the admin is removed from the pool. If `true`, the admin will be removed from the pool making it immutable.
 
 To run the script, use the following command:
 
 ```bash
-node ./lib/user-scripts/deploy-pool.js <NETWORK-NAME> <REVOKE-ADMIN>
+node ./lib/v2/user-scripts/deploy-pool.js <NETWORK-NAME> <REVOKE-ADMIN>
 ```
 
 ## Checking the Backstop Threshold Requirements
@@ -105,7 +104,7 @@ If you want to add the pool to the reward zone, or enable it, it's backstop depo
 To run the script, use the following command:
 
 ```bash
-node ./lib/user-scripts/get-backstop-threshold.ts <NETWORK-NAME> <USER>
+node ./lib/v2/user-scripts/get-backstop-threshold.js <NETWORK-NAME> <USER>
 ```
 
 The script will log the required lp tokens to meet the backstop threshold as well as the blend and usdc requirements for a balanced deposit, a solo BLND deposit, and a solo USDC deposit.
@@ -128,7 +127,7 @@ and takes the following arguments:
 To run the script, use the following command:
 
 ```bash
-node ./lib/user-scripts/mint-lp.ts <NETWORK-NAME> <USER> <DEPOSIT-ASSET> <MINT-AMOUNT>
+node ./lib/v2/user-scripts/mint-lp.js <NETWORK-NAME> <USER> <DEPOSIT-ASSET> <MINT-AMOUNT>
 ```
 
 ## Depositing into the pools Backstop
@@ -145,7 +144,7 @@ You can deposit these tokens by calling the `fund-backstop.ts` script. The scrip
 To run the script, use the following command:
 
 ```bash
-node ./lib/user-scripts/fund-backstop.ts <NETWORK-NAME> <USER> <POOL> <AMOUNT>
+node ./lib/v2/user-scripts/fund-backstop.js <NETWORK-NAME> <USER> <POOL> <AMOUNT>
 ```
 
 - `starting_status` - The initial status the admin wishes to set for the pool. The status can be one of the following: `0` for `Admin-Active`, `2` for `Admin-On-Ice`, `3` for `On-Ice`, and `4` for `Admin-Frozen`. For more information on pool status see: https://docs.blend.capital/tech-docs/core-contracts/lending-pool/pool-management
@@ -176,7 +175,7 @@ For owned pools, admins can set the pool status by calling the `set-status.ts` s
 To run the script, use the following command:
 
 ```bash
-node ./lib/user-scripts/set-status.ts <NETWORK-NAME> <ADMIN> <POOL> <STATUS>
+node ./lib/v2/user-scripts/set-status.js <NETWORK-NAME> <ADMIN> <POOL> <STATUS>
 ```
 
 ## Updating Pool Status
@@ -191,7 +190,7 @@ For non-owned pools, the pool admin can update the pool status by calling the `u
 To run the script, use the following command:
 
 ```bash
-node ./lib/user-scripts/update-status.ts <NETWORK-NAME> <USER> <POOL>
+node ./lib/v2/user-scripts/update-status.js <NETWORK-NAME> <USER> <POOL>
 ```
 
 ## Adding a Pool to the Reward Zone
@@ -206,8 +205,23 @@ Add or replace pools in the reward zone using the `reward-zone-add` script. The 
 To run the script, use the following command:
 
 ```bash
-node ./lib/user-scripts/reward-zone-add.js <NETWORK-NAME> <USER> <POOL-TO-ADD> [POOL-TO-REMOVE]
+node ./lib/v2/user-scripts/reward-zone-add.js <NETWORK-NAME> <USER> <POOL-TO-ADD> [POOL-TO-REMOVE]
 ```
+
+## Revoking Pool Admin
+
+For owned pools, admins can permanently revoke admin access by calling the `revoke-admin` script. This transfers ownership to a new account and revokes its signing power, making the pool immutable.
+
+### Usage
+
+```bash
+node ./lib/v2/user-scripts/revoke-admin.js <NETWORK-NAME> <POOL-NAME>
+```
+
+### Parameters
+
+- `network`: Network to run on (`mainnet`, `testnet`, `local`)
+- `pool_name`: Name of pool to revoke admin for
 
 ## Docker
 

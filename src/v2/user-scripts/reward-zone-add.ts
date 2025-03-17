@@ -40,11 +40,11 @@ async function addToRewardZone(
   poolToRemove: string | undefined,
   txParams: TxParams
 ) {
-  const backstop = new BackstopContractV2(addressBook.getContractId('backstop'));
+  const backstop = new BackstopContractV2(addressBook.getContractId('backstopV2'));
   await invokeSorobanOperation(
     backstop.addReward(
       addressBook.getContractId(poolToAdd),
-      poolToRemove ? addressBook.getContractId(poolToRemove) : ''
+      poolToRemove ? addressBook.getContractId(poolToRemove) : undefined
     ),
     BackstopContractV2.parsers.addReward,
     txParams

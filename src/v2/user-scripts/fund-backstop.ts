@@ -35,7 +35,7 @@ const txParams: TxParams = {
 await fundBackstop(poolName, amount, txParams);
 
 async function fundBackstop(poolName: string, amount: bigint, txParams: TxParams) {
-  const backstop = new BackstopContractV2(addressBook.getContractId('backstop'));
+  const backstop = new BackstopContractV2(addressBook.getContractId('backstopV2'));
   await invokeSorobanOperation(
     backstop.deposit({
       from: txParams.account.accountId(),

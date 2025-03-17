@@ -3,22 +3,13 @@ import {
   PoolContractV2,
   ReserveConfigV2,
   ReserveEmissionMetadata,
-  parseError,
 } from '@blend-capital/blend-sdk';
-import { Operation, rpc, Transaction, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
 import { setupPool } from '../pool/pool-setup.js';
 import { setupReserve } from '../pool/reserve-setup.js';
 import { addressBook } from '../../utils/address-book.js';
-import { airdropAccount } from '../../utils/contract.js';
 import { config } from '../../utils/env_config.js';
-import {
-  TxParams,
-  invokeClassicOp,
-  invokeSorobanOperation,
-  sendTransaction,
-  signWithKeypair,
-} from '../../utils/tx.js';
+import { TxParams, invokeSorobanOperation, signWithKeypair } from '../../utils/tx.js';
 
 /**
  * Deploy a pool with the following parameters (Parameters can be changed as needed)
@@ -93,7 +84,6 @@ const poolEmissionMetadata: ReserveEmissionMetadata[] = [
     share: BigInt(0.5e7), // Share of total emissions
   },
 ];
-const revokeAdmin = true;
 
 async function deploy() {
   console.log('Deploy Pool\n');
@@ -131,47 +121,6 @@ async function deploy() {
     PoolContractV2.parsers.setEmissionsConfig,
     txParams
   );
-
-  if (revokeAdmin) {
-    console.log('Revoking Admin\n');
-    const newAdmin = config.getUser('PROPOSER');
-    if (network != 'mainnet') {
-      await airdropAccount(newAdmin);
-    }
-    //switch ownership to new admin
-    const newAdminOp = newPool.setAdmin(newAdmin.publicKey());
-
-    const txBuilder = new TransactionBuilder(txParams.account, txParams.txBuilderOptions)
-      .setTimeout(0)
-      .addOperation(xdr.Operation.fromXDR(newAdminOp, 'base64'));
-    const transaction = txBuilder.build();
-    const newAdminSignedTx = new Transaction(
-      await signWithKeypair(transaction.toXDR(), config.passphrase, newAdmin),
-      config.passphrase
-    );
-    const simResponse = await config.rpc.simulateTransaction(newAdminSignedTx);
-    if (rpc.Api.isSimulationError(simResponse)) {
-      const error = parseError(simResponse);
-      throw error;
-    }
-    const assembledTx = rpc.assembleTransaction(newAdminSignedTx, simResponse).build();
-    const signedTx = new Transaction(
-      await txParams.signerFunction(assembledTx.toXDR()),
-      config.passphrase
-    );
-    await sendTransaction(signedTx, () => undefined);
-
-    // revoke new admin signing power
-    const revokeOp = Operation.setOptions({
-      masterWeight: 0,
-    });
-    txParams.account = await config.rpc.getAccount(newAdmin.publicKey());
-    txParams.signerFunction = async (txXDR: string) => {
-      return signWithKeypair(txXDR, config.passphrase, newAdmin);
-    };
-    await invokeClassicOp(revokeOp.toXDR('base64'), txParams);
-  }
 }
 
-const network = process.argv[2];
 await deploy();
