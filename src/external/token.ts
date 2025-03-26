@@ -118,4 +118,13 @@ export class TokenContract extends Contract {
 
     return operation.toXDR('base64');
   }
+
+  public balance(user: string) {
+    const invokeArgs = {
+      method: 'balance',
+      args: [nativeToScVal(user, { type: 'address' })],
+    };
+    const operation = this.call(invokeArgs.method, ...invokeArgs.args);
+    return operation.toXDR('base64');
+  }
 }

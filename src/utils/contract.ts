@@ -10,13 +10,16 @@ import { TxParams, invokeSorobanOperation } from './tx.js';
 // Relative paths from __dirname
 const CONTRACT_REL_PATH: object = {
   token: '../../src/external/token.wasm',
-  comet: '../../' + config.comet_wasm_rel_path + 'comet.wasm',
-  cometFactory: '../../' + config.comet_wasm_rel_path + 'comet_factory.wasm',
+  comet: '../../wasm_v1/comet.wasm',
+  cometFactory: '../../wasm_v1/comet_factory.wasm',
   oraclemock: '../../src/external/oracle.wasm',
-  emitter: '../../' + config.blend_wasm_rel_path + 'emitter.wasm',
-  poolFactory: '../../' + config.blend_wasm_rel_path + 'pool_factory.wasm',
-  backstop: '../../' + config.blend_wasm_rel_path + 'backstop.wasm',
-  lendingPool: '../../' + config.blend_wasm_rel_path + 'pool.wasm',
+  emitter: '../../wasm_v1/emitter.wasm',
+  poolFactory: '../../wasm_v1/pool_factory.wasm',
+  backstop: '../../wasm_v1/backstop.wasm',
+  lendingPool: '../../wasm_v1/pool.wasm',
+  poolFactoryV2: '../../wasm_v2/pool_factory.wasm',
+  backstopV2: '../../wasm_v2/backstop.wasm',
+  lendingPoolV2: '../../wasm_v2/pool.wasm',
 };
 
 const __filename = fileURLToPath(import.meta.url);
@@ -74,6 +77,24 @@ export async function deployContract(
   addressBook.writeToFile();
   await invokeSorobanOperation(deployOp.toXDR('base64'), () => undefined, txParams);
   return contractId;
+}
+
+export function generateContractId(accountId: string, salt: Buffer): string {
+  const networkId = hash(Buffer.from(config.passphrase));
+  const contractIdPreimage = xdr.ContractIdPreimage.contractIdPreimageFromAddress(
+    new xdr.ContractIdPreimageFromAddress({
+      address: Address.fromString(accountId).toScAddress(),
+      salt: salt,
+    })
+  );
+
+  const hashIdPreimage = xdr.HashIdPreimage.envelopeTypeContractId(
+    new xdr.HashIdPreimageContractId({
+      networkId: networkId,
+      contractIdPreimage: contractIdPreimage,
+    })
+  );
+  return StrKey.encodeContract(hash(hashIdPreimage.toXDR()));
 }
 
 export async function bumpContractInstance(contractKey: string, txParams: TxParams) {
