@@ -116,7 +116,7 @@ async function mock() {
     r_one: 30_0000,
     r_two: 200_0000,
     r_three: 1_000_0000,
-    reactivity: 500,
+    reactivity: 100,
   };
   await setupReserve(
     testnetPool.contractId(),
@@ -138,7 +138,7 @@ async function mock() {
     r_one: 50_0000,
     r_three: 1_500_0000,
     r_two: 500_0000,
-    reactivity: 1000,
+    reactivity: 100,
   };
   await setupReserve(
     testnetPool.contractId(),
@@ -160,7 +160,7 @@ async function mock() {
     r_one: 50_0000,
     r_three: 1_500_0000,
     r_two: 500_0000,
-    reactivity: 1000,
+    reactivity: 100,
   };
   await setupReserve(
     testnetPool.contractId(),
@@ -182,7 +182,7 @@ async function mock() {
     r_one: 30_0000,
     r_two: 100_0000,
     r_three: 1_000_0000,
-    reactivity: 500,
+    reactivity: 100,
   };
   await setupReserve(
     testnetPool.contractId(),

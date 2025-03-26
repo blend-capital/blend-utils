@@ -27,7 +27,7 @@ export async function deployBlend(
 ): Promise<[BackstopContractV2, EmitterContract, PoolFactoryContractV2]> {
   const factoryWasm = await installContract('poolFactoryV2', txParams);
   const backstopWasm = await installContract('backstopV2', txParams);
-  await bumpContractCode('emitter', txParams);
+
   await bumpContractCode('poolFactoryV2', txParams);
   await bumpContractCode('backstopV2', txParams);
   const poolHash = await installContract('lendingPoolV2', txParams);
@@ -38,10 +38,10 @@ export async function deployBlend(
 
   const factoryAddress = generateContractId(txParams.account.accountId(), factorySalt);
   const backstopAddress = generateContractId(txParams.account.accountId(), backstopSalt);
-  const emitterAddress = addressBook.getContractId('emitter');
 
   if (fullDeploy) {
     await installContract('emitter', txParams);
+    await bumpContractCode('emitter', txParams);
     const emitterAddress = await deployContract('emitter', 'emitter', txParams);
     await bumpContractInstance('emitter', txParams);
     const emitter = new EmitterContract(emitterAddress);
@@ -56,6 +56,7 @@ export async function deployBlend(
       txParams
     );
   }
+  const emitterAddress = addressBook.getContractId('emitter');
 
   const factoryInitArgs: PoolInitMeta = {
     backstop: backstopAddress,

@@ -40,6 +40,28 @@ export async function simulationOperation(
   return simulation;
 }
 
+export async function simulationOperationResult<T>(
+  operation: string,
+  parser: (result: string) => T,
+  txParams: TxParams
+): Promise<T> {
+  const txBuilder = new TransactionBuilder(
+    txParams.account,
+    txParams.txBuilderOptions
+  ).addOperation(xdr.Operation.fromXDR(operation, 'base64'));
+  const transaction = txBuilder.build();
+  const simulation = await config.rpc.simulateTransaction(transaction);
+  if (
+    (rpc.Api.isSimulationSuccess(simulation) || rpc.Api.isSimulationRestore(simulation)) &&
+    simulation.result
+  ) {
+    return parser(simulation.result.retval.toXDR('base64'));
+  } else if (rpc.Api.isSimulationError(simulation)) {
+    throw parseError(simulation);
+  }
+  throw Error('Invalid simulation response');
+}
+
 export async function sendTransaction<T>(
   transaction: Transaction,
   parser: (result: string) => T

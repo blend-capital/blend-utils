@@ -16,8 +16,8 @@ import { TxParams, invokeSorobanOperation, signWithKeypair } from '../../utils/t
  * example: node ./lib/user-scripts/deploy-pool.js testnet true
  */
 
-if (process.argv.length < 4) {
-  throw new Error('Arguments required: `network` `revoke_admin`');
+if (process.argv.length < 3) {
+  throw new Error('Arguments required: `network`');
 }
 
 const txParams: TxParams = {
