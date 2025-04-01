@@ -72,7 +72,7 @@ The following constants must also be defined in the `deploy-pool` script:
 | `r_two`          | Interest rate increase above target util          | ≥ 0         | [Interest Rates](https://docs.blend.capital/pool-creators/adding-assets/interest-rates)   |
 | `r_three`        | Interest rate increase above 95% util             | ≥ 0         | [Interest Rates](https://docs.blend.capital/pool-creators/adding-assets/interest-rates)   |
 | `reactivity`     | Speed of interest rate changes                    | ≤ 1000      | [Interest Rates](https://docs.blend.capital/pool-creators/adding-assets/interest-rates)   |
-| `collateral_cap` | Maximum amount of collateral that can be borrowed | ≥ 0         | [Risk Parameters](https://docs.blend.capital/pool-creators/adding-assets/risk-parameters) |
+| `supply_cap` | Maximum amount of collateral that can be borrowed | ≥ 0         | [Risk Parameters](https://docs.blend.capital/pool-creators/adding-assets/risk-parameters) |
 | `enabled`        | Whether the reserve is enabled                    | Boolean     |                                                                                           |
 
 #### `ReserveEmissionMetadata` Parameters
