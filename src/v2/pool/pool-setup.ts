@@ -1,10 +1,10 @@
-import { DeployArgs, PoolContractV2, PoolFactoryContractV2 } from '@blend-capital/blend-sdk';
+import { DeployV2Args, PoolContractV2, PoolFactoryContractV2 } from '@blend-capital/blend-sdk';
 import { addressBook } from '../../utils/address-book.js';
 import { bumpContractInstance } from '../../utils/contract.js';
 import { TxParams, invokeSorobanOperation } from '../../utils/tx.js';
 
 export async function setupPool(
-  deployPoolArgs: DeployArgs,
+  deployPoolArgs: DeployV2Args,
   txParams: TxParams
 ): Promise<PoolContractV2> {
   const poolFactory = new PoolFactoryContractV2(addressBook.getContractId('poolFactoryV2'));

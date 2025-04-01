@@ -39,6 +39,7 @@ const txParams: TxParams = {
 const pool_name = 'PairTrade';
 const backstop_take_rate = 0.5e7;
 const max_positions = 2;
+const min_collateral = BigInt(0); // Set to 0 for no minimum collateral requirement
 const reserves = ['XLM', 'wBTC'];
 const reserve_configs: ReserveConfigV2[] = [
   {
@@ -53,7 +54,7 @@ const reserve_configs: ReserveConfigV2[] = [
     r_two: 1000000, // (0_1000000)
     r_three: 1_0000000,
     reactivity: 1000, // must be 1000 or under
-    collateral_cap: I128MAX,
+    supply_cap: I128MAX,
     enabled: true,
   },
   {
@@ -68,7 +69,7 @@ const reserve_configs: ReserveConfigV2[] = [
     r_two: 1000000, // (0_1000000)
     r_three: 1_0000000,
     reactivity: 1000,
-    collateral_cap: I128MAX,
+    supply_cap: I128MAX,
     enabled: true,
   },
 ];
@@ -97,6 +98,7 @@ async function deploy() {
       oracle: addressBook.getContractId('oracle'),
       backstop_take_rate: backstop_take_rate,
       max_positions: max_positions,
+      min_collateral: min_collateral,
     },
     txParams
   );

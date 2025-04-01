@@ -1,4 +1,4 @@
-import { Address, Asset, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
+import { Asset, TransactionBuilder } from '@stellar/stellar-sdk';
 import { config } from '../../utils/env_config.js';
 import {
   invokeClassicOp,
@@ -95,6 +95,7 @@ async function migrateV1ToV2() {
       oracle: mockOracle.contractId(),
       backstop_take_rate: 0.1e7,
       max_positions: 8,
+      min_collateral: BigInt(0),
     },
     adminTxParams
   );
@@ -111,7 +112,7 @@ async function migrateV1ToV2() {
     r_two: 200_0000,
     r_three: 1_000_0000,
     reactivity: 500,
-    collateral_cap: I128MAX,
+    supply_cap: I128MAX,
     enabled: true,
   };
   await setupReserve(
@@ -135,7 +136,7 @@ async function migrateV1ToV2() {
     r_three: 1_500_0000,
     r_two: 500_0000,
     reactivity: 1000,
-    collateral_cap: I128MAX,
+    supply_cap: I128MAX,
     enabled: true,
   };
   await setupReserve(
@@ -159,7 +160,7 @@ async function migrateV1ToV2() {
     r_three: 1_500_0000,
     r_two: 500_0000,
     reactivity: 1000,
-    collateral_cap: I128MAX,
+    supply_cap: I128MAX,
     enabled: true,
   };
   await setupReserve(
@@ -183,7 +184,7 @@ async function migrateV1ToV2() {
     r_two: 100_0000,
     r_three: 1_000_0000,
     reactivity: 500,
-    collateral_cap: I128MAX,
+    supply_cap: I128MAX,
     enabled: true,
   };
   await setupReserve(
@@ -349,19 +350,7 @@ async function migrateV1ToV2() {
     backstopContract.distribute(),
     BackstopContractV2.parsers.distribute,
     adminTxParams,
-    undefined,
-    [
-      xdr.LedgerKey.contractData(
-        new xdr.LedgerKeyContractData({
-          contract: Address.fromString(addressBook.getContractId('emitter')).toScAddress(),
-          key: xdr.ScVal.scvVec([
-            xdr.ScVal.scvSymbol('LastDist'),
-            Address.fromString(addressBook.getContractId('backstopV2')).toScVal(),
-          ]),
-          durability: xdr.ContractDataDurability.persistent(),
-        })
-      ),
-    ]
+    undefined
   );
 }
 
