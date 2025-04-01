@@ -3,15 +3,10 @@ import { CometContract } from '../../external/comet.js';
 import { TokenContract } from '../../external/token.js';
 import { addressBook } from '../../utils/address-book.js';
 import { config } from '../../utils/env_config.js';
-import {
-  invokeSorobanOperation,
-  simulationOperation,
-  simulationOperationResult,
-} from '../../utils/tx.js';
+import { simulationOperationResult } from '../../utils/tx.js';
 import { signWithKeypair } from '../../utils/tx.js';
 import { TxParams } from '../../utils/tx.js';
-import { Api } from '@stellar/stellar-sdk/rpc';
-import { BackstopPool, BackstopPoolV2, FixedMath } from '@blend-capital/blend-sdk';
+import { BackstopPoolV2 } from '@blend-capital/blend-sdk';
 
 /**
  * Calculate required LP tokens to mint based on current balances and k threshold

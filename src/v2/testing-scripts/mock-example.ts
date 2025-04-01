@@ -104,6 +104,7 @@ export async function mock() {
       name: 'TestnetV2',
       salt: randomBytes(32),
       oracle: mockOracle.contractId(),
+      min_collateral: BigInt(0),
       backstop_take_rate: 0.1e7,
       max_positions: 8,
     },
@@ -122,7 +123,7 @@ export async function mock() {
     r_two: 200_0000,
     r_three: 1_000_0000,
     reactivity: 500,
-    collateral_cap: I128MAX,
+    supply_cap: I128MAX,
     enabled: true,
   };
   await setupReserve(
@@ -146,7 +147,7 @@ export async function mock() {
     r_three: 1_500_0000,
     r_two: 500_0000,
     reactivity: 1000,
-    collateral_cap: I128MAX,
+    supply_cap: I128MAX,
     enabled: true,
   };
   await setupReserve(
@@ -170,7 +171,7 @@ export async function mock() {
     r_three: 1_500_0000,
     r_two: 500_0000,
     reactivity: 1000,
-    collateral_cap: I128MAX,
+    supply_cap: I128MAX,
     enabled: true,
   };
   await setupReserve(
@@ -194,7 +195,7 @@ export async function mock() {
     r_two: 100_0000,
     r_three: 1_000_0000,
     reactivity: 500,
-    collateral_cap: I128MAX,
+    supply_cap: I128MAX,
     enabled: true,
   };
   await setupReserve(
