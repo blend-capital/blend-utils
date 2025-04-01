@@ -1,4 +1,4 @@
-import { ReserveConfig } from '@blend-capital/blend-sdk';
+import { I128MAX, ReserveConfigV2 } from '@blend-capital/blend-sdk';
 import { Asset, TransactionBuilder } from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
 import { deployBlend } from '../deploy/blend.js';
@@ -89,11 +89,12 @@ async function setupEnv() {
       oracle: auctionOracle.contractId(),
       backstop_take_rate: 0.1e7,
       max_positions: 4,
+      min_collateral: BigInt(0),
     },
     adminTxParams
   );
 
-  const usdcReserveMeta: ReserveConfig = {
+  const usdcReserveMeta: ReserveConfigV2 = {
     index: 0,
     decimals: 7,
     c_factor: 950_0000,
@@ -105,6 +106,8 @@ async function setupEnv() {
     r_two: 200_0000,
     r_three: 500_0000,
     reactivity: 100,
+    enabled: true,
+    supply_cap: I128MAX,
   };
   await setupReserve(
     auctionPool.contractId(),
@@ -115,7 +118,7 @@ async function setupEnv() {
     adminTxParams
   );
 
-  const volReserveMeta: ReserveConfig = {
+  const volReserveMeta: ReserveConfigV2 = {
     index: 1,
     decimals: 7,
     c_factor: 750_0000,
@@ -127,6 +130,8 @@ async function setupEnv() {
     r_two: 500_0000,
     r_three: 1_500_0000,
     reactivity: 500,
+    enabled: true,
+    supply_cap: I128MAX,
   };
 
   await setupReserve(
@@ -135,7 +140,7 @@ async function setupEnv() {
     adminTxParams
   );
 
-  const highIntReserveMeta: ReserveConfig = {
+  const highIntReserveMeta: ReserveConfigV2 = {
     index: 2,
     decimals: 7,
     c_factor: 900_0000,
@@ -147,6 +152,8 @@ async function setupEnv() {
     r_two: 1_500_0000,
     r_three: 5_000_0000,
     reactivity: 0,
+    enabled: true,
+    supply_cap: I128MAX,
   };
 
   await setupReserve(
@@ -155,7 +162,7 @@ async function setupEnv() {
     adminTxParams
   );
 
-  const noColReserveMeta: ReserveConfig = {
+  const noColReserveMeta: ReserveConfigV2 = {
     index: 3,
     decimals: 7,
     c_factor: 0,
@@ -167,6 +174,8 @@ async function setupEnv() {
     r_two: 500_0000,
     r_three: 2_000_0000,
     reactivity: 500,
+    enabled: true,
+    supply_cap: I128MAX,
   };
 
   await setupReserve(
