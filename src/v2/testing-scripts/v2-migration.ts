@@ -350,18 +350,6 @@ async function migrateV1ToV2() {
     BackstopContractV2.parsers.distribute,
     adminTxParams,
     undefined,
-    [
-      xdr.LedgerKey.contractData(
-        new xdr.LedgerKeyContractData({
-          contract: Address.fromString(addressBook.getContractId('emitter')).toScAddress(),
-          key: xdr.ScVal.scvVec([
-            xdr.ScVal.scvSymbol('LastDist'),
-            Address.fromString(addressBook.getContractId('backstopV2')).toScVal(),
-          ]),
-          durability: xdr.ContractDataDurability.persistent(),
-        })
-      ),
-    ]
   );
 }
 

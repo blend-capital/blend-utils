@@ -23,6 +23,9 @@
     "emitter": "438a5528cff17ede6fe515f095c43c5f15727af17d006971485e52462e7e7b89",
     "poolFactory": "0287f4ad7350935b83d94e046c0bcabc960b233dbce1531008c021b71d406a1d",
     "backstop": "62f61b32fff99f7eec052a8e573c367759f161c481a5caf0e76a10ae4617c3b4",
-    "lendingPool": "baf978f10efdbcd85747868bef8832845ea6809f7643b67a4ac0cd669327fc2c"
+    "lendingPool": "baf978f10efdbcd85747868bef8832845ea6809f7643b67a4ac0cd669327fc2c",
+    "poolFactoryV2": "80abaf3c68fd15adade9f82165baa9b50d85800e497c99b45809e1fbd7397de2",
+    "backstopV2": "1c2e5e4846e4f0d697a8f69cbe771fa221d87c94df66081e3ff45367e10faf4f",
+    "lendingPoolV2": "6a7c67449f6bad0d5f641cfbdf03f430ec718faa85107ecb0b97df93410d1c43"
   }
 }
