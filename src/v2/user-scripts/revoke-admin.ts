@@ -1,17 +1,15 @@
-import { parseError } from '@blend-capital/blend-sdk';
-import {
-  Address,
-  authorizeInvocation,
-  Operation,
-  rpc,
-  Transaction,
-  TransactionBuilder,
-  xdr,
-} from '@stellar/stellar-sdk';
+import { PoolContractV2 } from '@blend-capital/blend-sdk';
+import { Operation } from '@stellar/stellar-sdk';
+
 import { addressBook } from '../../utils/address-book.js';
 import { airdropAccount } from '../../utils/contract.js';
 import { config } from '../../utils/env_config.js';
-import { TxParams, invokeClassicOp, sendTransaction, signWithKeypair } from '../../utils/tx.js';
+import {
+  TxParams,
+  invokeClassicOp,
+  invokeSorobanOperation,
+  signWithKeypair,
+} from '../../utils/tx.js';
 
 /**
  * Revoke a pool's admin by transferring ownership to a new account and revoking its signing power
@@ -43,76 +41,27 @@ async function revokeAdmin() {
   if (network !== 'mainnet') {
     await airdropAccount(newAdmin);
   }
+  const pool = new PoolContractV2(poolAddress);
 
-  //switch ownership to new admin
-  const args = [
-    xdr.ScVal.scvAddress(
-      xdr.ScAddress.scAddressTypeAccount(
-        xdr.PublicKey.publicKeyTypeEd25519(newAdmin.rawPublicKey())
-      )
-    ),
-  ];
-  const auth_1 = await authorizeInvocation(
-    newAdmin,
-    2000000,
-    new xdr.SorobanAuthorizedInvocation({
-      function: xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
-        new xdr.InvokeContractArgs({
-          contractAddress: Address.fromString(poolAddress).toScAddress(),
-          functionName: 'set_admin',
-          args,
-        })
-      ),
-      subInvocations: [],
-    }),
-    newAdmin.publicKey(),
-    config.passphrase
+  //propose new admin
+  await invokeSorobanOperation(
+    pool.proposeAdmin(newAdmin.publicKey()),
+    PoolContractV2.parsers.proposeAdmin,
+    txParams
   );
-  const auth_2 = await authorizeInvocation(
-    config.admin,
-    2000000,
-    new xdr.SorobanAuthorizedInvocation({
-      function: xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
-        new xdr.InvokeContractArgs({
-          contractAddress: Address.fromString(poolAddress).toScAddress(),
-          functionName: 'set_admin',
-          args,
-        })
-      ),
-      subInvocations: [],
-    }),
-    config.admin.publicKey(),
-    config.passphrase
+  console.log(`Proposed ${newAdmin.publicKey()} as new admin`);
+
+  //accept new admin
+  const newAdminTxParams: TxParams = {
+    ...txParams,
+    account: await config.rpc.getAccount(newAdmin.publicKey()),
+  };
+  await invokeSorobanOperation(
+    pool.acceptAdmin(),
+    PoolContractV2.parsers.acceptAdmin,
+    newAdminTxParams
   );
 
-  const txBuilder = new TransactionBuilder(txParams.account, txParams.txBuilderOptions)
-    .setTimeout(0)
-    .addOperation(
-      Operation.invokeContractFunction({
-        contract: poolAddress,
-        function: 'set_admin',
-        args,
-        auth: [auth_1, auth_2],
-      })
-    );
-  const transaction = txBuilder.build();
-  const builtTx = new Transaction(
-    await signWithKeypair(transaction.toXDR(), config.passphrase, config.admin),
-    config.passphrase
-  );
-
-  const simResponse = await config.rpc.simulateTransaction(builtTx);
-  if (rpc.Api.isSimulationError(simResponse)) {
-    const error = parseError(simResponse);
-    throw error;
-  }
-  const assembledTx = rpc.assembleTransaction(builtTx, simResponse).build();
-  const signedTx = new Transaction(
-    await txParams.signerFunction(assembledTx.toXDR()),
-    config.passphrase
-  );
-
-  await sendTransaction(signedTx, () => undefined);
   // revoke new admin signing power
   const revokeOp = Operation.setOptions({
     masterWeight: 0,
