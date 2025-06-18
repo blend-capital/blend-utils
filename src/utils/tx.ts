@@ -75,6 +75,12 @@ export async function sendTransaction<T>(
   if (send_tx_response.status !== 'PENDING') {
     const error = parseError(send_tx_response);
     console.error('Transaction failed to send: ' + send_tx_response.hash);
+    console.error('Transaction failed: ' + JSON.stringify(send_tx_response));
+    console.error('XDR: ' + transaction.toXDR());
+
+    for (const err of send_tx_response.diagnosticEvents ?? []) {
+      console.error('Event: ' + err.toXDR('base64'));
+    }
     throw error;
   }
 
@@ -85,8 +91,8 @@ export async function sendTransaction<T>(
   }
 
   if (get_tx_response.status !== 'SUCCESS') {
-    console.log('Tx Failed: ', get_tx_response.status);
     const error = parseError(get_tx_response);
+    console.error('Transaction failed: ' + get_tx_response);
     throw error;
   }
 
@@ -114,6 +120,7 @@ export async function invokeSorobanOperation<T>(
   if (rpc.Api.isSimulationRestore(simulation)) {
     console.log('Restoring...');
     const fee = Number(simulation.restorePreamble.minResourceFee) + 1000;
+    const account = await config.rpc.getAccount(txParams.account.accountId());
     const restore_tx = new TransactionBuilder(account, { fee: fee.toString() })
       .setNetworkPassphrase(config.passphrase)
       .setTimeout(0)
@@ -140,6 +147,9 @@ export async function invokeSorobanOperation<T>(
     console.log('xdr: ', transaction.toXDR());
     console.log('simulation: ', simulation);
     const error = parseError(simulation);
+    for (const errEvent of simulation.events ?? []) {
+      console.error('Event: ' + errEvent.toXDR('base64'));
+    }
     console.error(error);
     throw error;
   }
