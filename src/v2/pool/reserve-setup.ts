@@ -1,9 +1,9 @@
-import { PoolContractV2, SetReserveArgs } from '@blend-capital/blend-sdk';
+import { PoolContractV2, SetReserveV2Args } from '@blend-capital/blend-sdk';
 import { TxParams, invokeSorobanOperation } from '../../utils/tx.js';
 
 export async function setupReserve(
   poolAddress: string,
-  initReserveArgs: SetReserveArgs,
+  initReserveArgs: SetReserveV2Args,
   txParams: TxParams
 ) {
   const pool = new PoolContractV2(poolAddress);

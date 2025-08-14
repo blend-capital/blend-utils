@@ -75,6 +75,7 @@ export async function deployBlend(
   );
   addressBook.setContractId('poolFactoryV2', factoryAddress);
   await bumpContractInstance('poolFactoryV2', txParams);
+  addressBook.writeToFile();
 
   const backstopConstructorArgs: BackstopConstructorArgs = {
     backstop_token: backstopTokenAddress,
@@ -96,6 +97,7 @@ export async function deployBlend(
   );
   addressBook.setContractId('backstopV2', backstopAddress);
   await bumpContractInstance('backstopV2', txParams);
+  addressBook.writeToFile();
   console.log('Sucessfully deployed Blend contracts\n');
   return [
     new BackstopContractV2(backstopAddress),
