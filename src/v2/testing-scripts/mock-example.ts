@@ -75,6 +75,8 @@ export async function mock() {
     adminTxParams
   );
 
+  console.log('Deploying Comet Factory...');
+
   const cometFactory = await deployCometFactory(adminTxParams);
   const null_address = 'GCVJMEUXNIN7BYI4ERWW66ZJNTXRU2AWM65ZDYOODH5ZEZUM7UZXDEAD';
   const cometContract = await deployComet(

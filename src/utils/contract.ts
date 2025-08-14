@@ -1,4 +1,12 @@
-import { Address, Keypair, Operation, StrKey, hash, xdr } from '@stellar/stellar-sdk';
+import {
+  Address,
+  Keypair,
+  Operation,
+  SorobanDataBuilder,
+  StrKey,
+  hash,
+  xdr,
+} from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
 import { readFileSync } from 'fs';
 import path from 'path';
@@ -106,26 +114,12 @@ export async function bumpContractInstance(contractKey: string, txParams: TxPara
       durability: xdr.ContractDataDurability.persistent(),
     })
   );
-  const bumpTransactionData = new xdr.SorobanTransactionData({
-    resources: new xdr.SorobanResources({
-      footprint: new xdr.LedgerFootprint({
-        readOnly: [contractInstanceXDR],
-        readWrite: [],
-      }),
-      instructions: 0,
-      readBytes: 0,
-      writeBytes: 0,
-    }),
-    resourceFee: xdr.Int64.fromString('0'),
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    ext: new xdr.ExtensionPoint(0),
-  });
+  const sorobanData = new SorobanDataBuilder().setReadOnly([contractInstanceXDR]).build();
   await invokeSorobanOperation(
     Operation.extendFootprintTtl({ extendTo: 535670 }).toXDR('base64'),
     () => undefined,
     txParams,
-    bumpTransactionData
+    sorobanData
   );
 }
 
@@ -136,26 +130,13 @@ export async function bumpContractCode(wasmKey: string, txParams: TxParams) {
       hash: wasmHash,
     })
   );
-  const bumpTransactionData = new xdr.SorobanTransactionData({
-    resources: new xdr.SorobanResources({
-      footprint: new xdr.LedgerFootprint({
-        readOnly: [contractCodeXDR],
-        readWrite: [],
-      }),
-      instructions: 0,
-      readBytes: 0,
-      writeBytes: 0,
-    }),
-    resourceFee: xdr.Int64.fromString('0'),
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    ext: new xdr.ExtensionPoint(0),
-  });
+
+  const sorobanData = new SorobanDataBuilder().setReadOnly([contractCodeXDR]).build();
   await invokeSorobanOperation(
     Operation.extendFootprintTtl({ extendTo: 535670 }).toXDR('base64'),
     () => undefined,
     txParams,
-    bumpTransactionData
+    sorobanData
   );
 }
 
@@ -172,26 +153,12 @@ export async function bumpContractData(
       durability: xdr.ContractDataDurability.persistent(),
     })
   );
-  const bumpTransactionData = new xdr.SorobanTransactionData({
-    resources: new xdr.SorobanResources({
-      footprint: new xdr.LedgerFootprint({
-        readOnly: [contractDataXDR],
-        readWrite: [],
-      }),
-      instructions: 0,
-      readBytes: 0,
-      writeBytes: 0,
-    }),
-    resourceFee: xdr.Int64.fromString('0'),
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    ext: new xdr.ExtensionPoint(0),
-  });
+  const sorobanData = new SorobanDataBuilder().setReadOnly([contractDataXDR]).build();
   await invokeSorobanOperation(
     Operation.extendFootprintTtl({ extendTo: 535670 }).toXDR('base64'),
     () => undefined,
     txParams,
-    bumpTransactionData
+    sorobanData
   );
 }
 
@@ -208,26 +175,12 @@ export async function restoreContractData(
       durability: xdr.ContractDataDurability.persistent(),
     })
   );
-  const restoreTransactionData = new xdr.SorobanTransactionData({
-    resources: new xdr.SorobanResources({
-      footprint: new xdr.LedgerFootprint({
-        readOnly: [],
-        readWrite: [contractDataXDR],
-      }),
-      instructions: 0,
-      readBytes: 0,
-      writeBytes: 0,
-    }),
-    resourceFee: xdr.Int64.fromString('0'),
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    ext: new xdr.ExtensionPoint(0),
-  });
+  const sorobanData = new SorobanDataBuilder().setReadWrite([contractDataXDR]).build();
   await invokeSorobanOperation(
     Operation.restoreFootprint({}).toXDR('base64'),
     () => undefined,
     txParams,
-    restoreTransactionData
+    sorobanData
   );
 }
 
