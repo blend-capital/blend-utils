@@ -15,14 +15,14 @@ import { BackstopPoolV2 } from '@blend-capital/blend-sdk';
  * example: node ./lib/user-scripts/get-backstop-threshold.js testnet
  */
 
-if (process.argv.length < 4) {
-  throw new Error('Arguments required: `network` `pool`');
+if (process.argv.length < 3) {
+  throw new Error('Arguments required: `network`');
 }
 
 const K_THRESHOLD = BigInt(100_000);
 
 async function getRequiredLP() {
-  const pool = addressBook.getContractId(process.argv[3] ?? '');
+  const pool = addressBook.getContractId(process.env.POOL_NAME || '');
   const comet_address = addressBook.getContractId('comet');
   const comet = new CometContract(comet_address);
   const usdc_contract = new TokenContract(addressBook.getContractId('USDC'));

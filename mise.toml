@@ -1,0 +1,31 @@
+[env]
+# The name of the pool to deploy
+POOL_NAME = "Etherfuse"
+
+# The URL of the RPC server
+RPC_URL = "https://soroban-testnet.stellar.org"
+
+# The URL of the friendbot server (only used for non-mainnet networks)
+FRIENDBOT_URL = "https://friendbot.stellar.org"
+
+# The passphrase of the network to connect to
+NETWORK_PASSPHRASE = "Test SDF Network ; September 2015"
+
+# The strkey encoded secret key to use for the deployment / admin account
+ADMIN = { required = true }
+
+[tasks.build]
+description = "Build the project"
+run = "npm run build"
+
+# If you want to deploy a new pool in testnet, you need to remove the "Etherfuse" key from
+# testnet.contracts.json file and then update the POOL_NAME in this file or use the same one.
+[tasks."deploy:testnet"]
+depends = ["build"]
+description = "Deploy the Etherfuse Pool on the testnet"
+run = "node ./lib/v2/user-scripts/deploy-pool.js testnet $$ADMIN"
+
+[tasks."get-backstop-threshold:testnet"]
+depends = ["build"]
+description = "Get the backstop threshold for the Etherfuse Pool on the testnet"
+run = "node ./lib/v2/user-scripts/get-backstop-threshold.js testnet"
